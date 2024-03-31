@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "name": "@cssninja/tairo",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./nuxt.config.ts",
+  "scripts": {
+    "clean": "rimraf .nuxt .output node_modules"
+  },
+  "dependencies": {
+    "@cssninja/nuxt-toaster": "^0.3.12",
+    "@shuriken-ui/nuxt": "2.0.1",
+    "klona": "^2.0.6",
+    "magic-string": "0.30.5",
+    "nuxt": "^3.9.3"
+  }
+}

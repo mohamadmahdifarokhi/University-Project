@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'IranSansX(Pro)';
+    src: url('~static/fonts/IranSansX(Pro).woff2') format('woff2'), /* Modern Browsers */
+         url('~IranSansX(Pro).woff') format('woff'); /* Older Browsers */
+}
+
+body {
+    font-family: 'IranSansX(Pro)', sans-serif;
+}

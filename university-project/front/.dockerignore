@@ -1,0 +1,9 @@
+node_modules
+.app/pnpm-lock.yaml
+.app/nuxt
+.demo/pnpm-lock.yaml
+.demo/nuxt
+.dockerignore
+.app/node_modules
+.demo/node_modules
+Dockerfile

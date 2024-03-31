@@ -1,0 +1,94 @@
+services:
+  # Service for the accountract application
+  accountract:
+    build: ./accountract/back
+    container_name: accountract-back
+    command: uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+    volumes:
+      - ./accountract/back:/usr/src/app
+    ports:
+      - "8000:8000"
+    env_file: .env
+    restart: always
+    depends_on:
+      - accountract-db
+    networks:
+      - accountract-network
+
+  redis:
+    container_name: redis
+    image: redis:7.2
+    networks:
+      - accountract-network
+    ports:
+      - 6379:6379
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  # PostgreSQL database for accountract
+  accountract-db:
+    image: postgres:15.3
+    container_name: accountract-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=accountract
+    networks:
+      - accountract-network
+    volumes:
+      - accountract-db-data:/var/lib/postgresql/data
+    restart: on-failure
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=accountractadminteam@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=Ac179234.Ac
+    depends_on:
+      - accountract-db
+    networks:
+      - accountract-network
+    restart: always
+
+  # Service for the accountract front
+  accountract-front:
+    build: ./accountract/front
+    container_name: accountract-front
+    # command: "node .app/.output/server/index.mjs"
+    working_dir: /usr/src/app
+    volumes:
+      - ./accountract/front:/usr/src/app
+      - /usr/src/app/node_modules
+      - /usr/src/app/.app/node_modules
+      - /usr/src/app/.demo/node_modules
+      - /usr/src/app/.app/.nuxt
+      - /usr/src/app/.app/.output
+      - /usr/src/app/.demo/.nuxt
+    ports:
+      - "80:3000"
+    depends_on:
+      - accountract
+      - accountract-db
+    networks:
+      - accountract-network
+    restart: always
+
+networks:
+  accountract-network:
+    driver: bridge
+
+volumes:
+  # Volume for accountract database data
+  accountract-db-data:
+
+  redis_data:
+
+  # Volume for gpt database data
+  gpt-db-data:

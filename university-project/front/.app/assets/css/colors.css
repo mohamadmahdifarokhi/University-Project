@@ -1,0 +1,270 @@
+@import url(~/assets/fontiran.css);
+
+body {
+	font-family: IRANSansX  !important;
+	/*direction: rtl;*/
+	/*background-color: #cdcdcd;*/
+	margin: 0;
+}
+h1, h2, h3, h4, h5, h6,input, textarea {
+	font-family: IRANSansX !important;
+}
+h1 {
+	font-weight: bold;
+}
+
+.wrapper {
+	max-width: 900px;
+	margin: 0 auto;
+}
+.ltr {
+	direction: ltr;
+}
+.text-right {
+	text-align: right;
+}
+.text-center {
+	text-align: center;
+}
+.text-left {
+	text-align: left;
+}
+.text-small {
+	font-size: 0.8em;
+}
+.text-xsmall {
+	font-size: 0.6em;
+}
+.text-large {
+	font-size: 1.2em;
+}
+.text-xlarge {
+	font-size: 1.4em;
+}
+.text-underline {
+	text-decoration:underline;
+}
+
+.text-thin {
+	font-weight: 100;
+}
+.text-UltraLight {
+	font-weight: 200;
+}
+.text-light {
+	font-weight: 300;
+}
+.text-regular {
+	font-weight: normal;
+}
+.text-medium {
+	font-weight: 500;
+}
+.text-demibold {
+	font-weight: 600;
+}
+.text-bold {
+	font-weight: bold;
+}
+
+.text-extrabold {
+	font-weight: 800;
+}
+.text-black {
+	font-weight: 900;
+}
+
+blockquote {
+	font-weight: 700;
+	padding: 10px;
+	border: 1px dashed #666666;
+}
+
+.mainbox {
+	width: 100%;
+	background-color: #EFEFEF;
+	display: table;
+	margin-bottom: 30px;
+	border-right: 8px solid #df79ff;
+}
+
+.mainboxnegativ {
+	width: 100%;
+	background-color: #000000;
+	display: table;
+	margin-bottom: 30px;
+	border-right: 8px solid #df79ff;
+	color: #F9F9F9;
+}
+
+.mainbox2 {
+	font-size: 1em;
+	width: 90%;
+	padding-right: 20px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+.mainboxitalic {
+	font-size: 1em;
+	font-style: italic;
+	width: 90%;
+	padding-right: 20px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+.mainbox3 {
+	width: 100%;
+	background-color: #DFDFDF;
+	display: table;
+	margin-bottom: 30px;
+	border-right: 8px solid #FF5EAA;
+}
+
+.mainbox2negativ {
+	font-size: 1em;
+	color: #F9F9F9;
+	background-color: #000000;
+	padding-right: 20px;
+}
+
+
+.farsiparagraph {
+	font-size: 1em;
+	width: 47%;
+	float:right;
+	padding-right: 20px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+
+}
+
+.farsiparagraph_negativ {
+	font-size: 1em;
+	color: #F9F9F9;
+	background-color: #000000;
+	width: 47%;
+	float:right;
+	padding-right: 20px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+
+}
+
+
+.englishparagraph {
+	font-size: 1em;
+	width: 47%;
+	float: left;
+	direction:ltr;
+	padding-left: 20px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+
+
+}
+
+.englishparagraph_negativ {
+	font-size: 1em;
+	color: #F9F9F9;
+	background-color: #000000;
+	width: 47%;
+	float: left;
+	direction:ltr;
+	padding-left: 20px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+
+
+}
+.rightbox {
+	width: 60%;
+	padding-right: 20px;
+	padding-left: 5px;
+	float: right;
+	margin-left: 10px;
+	margin-bottom: 0px;
+	min-width: 0px;
+	background-color: #F7F7F7;
+
+}
+
+.titelbox {
+	width: 60%;
+	padding-right: 25px;
+	padding-left: 0px;
+	float: right;
+	margin-left: 10px;
+	margin-bottom: 0px;
+	min-width: 0px;
+	background-color: #d5d5d5;
+	color: #4B4B4B;
+}
+
+
+.lefttbox {
+
+	padding-right: 20px;
+	padding-left: 4px;
+	float: right;
+	margin-bottom: 10px;
+	min-width: 0px;
+}
+
+.alphabet {
+	width: 35%;
+	float: left;
+	font-size: 20em;
+	text-align: center;
+	font-weight: 700;
+	color: #999999;
+}
+
+.alphabet2 {
+	width: 35%;
+	float: left;
+	direction: ltr;
+	font-size: 1.6em;
+	text-align: left;
+	font-weight: 600;
+	color: #333333;
+	margin-top: 100px;
+}
+.footer {
+	font-weight: 400;
+	font-size: 0.7em;
+	text-align: center;
+	direction: ltr;
+	margin-bottom: 0px;
+	padding-bottom: 0px;
+}
+
+
+
+:root {
+  /* violet from tailwind as r g b */
+  --color-primary-50: 245 243 255; /* #f5f3ff */
+  --color-primary-100: 237 233 254; /* #ede9fe */
+  --color-primary-200: 221 214 254; /* #ddd6fe */
+  --color-primary-300: 196 181 253; /* #c4b5fd */
+  --color-primary-400: 167 139 250; /* #a78bfa */
+  --color-primary-500: 139 92 246; /* #a855f7 */
+  --color-primary-600: 124 58 237; /* #9333ea */
+  --color-primary-700: 109 40 217; /* #7e22ce */
+  --color-primary-800: 91 33 182; /* #6b21a8 */
+  --color-primary-900: 76 29 149; /* #581c87 */
+  --color-primary-950: 46 16 101; /* #3b0764 */
+
+  /* slate from tailwind as r g b */
+  --color-muted-50: 248 250 252; /* #f8fafc */
+  --color-muted-100: 241 245 249; /* #f1f5f9 */
+  --color-muted-200: 226 232 240; /* #e2e8f0 */
+  --color-muted-300: 203 213 225; /* #cbd5e1 */
+  --color-muted-400: 148 163 184; /* #94a3b8 */
+  --color-muted-500: 100 116 139; /* #64748b */
+  --color-muted-600: 71 85 105; /* #475569 */
+  --color-muted-700: 51 65 85; /* #334155 */
+  --color-muted-800: 30 41 59; /* #1e293b */
+  --color-muted-900: 15 23 42; /* #0f172a */
+  --color-muted-950: 2 6 23; /* #020617 */
+}
