@@ -144,11 +144,11 @@ const logout = () => {
     </div>
     <!-- Display signup and login buttons if not authenticated -->
     <div v-else>
-<!--      <router-link :to="localPath('/signup')">-->
-<!--        <BaseButton shape="curved" class="mx-2">-->
-<!--          {{ t('Signup') }}-->
-<!--        </BaseButton>-->
-<!--      </router-link>-->
+      <router-link :to="localPath('/signup')">
+        <BaseButton shape="curved" class="mx-2">
+          {{ t('Signup') }}
+        </BaseButton>
+      </router-link>
       <router-link :to="localPath('/login')">
         <BaseButton shape="curved" class="ms-2">
           {{ t('Login') }}

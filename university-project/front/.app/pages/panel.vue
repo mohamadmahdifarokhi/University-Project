@@ -1,6 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
   title: 'Flex List',
+  middleware: ['authenticated'],
   preview: {
     title: 'Flex list 1',
     description: 'For list views and collections',

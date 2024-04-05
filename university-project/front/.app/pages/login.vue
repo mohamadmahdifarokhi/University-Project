@@ -95,15 +95,37 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
+  <video autoplay muted loop class="absolute inset-0 z-0 object-cover w-full h-full">
+    <source src="/auth.mp4" type="video/mp4">
+    <!-- Add additional <source> elements for other video formats -->
+    Your browser does not support the video tag.
+  </video>
   <div class="h-screen md:flex dark:bg-muted-900" :dir="locale === 'en' ? 'ltr' : 'rtl'">
-<!--    <div class="from-primary-900 to-primary-500 i group relative hidden w-1/2 items-center justify-around overflow-hidden bg-gradient-to-tr md:flex">-->
-<!--      <div class="mx-auto max-w-xs text-center">-->
-<!--        <BaseHeading as="h2" size="3xl" weight="medium" class="text-white mb-3">-->
-<!--          {{ t('Dont') }}-->
-<!--        </BaseHeading>-->
-<!--        <BaseButton :to="localPath('/signup')" shape="curved">{{ t('Signup') }}</BaseButton>-->
-<!--      </div>-->
-<!--    </div>-->
+
+
+    <div class="relative hidden w-1/2 items-center justify-around overflow-hidden bg-gradient-to-tr md:flex">
+      <div class="mx-auto max-w-xs text-center">
+        <img
+          class="grayscale-100 dark:invert mb-20"
+          src="/logo.png"
+        >
+         <div class="text-start mb-20">
+          <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
+          MICRO GRID ENERGEY
+        </BaseHeading>
+        <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
+          MANAGEMENT
+        </BaseHeading>
+        <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
+          SYSTEM
+        </BaseHeading>
+        </div>
+        <BaseHeading as="h2" size="3xl" weight="medium" class="relative text-white mb-3">
+          {{ t('Dont') }}
+        </BaseHeading>
+        <BaseButton :to="localPath('/signup')" shape="curved">{{ t('Signup') }}</BaseButton>
+      </div>
+    </div>
 
     <div class="dark:bg-muted-900 flex flex-col items-center justify-between bg-white py-10 md:w-1/2">
       <div class="mx-auto flex w-full max-w-xs items-center justify-between">
@@ -158,25 +180,30 @@ const onSubmit = handleSubmit(async (values) => {
           </Field>
         </div>
 
-        <BaseButton :disabled="isSubmitting" :loading="isSubmitting" type="submit" shape="curved" color="primary" class="!h-11 w-full">{{ t('Login') }}</BaseButton>
+        <BaseButton :disabled="isSubmitting" :loading="isSubmitting" type="submit" shape="curved" color="primary"
+                    class="!h-11 w-full">{{ t('Login') }}
+        </BaseButton>
 
         <!-- Button for Google provider -->
         <BaseButton @click="loginWithGoogle" shape="curved" color="primary" class="!h-11 w-full mt-4">
           <span class="flex items-center justify-center">
           <Icon name="ri:google-fill" class="size-5"/>
 
-<!--            <img class="w-7 h-5" src="/img/google.png"/>-->
-<!--            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">-->
-<!--              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 13h-4v4h-2v-4H8v-2h4V9h2v4h4v2z"/>-->
-<!--            </svg>-->
-<!--            {{ t('Login with Google') }}-->
+            <!--            <img class="w-7 h-5" src="/img/google.png"/>-->
+            <!--            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">-->
+            <!--              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 13h-4v4h-2v-4H8v-2h4V9h2v4h4v2z"/>-->
+            <!--            </svg>-->
+            <!--            {{ t('Login with Google') }}-->
           </span>
         </BaseButton>
 
-<!--        <p class="text-muted-400 mt-4 flex justify-between font-sans text-sm leading-5">-->
-<!--          <span>{{ t('Dont') }}</span>-->
-<!--          <NuxtLink :to="localPath('/signup')" class="text-primary-600 hover:text-primary-500 font-medium underline-offset-4 transition duration-150 ease-in-out hover:underline focus:underline focus:outline-none">{{ t('Signup') }}</NuxtLink>-->
-<!--        </p>-->
+        <p class="text-muted-400 mt-4 flex justify-between font-sans text-sm leading-5">
+          <span>{{ t('Dont') }}</span>
+          <NuxtLink :to="localPath('/signup')"
+                    class="text-primary-600 hover:text-primary-500 font-medium underline-offset-4 transition duration-150 ease-in-out hover:underline focus:underline focus:outline-none">
+            {{ t('Signup') }}
+          </NuxtLink>
+        </p>
       </form>
 
       <div class="text-center">

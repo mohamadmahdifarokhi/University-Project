@@ -118,15 +118,15 @@ const config = useRuntimeConfig()
             />
           </template>
         </div>
-        <!--        <BaseThemeToggle aria-label="Toggle darkmode"/>-->
-<!--        <BaseButton-->
-<!--          rounded="lg"-->
-<!--          color="primary"-->
-<!--          :to="localPath('/signup')"-->
-<!--          class="ltablet:!flex !hidden lg:!flex"-->
-<!--        >-->
-<!--          {{ t('Signup') }}-->
-<!--        </BaseButton>-->
+                <BaseThemeToggle aria-label="Toggle darkmode"/>
+        <BaseButton
+          rounded="lg"
+          color="primary"
+          :to="localPath('/signup')"
+          class="ltablet:!flex !hidden lg:!flex"
+        >
+          {{ t('Signup') }}
+        </BaseButton>
         <BaseButton
           rounded="lg"
           color="primary"
