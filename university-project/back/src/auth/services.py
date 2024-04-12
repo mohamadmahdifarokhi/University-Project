@@ -6,6 +6,7 @@ from typing import Optional, Type, List, Tuple, Any
 import requests
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from ..db.db import client, db
 
 from .models import User, OTP, Token, Permission, PermissionSet
 from .schemas import TokenReq, OtpReq
@@ -19,21 +20,19 @@ from ..profile.models import Profile
 class UserService:
     """
     Service class for handling User-related operations.
-
-    Args:
-        sess (Session): The SQLAlchemy database session.
     """
 
-    def __init__(self, sess: Session):
+    def __init__(self, client: client):
         """
         Initialize the UserService.
 
         Args:
-            sess (Session): The SQLAlchemy database session.
+            client (MongoClient): The MongoDB client.
         """
-        self.sess: Session = sess
+        self.client = client
+        self.db = db # Change 'your_database_name' to your actual MongoDB database name
 
-    def insert(self, req, admin=False) -> User:
+    def insert(self, req, admin=False):
         """
         Insert a new user entity into the database.
 
@@ -42,62 +41,50 @@ class UserService:
             admin (bool): Indicates whether the user should have admin privileges.
 
         Returns:
-            User: The inserted user entity.
+            dict: The inserted user entity.
 
         Raises:
-            HTTPException: If the operation fails, such as if the email already exists.
+            Exception: If the operation fails, such as if the email already exists.
         """
         try:
-            if self.sess.query(User).filter_by(email=req.email).first():
-                raise HTTPException(status_code=400, detail="Email already exists")
+            # Check if email already exists
+            if self.db.users.find_one({"email": req.email}):
+                raise Exception("Email already exists")
 
-            otp_service = OTPService(self.sess)
-            otp = otp_service.verify(email=req.email, otp_code=req.otp_code)
-            self.sess.delete(otp)
+            # Perform other operations
+            # otp_service = OTPService(self.db)  # Change to pymongo equivalent if necessary
+            # otp = otp_service.verify(email=req.email, otp_code=req.otp_code)
+            # Assuming deletion logic for OTP verification
+            # self.db.otps.delete_one({"_id": ObjectId(otp["_id"])})
 
             password = get_password_hash(req.password)
-            user = User(email=req.email, password=password)
-            self.sess.add(user)
-            permission_service = PermissionService(self.sess)
-            user_permission = permission_service.get_by_name("user")
-            user_permission_set = PermissionSet(user=user, permission_id=user_permission.id)
-            self.sess.add(user_permission_set)
+            user_data = {"email": req.email, "password": password}
+            user = self.db.users.insert_one(user_data)
+            print(user, "aaa")
+            user_id = user.inserted_id
+            print(user_id, "asdasd")
+            # permission_service = PermissionService(self.db)  # Change to pymongo equivalent if necessary
+            # user_permission = permission_service.get_by_name("user")
+            # user_permission_set = {"user_id": user_id, "permission_id": user_permission["_id"]}
+            # self.db.permission_sets.insert_one(user_permission_set)
 
-            if admin:
-                admin_permission = permission_service.get_by_name("admin")
-                admin_permission_set = PermissionSet(user=user, permission_id=admin_permission.id)
-                self.sess.add(admin_permission_set)
+            # if admin:
+            #     admin_permission = permission_service.get_by_name("admin")
+            #     admin_permission_set = {"user_id": user_id, "permission_id": admin_permission["_id"]}
+            #     self.db.permission_sets.insert_one(admin_permission_set)
 
             random_numbers = random.randint(1, 26)
-            profile = Profile(user=user, photo=random_numbers)
-            self.sess.add(profile)
+            profile_data = {"user_id": str(user_id), "photo": random_numbers}
+            print("asdqwqwe")
+            profile = self.db.profiles.insert_one(profile_data)
+            print("vfdvsdf")
 
 
-            self.sess.commit()
-            a_token, _, expires_delta_a, a_scopes = self.create_token(
-                user.email, user.password, auth=False
-            )
+            return {"_id": str(user_id), "email": req.email}
 
-            headers = {'content-type': "application/json", 'access-token': f'Bearer {a_token}'}
-            payload = {
-                'userId': str(user.id)
-            }
-            response = requests.post('http://127.0.0.1:8001/shared-account/', json=payload, headers=headers)
-            if response.status_code != 201:
-                raise HTTPException(status_code=400, detail="Failed to create shared account for the user.")
-
-            logger.info(f"Inserted User with ID: {user.id}, Email: {user.email}")
-            logger.info(f"Inserted Profile with ID: {profile.id}, User ID: {user.id}")
-
-            return user
-
-        except HTTPException:
-            raise
         except Exception as e:
-            self.sess.rollback()
-            logger.error(f"Insert operation failed: {e}")
-            raise HTTPException(status_code=500, detail="Internal Server Error")
-
+            # Logging and error handling
+            raise Exception("Insert operation failed: " + str(e))
     def get_by_email(self, email: str) -> Type[User]:
         """
         Get a user by email.

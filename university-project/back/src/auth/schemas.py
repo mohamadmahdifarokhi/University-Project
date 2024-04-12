@@ -16,6 +16,8 @@ class User(BaseModel):
     devices: List["Device"] = []
     block: Optional["Block"] = None
 
+    class Config:
+        orm_mode = True
 
 class OTP(BaseModel):
     id: UUID
@@ -23,6 +25,8 @@ class OTP(BaseModel):
     email: EmailStr
     expired_at: datetime
 
+    class Config:
+        orm_mode = True
 
 class Token(BaseModel):
     id: UUID
@@ -30,18 +34,24 @@ class Token(BaseModel):
     email: EmailStr
     expired_at: datetime
 
+    class Config:
+        orm_mode = True
 
 class Permission(BaseModel):
     id: UUID
     name: str
     description: str
 
+    class Config:
+        orm_mode = True
 
 class PermissionSet(BaseModel):
     id: UUID
     user_id: UUID
     permission_id: UUID
 
+    class Config:
+        orm_mode = True
 
 # ------------------------------------
 
@@ -103,6 +113,7 @@ class OtpRes(BaseModel):
     email: EmailStr
     # TODO badan baresh dar
     otp_code: int
+
 
 
 class VerifyOtpReq(BaseModel):

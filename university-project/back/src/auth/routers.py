@@ -205,7 +205,8 @@ def send_otp(req: OtpReq, sess: Session = Depends(sess_db)):
     return otp
 
 
-@router.post("/users/otp/verify", response_model=UserRes)
+# @router.post("/users/otp/verify", response_model=UserRes)
+@router.post("/users/otp/verify")
 def otp_verify(req: VerifyOtpReq, sess: Session = Depends(sess_db)):
     """
     Endpoint to verify OTP.
@@ -218,6 +219,7 @@ def otp_verify(req: VerifyOtpReq, sess: Session = Depends(sess_db)):
         UserRes: User response model.
     """
     user = UserService(sess).insert(req)
+    print(user, "dede")
     return user
 
 
