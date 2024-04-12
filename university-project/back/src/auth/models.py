@@ -3,26 +3,18 @@ from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, CheckConst
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import EmailType
+from ..device.models import Device
 
 from ..core.models import BaseModel
 from ..db.db import Base
 
+from typing import Optional, Text
+
+from pydantic import Field, EmailStr
+from pymongo import MongoClient
+
 
 class User(Base, BaseModel):
-    """
-    Represents a user in the system.
-
-    Attributes:
-        id (UUID): Unique identifier for the user.
-        email (str): Email address associated with the user.
-        password (str): password associated with the user.
-
-    Relationships:
-        profile (relationship): One-to-one relationship with the Profile model.
-        cart (relationship): One-to-one relationship with the Cart model.
-        permission_set (relationship): One-to-many relationship with PermissionSet model.
-        order (relationship): One-to-one relationship with the Order model.
-    """
     __tablename__ = "user"
 
     id = Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True, index=True)
@@ -30,9 +22,11 @@ class User(Base, BaseModel):
     password = Column(String, nullable=True)
     provider = Column(String, nullable=True)
     profile = relationship("Profile", back_populates="user", uselist=False)
-    cart = relationship("Cart", back_populates="user", uselist=False)
     permission_set = relationship("PermissionSet", back_populates="user")
     orders = relationship("Order", back_populates="user")
+    devices = relationship("Device", back_populates="user")
+    block = relationship("Block", back_populates="user")
+    block_id = Column(UUID(as_uuid=True), ForeignKey("block.id"), nullable=False)
 
     __table_args__ = (CheckConstraint("CHAR_LENGTH(password) >= 8"),)
 

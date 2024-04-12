@@ -8,10 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, Security, Form, Request
 from sqlalchemy.orm import Session
 
 from .schemas import (OtpReq, OtpRes, TokenRes, VerifyOtpReq, UserRes, TokenReq, VerifyTokenReq, TokenPasswordReq,
-                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq)
-from ..cart.models import Cart
+                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq)
 from ..core.utils import redis_instance, EmailSender
-from ..db.db import sess_db
+from ..db.db import sess_db, db
 from .models import User, PermissionSet
 from .services import UserService, TokenService, OTPService, PermissionSetService, PermissionService
 from .secures import get_current_user, authenticate, ACCESS_TOKEN_EXPIRE_MINUTES, sso, create_token, \
@@ -57,6 +56,14 @@ router = APIRouter(tags=["Auths"])
 #                dependencies=[Security(get_current_user, scopes=["admin"])])
 # def delete_user(user_id: UUID, sess: Session = Depends(sess_db)):
 #     UserService(sess).delete(user_id)
+@router.post("/test", status_code=200)
+def test():
+    user = UserReq(email='a@gmail.com', password='password')
+
+    result = db["user"].insert_one(user.__dict__)
+
+    return {"message": "User inserted successfully"}
+
 
 @router.post("/users", status_code=200)
 def access_token(
@@ -310,7 +317,6 @@ async def auth_callback(request: Request, sess: Session = Depends(sess_db)):
         # user = UserService(sess).get_by_email(user.email)
         user = sess.query(User).filter_by(email=email).first()
         if not user:
-            print("a")
             user = User(email=email)
             sess.add(user)
             permission_service = PermissionService(sess)
@@ -328,17 +334,13 @@ async def auth_callback(request: Request, sess: Session = Depends(sess_db)):
             a_token, _, expires_delta_a, a_scopes = UserService(sess).create_token(
                 user.email, user.password, auth=False
             )
-            print("dvdvdf")
-            print(a_token)
             headers = {'content-type': "application/json", 'access-token': f'Bearer {a_token}'}
             payload = {
                 'userId': str(user.id)
             }
             response = requests.post('http://127.0.0.1:8001/shared-account/', json=payload, headers=headers)
-            print(response.json())
             if response.status_code != 201:
                 raise HTTPException(status_code=400, detail="Failed to create shared account for the user.")
-            print("dvaaaadvdf")
 
             logger.info(f"Inserted User with ID: {user.id}, Email: {email}")
             logger.info(f"Inserted Profile with ID: {profile.id}, User ID: {user.id}")

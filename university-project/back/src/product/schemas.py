@@ -1,6 +1,5 @@
 from pydantic import BaseModel, UUID4
 
-from src.category.schemas import CategoryRes
 
 
 # class ProductReq(BaseModel):
@@ -50,7 +49,6 @@ class ProductRes(BaseModel):
     price: float
     discount_price: float
     count: int
-    category: CategoryRes
 
 
 # class ProductUpdate(BaseModel):

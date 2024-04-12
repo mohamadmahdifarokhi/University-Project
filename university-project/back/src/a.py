@@ -38,6 +38,5 @@ hashed_amount = hash_amount_with_password(amount, user_password)
 # Simulate the callback with the hashed amount
 try:
     original_amount = unhash_amount_with_password(hashed_amount, user_password)
-    print(f"Amount after unhashing: {original_amount}")
 except ValueError as e:
     print(f"Error: {e}")

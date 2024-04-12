@@ -5,7 +5,6 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from .models import Product
-from ..payment.utils import read_prices
 
 
 class ProductService:

@@ -2,21 +2,17 @@ import uvicorn
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
-
+from src.device.models import Device
+from src.block.models import Block
 from src.auth.models import Permission
 from src.auth.routers import router as auth_router
 from src.auth.schemas import VerifyOtpReq, OtpReq
 from src.auth.services import UserService, OTPService
-from src.cart.routers import router as cart_router
-from src.category.admins import CategoryAdmin
-from src.category.routers import router as category_router
 from src.order.routers import router as order_router
-from src.payment.routers import router as payment_router
 from src.product.routers import router as product_router
 from src.profile.routers import router as profile_router
 from src.auth.admins import UserAdmin, OTPAdmin, TokenAdmin, PermissionAdmin, PermissionSetAdmin
-from src.cart.admins import CartAdmin, CartItemAdmin
-from src.order.admins import OrderAdmin, OrderItemAdmin
+from src.order.admins import OrderAdmin
 from src.product.admins import ProductAdmin
 from src.profile.admins import ProfileAdmin
 from src.core.admins import authentication_backend
@@ -35,11 +31,7 @@ admin.add_view(TokenAdmin)
 admin.add_view(PermissionAdmin)
 admin.add_view(PermissionSetAdmin)
 
-admin.add_view(CartAdmin)
-admin.add_view(CartItemAdmin)
 admin.add_view(OrderAdmin)
-admin.add_view(OrderItemAdmin)
-admin.add_view(CategoryAdmin)
 admin.add_view(ProductAdmin)
 admin.add_view(ProfileAdmin)
 
@@ -82,11 +74,8 @@ async def on_startup():
 # Include routers
 app.include_router(auth_router)
 app.include_router(profile_router, prefix="/users/profiles")
-app.include_router(category_router, prefix="/categories")
 app.include_router(product_router, prefix="/products")
-app.include_router(cart_router, prefix="/users/carts")
 app.include_router(order_router, prefix="/users/orders")
-app.include_router(payment_router, prefix="/users/payments")
 
 Base.metadata.create_all(bind=engine)
 

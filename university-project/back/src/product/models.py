@@ -43,8 +43,4 @@ class Product(Base, BaseModel):
     count = Column(Integer, default=1, nullable=False)
     sold = Column(Integer, default=0, nullable=False)
 
-    category = relationship("Category", back_populates="products")
-    category_id = Column(UUID(as_uuid=True), ForeignKey("category.id"), nullable=False)
 
-    cart_item = relationship("CartItem", back_populates="product")
-    order_items = relationship("OrderItem", back_populates="product")

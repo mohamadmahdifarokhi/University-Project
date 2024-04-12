@@ -11,7 +11,6 @@ from .models import User, OTP, Token, Permission, PermissionSet
 from .schemas import TokenReq, OtpReq
 from .secures import authenticate, create_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, \
     REFRESH_TOKEN_EXPIRE_DAYS
-from ..cart.models import Cart
 from ..core.utils import EmailSender
 from ..logger import logger
 from ..profile.models import Profile
@@ -55,17 +54,14 @@ class UserService:
             otp_service = OTPService(self.sess)
             otp = otp_service.verify(email=req.email, otp_code=req.otp_code)
             self.sess.delete(otp)
-            print("aasd")
 
             password = get_password_hash(req.password)
             user = User(email=req.email, password=password)
             self.sess.add(user)
-            print("a")
             permission_service = PermissionService(self.sess)
             user_permission = permission_service.get_by_name("user")
             user_permission_set = PermissionSet(user=user, permission_id=user_permission.id)
             self.sess.add(user_permission_set)
-            print("asdasd")
 
             if admin:
                 admin_permission = permission_service.get_by_name("admin")
@@ -75,32 +71,23 @@ class UserService:
             random_numbers = random.randint(1, 26)
             profile = Profile(user=user, photo=random_numbers)
             self.sess.add(profile)
-            print("asasa")
 
-            cart = Cart(user=user)
-            self.sess.add(cart)
-            print("wdwdwd")
 
             self.sess.commit()
             a_token, _, expires_delta_a, a_scopes = self.create_token(
                 user.email, user.password, auth=False
             )
-            print("dvdvdf")
-            print(a_token)
 
             headers = {'content-type': "application/json", 'access-token': f'Bearer {a_token}'}
             payload = {
                 'userId': str(user.id)
             }
             response = requests.post('http://127.0.0.1:8001/shared-account/', json=payload, headers=headers)
-            print(response.json())
             if response.status_code != 201:
                 raise HTTPException(status_code=400, detail="Failed to create shared account for the user.")
-            print("dvaaaadvdf")
 
             logger.info(f"Inserted User with ID: {user.id}, Email: {user.email}")
             logger.info(f"Inserted Profile with ID: {profile.id}, User ID: {user.id}")
-            logger.info(f"Inserted Cart with ID: {cart.id}, User ID: {user.id}")
 
             return user
 
@@ -206,12 +193,10 @@ class UserService:
                 else timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
             )
             a = [scope.permission.name for scope in scopes]
-            print(a, "qweqweqwe")
             token = create_token(
                 data={"sub": str(user.id), "scopes": [scope.permission.name for scope in scopes]},
                 expires_delta=expires_delta,
             )
-            print(token)
             logger.info(f"Token created for User with ID: {user.id}, Email: {user.email}")
             return token, user.id, expires_delta, [scope.permission.name for scope in scopes]
 

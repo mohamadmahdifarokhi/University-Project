@@ -26,12 +26,12 @@ class ProductAdmin(BaseAdmin, model=Product):
     form_excluded_columns = [Product.slug]
     column_list = [
                       Product.id, Product.name, Product.slug, Product.photo, Product.background, Product.logo, Product.price,
-                      Product.discount_price, Product.count, Product.sold, Product.category_id
+                      Product.discount_price, Product.count, Product.sold
                   ] + BaseAdmin.column_list
-    column_searchable_list = [Product.id, Product.name, Product.slug, Product.category_id]
+    column_searchable_list = [Product.id, Product.name, Product.slug,]
     column_sortable_list = [
                                Product.name, Product.price, Product.discount_price,
-                               Product.count, Product.sold, Product.category_id
+                               Product.count, Product.sold
                            ] + BaseAdmin.column_sortable_list
 
     async def on_model_change(self, data: dict, model: Any, is_created: bool) -> None:

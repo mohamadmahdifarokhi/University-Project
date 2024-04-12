@@ -57,7 +57,6 @@ def create_token(data: dict, expires_delta: timedelta):
     Returns:
         str: The encoded JWT access token.
     """
-    print(data, "aqweqwe")
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
@@ -100,7 +99,6 @@ def authenticate(password, user):
 
 def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme),
                      sess: Session = Depends(sess_db)):
-    print(security_scopes.__dict__, "weqasdasdwe")
     """
     Get the current user based on the provided token.
 
@@ -128,7 +126,6 @@ def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth
         if user_id is None:
             raise credentials_exception
         token_scopes = payload.get("scopes", [])
-        print(token_scopes, "qweqwe")
     except JWTError:
         raise credentials_exception
 

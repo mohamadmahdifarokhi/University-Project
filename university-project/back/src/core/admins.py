@@ -70,13 +70,11 @@ class BaseAdmin(ModelView):
             pks (list): List of primary keys of selected items.
             update_data (dict): Data to be updated in the selected items.
         """
-        print(pks, "lqwdqwd")
         if pks:
             for pk in pks:
                 await self.get_object_for_edit(pk)
                 await self.update_model(request, pk, update_data)
             referer = request.headers.get("Referer")
-            print(referer, "wefwef")
             if referer:
                 return RedirectResponse(referer)
             else:

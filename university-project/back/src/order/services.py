@@ -1,11 +1,10 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from .models import Order, OrderItem
+from .models import Order
 from .schemas import OrderReq, OrderItemReq
 from ..auth.models import User
 from ..logger import logger
-from ..payment.utils import read_prices
 from ..product.models import Product
 
 
@@ -128,48 +127,6 @@ class OrderService:
     #         self.sess.commit()
 
 
-class order_itemservice:
-    def __init__(self, sess: Session):
-        self.sess: Session = sess
-
-    def insert(self, req: OrderItemReq) -> OrderItem:
-        """
-        Insert a new order item.
-
-        Args:
-            req: The order item information to be inserted.
-
-        Returns:
-            OrderItem: The inserted order item.
-
-        Raises:
-            HTTPException: If the product or order is not found or internal server error occurs.
-        """
-        try:
-            product = self.sess.query(Product).filter_by(id=req.product_id, is_active=True).first()
-            if not product:
-                raise HTTPException(status_code=400, detail="Product not found")
-
-            order = self.sess.query(Order).filter_by(id=req.orderId, is_active=True).first()
-            if not order:
-                raise HTTPException(status_code=400, detail="Order not found")
-
-            new_order_item = OrderItem(**req.__dict__)
-            order.price += product.price
-            order.discount_price += product.price
-            self.sess.add(new_order_item)
-            self.sess.commit()
-
-            logger.info(f"Inserted OrderItem with ID: {new_order_item.id}")
-            return new_order_item
-
-        except HTTPException:
-            raise
-
-        except Exception as e:
-            self.sess.rollback()
-            logger.error(f"Error inserting OrderItem: {str(e)}")
-            raise HTTPException(status_code=500, detail="Internal server error")
 #
 #   def get_orderItem_by_id(self, orderItem_id: UUID):
 #         """Retrieve an order item by its ID."""

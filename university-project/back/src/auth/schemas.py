@@ -1,6 +1,49 @@
 from datetime import datetime
+from typing import List, Optional
+from uuid import UUID
 
 from pydantic import UUID4, BaseModel, EmailStr, constr, conint
+
+
+class User(BaseModel):
+    id: UUID
+    email: EmailStr
+    password: str
+    provider: str
+    profile: Optional["Profile"] = None
+    permission_set: List["PermissionSet"] = []
+    orders: List["Order"] = []
+    devices: List["Device"] = []
+    block: Optional["Block"] = None
+
+
+class OTP(BaseModel):
+    id: UUID
+    otp_code: int
+    email: EmailStr
+    expired_at: datetime
+
+
+class Token(BaseModel):
+    id: UUID
+    token: str
+    email: EmailStr
+    expired_at: datetime
+
+
+class Permission(BaseModel):
+    id: UUID
+    name: str
+    description: str
+
+
+class PermissionSet(BaseModel):
+    id: UUID
+    user_id: UUID
+    permission_id: UUID
+
+
+# ------------------------------------
 
 
 class UserReq(BaseModel):
@@ -96,6 +139,7 @@ class SendEmailReq(BaseModel):
     email: str
     subject: str
     description: str
+
 
 class TokenReq(BaseModel):
     """

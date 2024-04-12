@@ -5,8 +5,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
+from pymongo import MongoClient
 from src.logger import logger
+
+
+client = MongoClient("mongodb://localhost:27017/")
+# Access your database
+db = client["university"]
+# Access your collection
 
 # Load environment variables from a .env file
 load_dotenv()

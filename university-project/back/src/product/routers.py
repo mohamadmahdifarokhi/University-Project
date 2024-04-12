@@ -147,7 +147,6 @@ def get_not_active_products_route(
     Returns:
         List[ProductRes]: List of product responses.
     """
-    print("powqdkqpwod")
     products = ProductService(sess).get_not_active_products(page, page_size)
     return products
 
