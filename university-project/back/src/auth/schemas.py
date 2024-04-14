@@ -4,6 +4,18 @@ from uuid import UUID
 
 from pydantic import UUID4, BaseModel, EmailStr, constr, conint
 
+from ..order.models import Order
+from ..profile.models import Profile
+
+
+class Permission(BaseModel):
+    id: UUID
+    name: str
+    description: str
+
+    class Config:
+        orm_mode = True
+
 
 class User(BaseModel):
     id: UUID
@@ -11,13 +23,15 @@ class User(BaseModel):
     password: str
     provider: str
     profile: Optional["Profile"] = None
-    permission_set: List["PermissionSet"] = []
+    permissions: List["Permission"] = []
     orders: List["Order"] = []
-    devices: List["Device"] = []
-    block: Optional["Block"] = None
 
+    # devices: List["Device"] = []
+    # block: Optional["Block"] = None
     class Config:
         orm_mode = True
+        arbitrary_types_allowed = True
+
 
 class OTP(BaseModel):
     id: UUID
@@ -28,6 +42,7 @@ class OTP(BaseModel):
     class Config:
         orm_mode = True
 
+
 class Token(BaseModel):
     id: UUID
     token: str
@@ -37,21 +52,6 @@ class Token(BaseModel):
     class Config:
         orm_mode = True
 
-class Permission(BaseModel):
-    id: UUID
-    name: str
-    description: str
-
-    class Config:
-        orm_mode = True
-
-class PermissionSet(BaseModel):
-    id: UUID
-    user_id: UUID
-    permission_id: UUID
-
-    class Config:
-        orm_mode = True
 
 # ------------------------------------
 
@@ -99,6 +99,9 @@ class OtpReq(BaseModel):
     """
     email: EmailStr
 
+    class Config:
+        orm_mode = True
+
 
 class OtpRes(BaseModel):
     """
@@ -109,11 +112,13 @@ class OtpRes(BaseModel):
         email (EmailStr): User's email address.
         otp_code (constr): Generated one-time password.
     """
-    id: UUID4
+    id: str
     email: EmailStr
     # TODO badan baresh dar
     otp_code: int
 
+    class Config:
+        orm_mode = True
 
 
 class VerifyOtpReq(BaseModel):
@@ -128,7 +133,8 @@ class VerifyOtpReq(BaseModel):
     email: EmailStr
     password: constr(min_length=8)
     otp_code: conint(ge=100000, le=999999)
-
+    class Config:
+        orm_mode = True
 
 class VerifyCodeReq(BaseModel):
     """
@@ -208,58 +214,3 @@ class PasswordReq(BaseModel):
         """
     password: constr(min_length=8)
     new_password: constr(min_length=8)
-
-# class PermissionReq(BaseModel):
-#     """
-#     Request model for creating a new permission.
-#
-#     Attributes:
-#         name (str): Name of the permission.
-#         description (str): Description of the permission.
-#     """
-#     name: str
-#     description: str
-
-
-# class PermissionRes(BaseModelResponse):
-#     """
-#     Response model for permission creation.
-#
-#     Attributes:
-#         id (UUID4): Unique identifier for the permission.
-#     """
-#     id: UUID4
-
-
-# class PermissionSetReq(BaseModel):
-#     """
-#     Request model for creating a new permission set.
-#
-#     Attributes:
-#         user_id (UUID4): Unique identifier for the user.
-#         permission_id (UUID4): Unique identifier for the permission.
-#     """
-#     user_id: UUID4
-#     permission_id: UUID4
-
-
-# class PermissionSetRes(BaseModelResponse):
-#     """
-#     Response model for permission set creation.
-#
-#     Attributes:
-#         id (UUID4): Unique identifier for the permission set.
-#     """
-#     id: UUID4
-
-
-# class PermissionSetUp(BaseModel):
-#     """
-#     Request model for updating a new permission set.
-#
-#     Attributes:
-#         user_id (UUID4): Unique identifier for the user.
-#         permission_id (UUID4): Unique identifier for the permission.
-#     """
-#     user_id: UUID4 | None = None
-#     permission_id: UUID4 | None = None

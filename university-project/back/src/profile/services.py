@@ -1,8 +1,6 @@
-import random
-from typing import Type
-
-from sqlalchemy.orm import Session
+from pymongo import MongoClient
 from fastapi import HTTPException, status
+import random
 from .models import Profile
 from ..auth.models import User
 
@@ -12,34 +10,15 @@ class ProfileService:
     Repository class for interacting with the Profile model in the database.
 
     Attributes:
-        sess (Session): SQLAlchemy database session.
+        client (MongoClient): MongoDB client.
+        db_name (str): Name of the MongoDB database.
     """
 
-    def __init__(self, sess: Session):
-        self.sess: Session = sess
+    def __init__(self, client: MongoClient, db_name: str):
+        self.client = client
+        self.db = self.client[db_name]
 
-    # def insert(self, entity) -> bool:
-    #     """
-    #     Insert a new entity into the database.
-    #
-    #     Args:
-    #         entity: The entity to be inserted.
-    #
-    #     Returns:
-    #         bool: True if the operation is successful, False otherwise.
-    #     """
-    #     try:
-    #         random_numbers = random.randint(1, 26)
-    #         entity.photo = random_numbers
-    #         self.sess.add(entity)
-    #         self._commit_or_rollback()
-    #         logger.info(f"Inserted {self.model.__name__} with ID: {entity.id}")
-    #     except Exception as e:
-    #         logger.error(f"Insert operation failed: {e}")
-    #         return False
-    #     return True
-
-    def change_photo(self, user: User) -> Type[Profile]:
+    def change_photo(self, user: User) -> dict:
         """
         Change the photo of a user profile in the database.
 
@@ -47,20 +26,30 @@ class ProfileService:
             user (User): User model.
 
         Returns:
-            Profile: Updated Profile object.
+            dict: Updated Profile object.
         """
-        random_number = random.randint(1, 26)
-        profile = self.sess.query(Profile).filter_by(id=user.profile.id, is_active=True).first()
-        if not profile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Profile not found with ID: {user.profile.id}"
+        try:
+            random_number = random.randint(1, 26)
+            profile = self.db.profiles.find_one_and_update(
+                {"user_id": user.id, "is_active": True},
+                {"$set": {"photo": random_number}},
+                return_document=True
             )
-        profile.photo = random_number
-        self.sess.commit()
-        return profile
+            if not profile:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Profile not found with user ID: {user.id}"
+                )
+            return profile
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to change photo: {str(e)}"
+            )
 
-    def get_by_user_id(self, user: User) -> Type[Profile]:
+    def get_by_user_id(self, user: User) -> dict:
         """
         Retrieve a user profile based on the user ID from the database.
 
@@ -68,9 +57,9 @@ class ProfileService:
             user (User): User model.
 
         Returns:
-            Profile: Profile object if found.
+            dict: Profile object if found.
         """
-        profile = self.sess.query(Profile).filter_by(user_id=user.id, is_active=True).first()
+        profile = self.db.profiles.find_one({"user_id": user.id, "is_active": True})
         if not profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
