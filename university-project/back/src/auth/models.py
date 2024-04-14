@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
@@ -5,11 +7,42 @@ from ..core.models import BaseModel
 
 from typing import List
 
-from pydantic import EmailStr
+from pydantic import EmailStr, UUID4
+
+
+class UUIDType(UUID4):
+    """
+    Custom Pydantic UUID type to handle SQLAlchemy UUID.
+    """
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        """
+        Validate the UUID value.
+
+        Args:
+            v: The value to validate.
+
+        Returns:
+            UUID: The validated UUID value.
+
+        Raises:
+            ValueError: If the value is not a valid UUID.
+        """
+        # Perform validation here
+        try:
+            return uuid.UUID(str(v))
+        except ValueError:
+            raise ValueError("Invalid UUID")
+
 
 
 class User(BaseModel):
-    id: UUID
+    id: UUIDType
     email: EmailStr
     password: str
     provider: str
@@ -23,7 +56,7 @@ class User(BaseModel):
 
 
 class OTP(BaseModel):
-    id: UUID
+    id: UUIDType
     otp_code: int
     email: EmailStr
     expired_at: datetime
@@ -33,7 +66,7 @@ class OTP(BaseModel):
 
 
 class Token(BaseModel):
-    id: UUID
+    id: UUIDType
     token: str
     email: EmailStr
     expired_at: datetime
@@ -43,7 +76,7 @@ class Token(BaseModel):
 
 
 class Permission(BaseModel):
-    id: UUID
+    id: UUIDType
     name: str
     description: str
 

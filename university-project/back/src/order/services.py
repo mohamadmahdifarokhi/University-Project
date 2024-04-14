@@ -2,13 +2,13 @@ from pymongo import MongoClient
 from fastapi import HTTPException, status
 from datetime import datetime
 from .models import Order
+from ..db.db import db
 from ..logger import logger
 
 
 class OrderService:
-    def __init__(self, client: MongoClient, db_name: str):
-        self.client = client
-        self.db = self.client[db_name]
+    def __init__(self):
+        self.db = db
 
     def insert(self, req):
         """
@@ -47,4 +47,34 @@ class OrderService:
 
         except Exception as e:
             logger.error(f"Error inserting Order: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+    def get_by_user_id(self, user_id: str, page: int, page_size: int):
+        
+        try:
+
+            offset = (page - 1) * page_size
+
+            count = self.db.orders.count_documents({"user_id": user_id, "is_active": True})
+
+            orders = self.db.orders.find({"user_id": user_id, "is_active": True}).sort("created", -1).skip(
+                offset).limit(page_size)
+
+            orders_list = list(orders)
+
+            if not orders_list:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail={"message": "Orders not found", "code": 404},
+                )
+
+            # You can further process the orders here if needed
+
+            return {"orders": orders_list, "count": count}
+
+        except HTTPException:
+            raise
+
+        except Exception as e:
+            logger.error(f"Error retrieving orders: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal server error")

@@ -30,7 +30,6 @@ class User(BaseModel):
     # block: Optional["Block"] = None
     class Config:
         orm_mode = True
-        arbitrary_types_allowed = True
 
 
 class OTP(BaseModel):

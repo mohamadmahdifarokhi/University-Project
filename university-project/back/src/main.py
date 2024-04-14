@@ -5,7 +5,6 @@ from starlette.middleware.cors import CORSMiddleware
 from src.auth.services import OTPService, UserService
 from src.logger import logger
 from src.order.routers import router as order_router
-from src.product.routers import router as product_router
 from src.profile.routers import router as profile_router
 from src.auth.routers import router as auth_router
 
@@ -44,9 +43,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
-
 app.include_router(profile_router, prefix="/users/profiles")
-app.include_router(product_router, prefix="/products")
 app.include_router(order_router, prefix="/users/orders")
 
 
