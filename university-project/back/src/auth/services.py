@@ -155,7 +155,7 @@ class OTPService:
             print("awdww")
             print(otp_data)
             logger.info(f"Generated OTP for email: {req['email']}, OTP Code: {otp_code}")
-            return OtpRes(email=req['email'], otp_code=otp_code, id=inserted_id)
+            return OtpRes(email=req['email'], otp_code=otp_code, id=inserted_id).__dict__
 
         except HTTPException:
             raise

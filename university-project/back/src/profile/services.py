@@ -3,7 +3,9 @@ from fastapi import HTTPException, status
 import random
 from .models import Profile
 from ..auth.models import User
+from .schemas import ProfileRes
 
+from ..db.db import client, db
 
 class ProfileService:
     """
@@ -14,9 +16,8 @@ class ProfileService:
         db_name (str): Name of the MongoDB database.
     """
 
-    def __init__(self, client: MongoClient, db_name: str):
-        self.client = client
-        self.db = self.client[db_name]
+    def __init__(self):
+        self.db = db
 
     def change_photo(self, user: User) -> dict:
         """
@@ -31,7 +32,8 @@ class ProfileService:
         try:
             random_number = random.randint(1, 26)
             profile = self.db.profiles.find_one_and_update(
-                {"user_id": user.id, "is_active": True},
+                {"user_id": str(user["_id"])},
+                # {"user_id": user.id, "is_active": True},
                 {"$set": {"photo": random_number}},
                 return_document=True
             )
@@ -40,7 +42,7 @@ class ProfileService:
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Profile not found with user ID: {user.id}"
                 )
-            return profile
+            return ProfileRes(photo=profile['photo'], user={"_id": str(user["_id"]), "email": user['email']})
         except HTTPException:
             raise
         except Exception as e:
@@ -59,10 +61,15 @@ class ProfileService:
         Returns:
             dict: Profile object if found.
         """
-        profile = self.db.profiles.find_one({"user_id": user.id, "is_active": True})
+        print("weqwwqe")
+        profile = self.db.profiles.find_one({"user_id":str(user["_id"])})
+        # TODO Fix this
+        # profile = self.db.profiles.find_one({"user_id": user["_id"], "is_active": True})
+        print("dfgdfgfdg")
+
         if not profile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Profile not found with user ID: {user.id}"
+                detail=f"Profile not found with user ID: {str(user['_id'])}"
             )
-        return profile
+        return ProfileRes(photo=profile['photo'],user={"_id": str(user["_id"]), "email": user['email']})

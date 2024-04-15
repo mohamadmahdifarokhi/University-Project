@@ -116,8 +116,7 @@ class OtpRes(BaseModel):
     # TODO badan baresh dar
     otp_code: int
 
-    class Config:
-        orm_mode = True
+
 
 
 class VerifyOtpReq(BaseModel):

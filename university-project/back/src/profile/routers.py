@@ -48,7 +48,6 @@ router = APIRouter(tags=["Profiles"])
 @router.get("", response_model=ProfileRes)
 def get_profile_by_user_id(
     user: User = Security(get_user),
-    sess: Session = Depends(sess_db),
 ):
     """
     Get the current user.
@@ -60,7 +59,7 @@ def get_profile_by_user_id(
     Returns:
         dict: Dictionary containing the user's profile.
     """
-    return ProfileService(sess).get_by_user_id(user)
+    return ProfileService().get_by_user_id(user)
 
 
 # @router.get("/list")
@@ -86,7 +85,6 @@ def get_profile_by_user_id(
 @router.patch("/update/photo", response_model=ProfileRes)
 def change_photo(
     user: User = Security(get_user),
-    sess: Session = Depends(sess_db),
 ):
     """
     Change the user profile photo.
@@ -98,7 +96,7 @@ def change_photo(
     Returns:
         JSONResponse: JSON response indicating the success or failure of the photo change.
     """
-    return ProfileService(sess).change_photo(user)
+    return ProfileService().change_photo(user)
 
 # @router.patch("/update")
 # def update_profile(

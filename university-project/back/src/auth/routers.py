@@ -48,10 +48,6 @@ def access_token(
         username, password, auth=True
     )
 
-    if authCode:
-        token_data = [str(a_token), str(r_token)]
-        token_data_json = json.dumps(token_data)
-        redis_instance.set(str(authCode), token_data_json, ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     return {
         "access_token": a_token,
         "expires_in": expires_delta_a.total_seconds(),
