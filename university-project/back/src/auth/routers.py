@@ -1,13 +1,15 @@
 import json
 import random
+import uuid
 from datetime import timedelta
+from typing import List
 
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Security, Form, Request
 from sqlalchemy.orm import Session
 
 from .schemas import (OtpReq, OtpRes, TokenRes, VerifyOtpReq, UserRes, TokenReq, VerifyTokenReq, TokenPasswordReq,
-                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq)
+                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq, UserUpdate, UserOut, UserCreate)
 from ..core.utils import redis_instance, EmailSender
 from ..db.db import sess_db, db
 from .models import User
@@ -326,3 +328,52 @@ async def auth_callback(request: Request):
     except Exception as e:
         logger.error(f"Error creating token: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/users/create", response_model=UserOut)
+async def create_user(user: UserCreate):
+    """
+    Create a new user.
+    """
+    return UserService().create_user(user)
+
+
+@router.get("/users/reads")
+async def read_users(skip: int = 0, limit: int = 10):
+    """
+    Get a list of users.
+    """
+    return UserService().get_users(skip=skip, limit=limit)
+
+
+@router.get("/users/read/{user_id}")
+async def read_user(user_id):
+    """
+    Get a user by ID.
+    """
+    user = UserService().get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@router.patch("/users/update/{user_id}")
+async def update_user(user_id, user_update: UserUpdate):
+    """
+    Update a user.
+    """
+    updated_user = UserService().update_user(user_id, user_update)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
+
+@router.delete("/users/delete/{user_id}")
+async def delete_user(user_id):
+    """
+    Delete a user.
+    """
+    deleted_user = UserService().delete_user(user_id)
+    if not deleted_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return deleted_user

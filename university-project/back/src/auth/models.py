@@ -1,5 +1,6 @@
 import uuid
 
+from pydantic_mongo import ObjectIdField
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
@@ -42,7 +43,7 @@ class UUIDType(UUID4):
 
 
 class User(BaseModel):
-    id: UUIDType
+    id: ObjectIdField = None
     email: EmailStr
     password: str
     provider: str

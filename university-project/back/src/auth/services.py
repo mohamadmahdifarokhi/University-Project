@@ -1,14 +1,14 @@
 from uuid import UUID, uuid4
 from datetime import timedelta, datetime
 import random
-from typing import Type
+from typing import Type, List, Optional
 
 from bson import ObjectId
 from fastapi import HTTPException
 from ..db.db import client, db
 
-from .models import User
-from .schemas import TokenReq, OtpReq, OtpRes
+from .models import User, Permission
+from .schemas import TokenReq, OtpReq, OtpRes, UserOut, UserUpdate, UserCreate, Permission
 from .secures import authenticate, create_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, \
     REFRESH_TOKEN_EXPIRE_DAYS
 from ..core.utils import EmailSender
@@ -19,6 +19,50 @@ class UserService:
 
     def __init__(self):
         self.db = db  # Change 'your_database_name' to your actual MongoDB database name
+
+    def create_user(self, user: UserCreate) -> UserOut:
+        user_data = user.dict()
+        user_id = str(ObjectId())
+        user_data["_id"] = user_id
+        user_data["permissions"] = [Permission(id=str(permission["_id"]), **permission) for permission in
+                               user.get("permissions", [])]
+        self.db.users.insert_one(user_data)
+        return user_data
+
+    def get_users(self, skip: int = 0, limit: int = 10) -> List[UserOut]:
+        users = list(self.db.users.find().skip(skip).limit(limit))
+        for user in users:
+            user["_id"] = str(user["_id"])
+            user["permissions"] = [Permission(id=str(permission["_id"]), **permission) for permission in user.get("permissions", [])]
+        return users
+
+    def get_user(self, user_id: str) -> Optional[UserOut]:
+        user = self.db.users.find_one({"_id": ObjectId(user_id)})
+        if user:
+            user["_id"] = str(user["_id"])
+            user["permissions"] = [Permission(id=str(permission["_id"]), **permission) for permission in user.get("permissions", [])]
+            return user
+        return None
+
+    def update_user(self, user_id: str, user_update: UserUpdate) -> str | None:
+        update_data = user_update.dict(exclude_unset=True)
+        result = self.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
+        print(result)
+        if result.modified_count:
+            updated_user = self.db.users.find_one({"_id": ObjectId(user_id)})
+            updated_user["_id"] = str(updated_user["_id"])
+            updated_user["permissions"] = [Permission(id=str(permission["_id"]), **permission) for permission in updated_user.get("permissions", [])]
+            return 'success'
+        return None
+
+    def delete_user(self, user_id: str) -> Optional[UserOut]:
+        user = self.db.users.find_one({"_id": ObjectId(user_id)})
+        if user:
+            self.db.users.delete_one({"_id": ObjectId(user_id)})
+            user["_id"] = str(user["_id"])
+            user["permissions"] = [Permission(id=str(permission["_id"]), **permission) for permission in user.get("permissions", [])]
+            return user
+        return None
 
     def insert(self, req, admin=False):
         req = dict(req)
@@ -50,7 +94,6 @@ class UserService:
             print(e)
             # Logging and error handling
             raise Exception("Insert operation failed: " + str(e))
-
 
     def get_by_email(self, email: str) -> Type[User]:
         try:
@@ -200,7 +243,7 @@ class TokenService:
         self.db = db
 
     def insert(self, req: TokenReq):
-        req= dict(req)
+        req = dict(req)
         try:
             user = UserService().get_by_email(req['email'])
             existing_token = self.db.tokens.find_one({"email": req['email']})
@@ -244,7 +287,7 @@ class TokenService:
     def verify_token(self, token_value: UUID):
         try:
             token = self.db.tokens.find_one({"token": str(token_value)})
-            print(token,'masd')
+            print(token, 'masd')
             if token and token["expired_at"] >= datetime.utcnow():
                 logger.info(f"Verified token for email: {token['email']}")
                 return token

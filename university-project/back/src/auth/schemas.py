@@ -1,17 +1,73 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any, Annotated
 from uuid import UUID
 
-from pydantic import UUID4, BaseModel, EmailStr, constr, conint
+from bson import ObjectId
+from bson.errors import InvalidId
+from pydantic import UUID4, BaseModel, EmailStr, constr, conint, Field
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import core_schema
 
+from .models import UUIDType
 from ..order.models import Order
 from ..profile.models import Profile
 
 
+class OID(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        try:
+            return ObjectId(str(v))
+        except InvalidId:
+            raise ValueError("Not a valid ObjectId")
+
+
+class ObjectIdPydanticAnnotation:
+    @classmethod
+    def validate_object_id(cls, v: Any, handler) -> ObjectId:
+        if isinstance(v, ObjectId):
+            return v
+
+        s = handler(v)
+        if ObjectId.is_valid(s):
+            return ObjectId(s)
+        else:
+            raise ValueError("Invalid ObjectId")
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, _handler) -> core_schema.CoreSchema:
+        assert source_type is ObjectId
+        return core_schema.no_info_wrap_validator_function(
+            cls.validate_object_id,
+            core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, _core_schema, handler) -> JsonSchemaValue:
+        return handler(core_schema.str_schema())
+
+
+class ObjectIdStr(str):
+    """
+    Pydantic doesn't support ObjectId directly in JSON Schema.
+    This class allows using ObjectId in Pydantic models
+    by converting it to a string in the JSON Schema.
+    """
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+
 class Permission(BaseModel):
-    id: UUID
-    name: str
-    description: str
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    name: str | None
+    description: str | None
 
     class Config:
         orm_mode = True
@@ -30,6 +86,48 @@ class User(BaseModel):
     # block: Optional["Block"] = None
     class Config:
         orm_mode = True
+
+
+class UserBase(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    email: EmailStr
+    password: str
+    provider: str
+    # permissions: List[Permission] = []
+
+
+class UserCreate(UserBase):
+    pass
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    password: str | None = None
+    provider: str | None = None
+
+
+class ObjectIdStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not isinstance(v, ObjectId):
+            raise ValueError("Not a valid ObjectId")
+        return str(v)
+
+
+class UserOut(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    email: EmailStr
+    password: str | None
+    permissions: List["Permission"] = []
+
+    # provider: str  # Add the provider field
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class OTP(BaseModel):
@@ -117,8 +215,6 @@ class OtpRes(BaseModel):
     otp_code: int
 
 
-
-
 class VerifyOtpReq(BaseModel):
     """
     Request model for generating OTP.
@@ -131,8 +227,10 @@ class VerifyOtpReq(BaseModel):
     email: EmailStr
     password: constr(min_length=8)
     otp_code: conint(ge=100000, le=999999)
+
     class Config:
         orm_mode = True
+
 
 class VerifyCodeReq(BaseModel):
     """
