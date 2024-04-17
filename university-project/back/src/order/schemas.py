@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Optional, Annotated
 
 from pydantic import UUID4, BaseModel
 
 from .models import StatusEnum
-
+from ..auth.schemas import ObjectIdPydanticAnnotation
+from bson import ObjectId
 
 
 class OrderReq(BaseModel):
@@ -17,7 +18,7 @@ class OrderReq(BaseModel):
     - discount_price (float): Discounted price of the order.
     - status (str): Status of the order.
     """
-    user_id: UUID4
+    user_id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     transaction_id: str
     price: float
     discount_price: float
@@ -38,12 +39,14 @@ class OrderRes(BaseModel):
     - orderItem (List[OrderItemRes]): List of order items associated with the order.
     """
 
-    id: UUID4
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     transaction_id: str
     price: float
     discount_price: float
     status: StatusEnum
     user_id: UUID4
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class OrderResList(BaseModel):
@@ -58,3 +61,24 @@ class OrderResList(BaseModel):
     orders: List[OrderRes] | None = None
     count: int
 
+class OrderCreate(BaseModel):
+    price: float = 0.0
+    status: str
+    user_id: str
+
+class OrderUpdate(BaseModel):
+    price: Optional[float] = None
+    status: Optional[str] = None
+    volume: Optional[float] = None
+
+
+
+
+class OrderOut(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    price: float | None = None
+    status: str | None = None
+    volume: float | None = None
+    user_id: str | None = None
+    class Config:
+        arbitrary_types_allowed = True

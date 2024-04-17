@@ -1,6 +1,7 @@
 import time
+from http.client import HTTPException
 
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Security, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -8,6 +9,7 @@ from src.auth.models import User
 from .schemas import ProfileRes
 from .services import ProfileService
 from src.auth.secures import get_user
+from ..auth.schemas import ProfileUpdate, ProfileOut, ProfileCreate
 from ..db.db import sess_db
 
 router = APIRouter(tags=["Profiles"])
@@ -149,3 +151,46 @@ def change_photo(
 #     """
 #     repo: ProfileService = ProfileService(sess)
 #     result = repo.delete(id)
+@router.post("/profiles/create", response_model=ProfileOut)
+async def create_profile(profile: ProfileCreate):
+    """
+    Create a new profile.
+    """
+    return ProfileService().create_profile(profile)
+
+@router.get("/profiles/reads")
+async def read_profiles(skip: int = 0, limit: int = 10):
+    """
+    Get a list of profiles.
+    """
+    return ProfileService().get_profiles(skip=skip, limit=limit)
+
+@router.get("/profiles/read/{profile_id}")
+async def read_profile(profile_id):
+    """
+    Get a profile by ID.
+    """
+    profile = ProfileService().get_profile(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
+
+@router.patch("/profiles/update/{profile_id}")
+async def update_profile(profile_id, profile_update: ProfileUpdate):
+    """
+    Update a profile.
+    """
+    updated_profile = ProfileService().update_profile(profile_id, profile_update)
+    if not updated_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return updated_profile
+
+@router.delete("/profiles/delete/{profile_id}")
+async def delete_profile(profile_id):
+    """
+    Delete a profile.
+    """
+    deleted_profile = ProfileService().delete_profile(profile_id)
+    if not deleted_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return deleted_profile

@@ -7,8 +7,9 @@ from bson import ObjectId
 from fastapi import HTTPException
 from ..db.db import client, db
 
-from .models import User, Permission
-from .schemas import TokenReq, OtpReq, OtpRes, UserOut, UserUpdate, UserCreate, Permission
+from .models import User, Permission, OTP, Token
+from .schemas import TokenReq, OtpReq, OtpRes, UserOut, UserUpdate, UserCreate, Permission, OTPCreate, OTPUpdate, \
+    OTPOut, TokenCreate, TokenUpdate, TokenOut, PermissionCreate, PermissionOut, PermissionUpdate
 from .secures import authenticate, create_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, \
     REFRESH_TOKEN_EXPIRE_DAYS
 from ..core.utils import EmailSender
@@ -235,6 +236,49 @@ class OTPService:
             logger.error(f"Error cleaning up expired OTP: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal server error")
 
+    def create_otp(self, otp_data: OTPCreate) -> OTPOut:
+        # Logic to create a new OTP in the database
+        otp_id = ObjectId()  # Generate a new ObjectId for the OTP
+        otp_data_dict = otp_data.dict()
+        otp_data_dict["_id"] = otp_id
+        self.db.otps.insert_one(otp_data_dict)
+        return OTPOut(id=otp_id, **otp_data_dict)
+
+    def get_otps(self, skip: int = 0, limit: int = 10) -> List[OTPOut]:
+        # Logic to retrieve a list of OTPs from the database
+        otps = list(self.db.otps.find().skip(skip).limit(limit))
+        for otp in otps:
+            otp["_id"] = str(otp["_id"])
+        return otps
+
+    def get_otp(self, otp_id: str) -> Optional[OTPOut]:
+        # Logic to retrieve an OTP by its ID from the database
+        otp = self.db.otps.find_one({"_id": ObjectId(otp_id)})
+        if otp:
+            otp["_id"] = str(otp["_id"])
+            return otp
+        return None
+
+    def update_otp(self, otp_id: str, otp_update: OTPUpdate) -> Optional[OTPOut]:
+        # Logic to update an OTP in the database
+        update_data = otp_update.dict(exclude_unset=True)
+        result = self.db.otps.update_one({"_id": ObjectId(otp_id)}, {"$set": update_data})
+        print(result)
+        if result:
+            updated_otp = self.db.otps.find_one({"_id": ObjectId(otp_id)})
+            updated_otp["_id"] = str(updated_otp["_id"])
+            return updated_otp
+        return None
+
+    def delete_otp(self, otp_id: str) -> Optional[OTPOut]:
+        # Logic to delete an OTP from the database
+        otp = self.db.otps.find_one({"_id": ObjectId(otp_id)})
+        if otp:
+            self.db.otps.delete_one({"_id": ObjectId(otp_id)})
+            otp["_id"] = str(otp["_id"])
+            return otp
+        return None
+
 
 class TokenService:
 
@@ -330,6 +374,43 @@ class TokenService:
             logger.error(f"Error retrieving token by token value: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal server error")
 
+    def create_token(self, token_data: TokenCreate) -> TokenOut:
+        token_id = ObjectId()
+        token_data_dict = token_data.dict()
+        token_data_dict["_id"] = token_id
+        self.db.tokens.insert_one(token_data_dict)
+        return TokenOut(id=str(token_id), **token_data_dict)
+
+    def get_tokens(self, skip: int = 0, limit: int = 10) -> List[TokenOut]:
+        tokens = list(self.db.tokens.find().skip(skip).limit(limit))
+        for token in tokens:
+            token["_id"] = str(token["_id"])
+        return tokens
+
+    def get_token(self, token_id: str) -> Optional[TokenOut]:
+        token = self.db.tokens.find_one({"_id": ObjectId(token_id)})
+        if token:
+            token["_id"] = str(token["_id"])
+            return token
+        return None
+
+    def update_token(self, token_id: str, token_update: TokenUpdate) -> Optional[TokenOut]:
+        update_data = token_update.dict(exclude_unset=True)
+        result = self.db.tokens.update_one({"_id": ObjectId(token_id)}, {"$set": update_data})
+        if result.modified_count:
+            updated_token = self.db.tokens.find_one({"_id": ObjectId(token_id)})
+            updated_token["_id"] = str(updated_token["_id"])
+            return updated_token
+        return None
+
+    def delete_token(self, token_id: str) -> Optional[TokenOut]:
+        token = self.db.tokens.find_one({"_id": ObjectId(token_id)})
+        if token:
+            self.db.tokens.delete_one({"_id": ObjectId(token_id)})
+            token["_id"] = str(token["_id"])
+            return token
+        return None
+
 
 class PermissionService:
 
@@ -349,3 +430,40 @@ class PermissionService:
         except Exception as e:
             logger.error(f"Error retrieving permission by name: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal server error")
+
+    def create_permission(self, permission_data: PermissionCreate) -> PermissionOut:
+        permission_id = ObjectId()
+        permission_data_dict = permission_data.dict()
+        permission_data_dict["_id"] = permission_id
+        self.db.permissions.insert_one(permission_data_dict)
+        return PermissionOut(id=str(permission_id), **permission_data_dict)
+
+    def get_permissions(self, skip: int = 0, limit: int = 10) -> List[PermissionOut]:
+        permissions = list(self.db.permissions.find().skip(skip).limit(limit))
+        for permission in permissions:
+            permission["_id"] = str(permission["_id"])
+        return permissions
+
+    def get_permission(self, permission_id: str) -> Optional[PermissionOut]:
+        permission = self.db.permissions.find_one({"_id": ObjectId(permission_id)})
+        if permission:
+            permission["_id"] = str(permission["_id"])
+            return permission
+        return None
+
+    def update_permission(self, permission_id: str, permission_update: PermissionUpdate) -> Optional[PermissionOut]:
+        update_data = permission_update.dict(exclude_unset=True)
+        result = self.db.permissions.update_one({"_id": ObjectId(permission_id)}, {"$set": update_data})
+        if result.modified_count:
+            updated_permission = self.db.permissions.find_one({"_id": ObjectId(permission_id)})
+            updated_permission["_id"] = str(updated_permission["_id"])
+            return updated_permission
+        return None
+
+    def delete_permission(self, permission_id: str) -> Optional[PermissionOut]:
+        permission = self.db.permissions.find_one({"_id": ObjectId(permission_id)})
+        if permission:
+            self.db.permissions.delete_one({"_id": ObjectId(permission_id)})
+            permission["_id"] = str(permission["_id"])
+            return permission
+        return None

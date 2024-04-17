@@ -9,7 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, Security, Form, Request
 from sqlalchemy.orm import Session
 
 from .schemas import (OtpReq, OtpRes, TokenRes, VerifyOtpReq, UserRes, TokenReq, VerifyTokenReq, TokenPasswordReq,
-                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq, UserUpdate, UserOut, UserCreate)
+                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq, UserUpdate, UserOut, UserCreate,
+                      OTPUpdate, OTPOut, OTPCreate, TokenUpdate, TokenCreate, TokenOut, PermissionUpdate,
+                      PermissionCreate, PermissionOut)
 from ..core.utils import redis_instance, EmailSender
 from ..db.db import sess_db, db
 from .models import User
@@ -377,3 +379,136 @@ async def delete_user(user_id):
     if not deleted_user:
         raise HTTPException(status_code=404, detail="User not found")
     return deleted_user
+
+@router.post("/otp/create", response_model=OTPOut)
+async def create_otp(otp: OTPCreate):
+    """
+    Create a new OTP.
+    """
+    return OTPService().create_otp(otp)
+
+@router.get("/otp/reads")
+async def read_otps(skip: int = 0, limit: int = 10):
+    """
+    Get a list of OTPs.
+    """
+    return OTPService().get_otps(skip=skip, limit=limit)
+
+@router.get("/otp/read/{otp_id}")
+async def read_otp(otp_id):
+    """
+    Get an OTP by ID.
+    """
+    otp = OTPService().get_otp(otp_id)
+    if not otp:
+        raise HTTPException(status_code=404, detail="OTP not found")
+    return otp
+
+@router.patch("/otp/update/{otp_id}")
+async def update_otp(otp_id, otp_update: OTPUpdate):
+    """
+    Update an OTP.
+    """
+    updated_otp = OTPService().update_otp(otp_id, otp_update)
+    if not updated_otp:
+        raise HTTPException(status_code=404, detail="OTP not found")
+    return updated_otp
+
+@router.delete("/otp/delete/{otp_id}")
+async def delete_otp(otp_id):
+    """
+    Delete an OTP.
+    """
+    deleted_otp = OTPService().delete_otp(otp_id)
+    if not deleted_otp:
+        raise HTTPException(status_code=404, detail="OTP not found")
+    return deleted_otp
+
+@router.post("/tokens/create", response_model=TokenOut)
+async def create_token(token: TokenCreate):
+    """
+    Create a new token.
+    """
+    return TokenService().create_token(token)
+
+@router.get("/tokens/reads")
+async def read_tokens(skip: int = 0, limit: int = 10):
+    """
+    Get a list of tokens.
+    """
+    return TokenService().get_tokens(skip=skip, limit=limit)
+
+@router.get("/tokens/read/{token_id}")
+async def read_token(token_id):
+    """
+    Get a token by ID.
+    """
+    token = TokenService().get_token(token_id)
+    if not token:
+        raise HTTPException(status_code=404, detail="Token not found")
+    return token
+
+@router.patch("/tokens/update/{token_id}")
+async def update_token(token_id, token_update: TokenUpdate):
+    """
+    Update a token.
+    """
+    updated_token = TokenService().update_token(token_id, token_update)
+    if not updated_token:
+        raise HTTPException(status_code=404, detail="Token not found")
+    return updated_token
+
+@router.delete("/tokens/delete/{token_id}")
+async def delete_token(token_id):
+    """
+    Delete a token.
+    """
+    deleted_token = TokenService().delete_token(token_id)
+    if not deleted_token:
+        raise HTTPException(status_code=404, detail="Token not found")
+    return deleted_token
+
+
+@router.post("/permissions/create", response_model=PermissionOut)
+async def create_permission(permission: PermissionCreate):
+    """
+    Create a new permission.
+    """
+    return PermissionService().create_permission(permission)
+
+@router.get("/permissions/reads")
+async def read_permissions(skip: int = 0, limit: int = 10):
+    """
+    Get a list of permissions.
+    """
+    return PermissionService().get_permissions(skip=skip, limit=limit)
+
+@router.get("/permissions/read/{permission_id}")
+async def read_permission(permission_id):
+    """
+    Get a permission by ID.
+    """
+    permission = PermissionService().get_permission(permission_id)
+    if not permission:
+        raise HTTPException(status_code=404, detail="Permission not found")
+    return permission
+
+@router.patch("/permissions/update/{permission_id}")
+async def update_permission(permission_id, permission_update: PermissionUpdate):
+    """
+    Update a permission.
+    """
+    updated_permission = PermissionService().update_permission(permission_id, permission_update)
+    if not updated_permission:
+        raise HTTPException(status_code=404, detail="Permission not found")
+    return updated_permission
+
+@router.delete("/permissions/delete/{permission_id}")
+async def delete_permission(permission_id):
+    """
+    Delete a permission.
+    """
+    deleted_permission = PermissionService().delete_permission(permission_id)
+    if not deleted_permission:
+        raise HTTPException(status_code=404, detail="Permission not found")
+    return deleted_permission

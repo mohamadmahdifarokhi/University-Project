@@ -8,7 +8,6 @@ from pydantic import UUID4, BaseModel, EmailStr, constr, conint, Field
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema
 
-from .models import UUIDType
 from ..order.models import Order
 from ..profile.models import Profile
 
@@ -50,18 +49,6 @@ class ObjectIdPydanticAnnotation:
     @classmethod
     def __get_pydantic_json_schema__(cls, _core_schema, handler) -> JsonSchemaValue:
         return handler(core_schema.str_schema())
-
-
-class ObjectIdStr(str):
-    """
-    Pydantic doesn't support ObjectId directly in JSON Schema.
-    This class allows using ObjectId in Pydantic models
-    by converting it to a string in the JSON Schema.
-    """
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
 
 
 class Permission(BaseModel):
@@ -106,17 +93,6 @@ class UserUpdate(BaseModel):
     provider: str | None = None
 
 
-class ObjectIdStr(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, ObjectId):
-            raise ValueError("Not a valid ObjectId")
-        return str(v)
-
 
 class UserOut(BaseModel):
     id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
@@ -131,7 +107,7 @@ class UserOut(BaseModel):
 
 
 class OTP(BaseModel):
-    id: UUID
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     otp_code: int
     email: EmailStr
     expired_at: datetime
@@ -140,8 +116,30 @@ class OTP(BaseModel):
         orm_mode = True
 
 
+class OTPCreate(BaseModel):
+    otp_code: int
+    email: EmailStr
+    expired_at: datetime
+
+class OTPUpdate(BaseModel):
+    otp_code: int | None = None
+    email: EmailStr | None = None
+    expired_at: datetime | None = None
+
+class OTPOut(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    otp_code: int
+    email: EmailStr
+    expired_at: datetime
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+
+
 class Token(BaseModel):
-    id: UUID
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     token: str
     email: EmailStr
     expired_at: datetime
@@ -149,6 +147,25 @@ class Token(BaseModel):
     class Config:
         orm_mode = True
 
+
+class TokenCreate(BaseModel):
+    token: str
+    email: EmailStr
+    expired_at: datetime
+
+class TokenUpdate(BaseModel):
+    token: str | None = None
+    email: EmailStr | None = None
+    expired_at: datetime | None = None
+
+class TokenOut(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    token: str
+    email: EmailStr
+    expired_at: datetime
+
+    class Config:
+        arbitrary_types_allowed = True
 
 # ------------------------------------
 
@@ -310,3 +327,34 @@ class PasswordReq(BaseModel):
         """
     password: constr(min_length=8)
     new_password: constr(min_length=8)
+
+
+class PermissionCreate(BaseModel):
+    name: str
+    description: str
+
+class PermissionUpdate(BaseModel):
+    name: str
+    description: str
+
+class PermissionOut(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    name: str
+    description: str
+
+    class Config:
+        arbitrary_types_allowed = True
+
+class ProfileCreate(BaseModel):
+    photo: conint(ge=1, le=26)
+    user_id: str
+
+class ProfileUpdate(BaseModel):
+    photo: Optional[conint(ge=1, le=26)] = None
+
+class ProfileOut(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    photo: int
+    user_id: str
+    class Config:
+        arbitrary_types_allowed = True

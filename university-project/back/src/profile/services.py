@@ -1,11 +1,16 @@
+from typing import List, Optional
+from pydantic_mongo import ObjectIdField
+
 from pymongo import MongoClient
 from fastapi import HTTPException, status
 import random
 from .models import Profile
 from ..auth.models import User
 from .schemas import ProfileRes
+from ..auth.schemas import ProfileCreate, ProfileOut, ProfileUpdate
 
 from ..db.db import client, db
+from bson import ObjectId
 
 class ProfileService:
     """
@@ -73,3 +78,41 @@ class ProfileService:
                 detail=f"Profile not found with user ID: {str(user['_id'])}"
             )
         return ProfileRes(photo=profile['photo'],user={"_id": str(user["_id"]), "email": user['email']})
+
+
+    def create_profile(self, profile_data: ProfileCreate) -> ProfileOut:
+        profile_id = ObjectId()
+        profile_data_dict = profile_data.dict()
+        profile_data_dict["_id"] = profile_id
+        self.db.profiles.insert_one(profile_data_dict)
+        return ProfileOut(id=str(profile_id), **profile_data_dict)
+
+    def get_profiles(self, skip: int = 0, limit: int = 10) -> List[ProfileOut]:
+        profiles = list(self.db.profiles.find().skip(skip).limit(limit))
+        for profile in profiles:
+            profile["_id"] = str(profile["_id"])
+        return profiles
+
+    def get_profile(self, profile_id: str) -> Optional[ProfileOut]:
+        profile = self.db.profiles.find_one({"_id": ObjectId(profile_id)})
+        if profile:
+            profile["_id"] = str(profile["_id"])
+            return profile
+        return None
+
+    def update_profile(self, profile_id: str, profile_update: ProfileUpdate) -> Optional[ProfileOut]:
+        update_data = profile_update.dict(exclude_unset=True)
+        result = self.db.profiles.update_one({"_id": ObjectId(profile_id)}, {"$set": update_data})
+        if result.modified_count:
+            updated_profile = self.db.profiles.find_one({"_id": ObjectId(profile_id)})
+            updated_profile["_id"] = str(updated_profile["_id"])
+            return updated_profile
+        return None
+
+    def delete_profile(self, profile_id: str) -> Optional[ProfileOut]:
+        profile = self.db.profiles.find_one({"_id": ObjectId(profile_id)})
+        if profile:
+            self.db.profiles.delete_one({"_id": ObjectId(profile_id)})
+            profile["_id"] = str(profile["_id"])
+            return profile
+        return None
