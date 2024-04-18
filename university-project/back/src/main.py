@@ -17,7 +17,6 @@ db = client["university"]
 # Configure CORS
 origins = [
     "http://localhost:3002",
-    "http://localhost:3000",
     "http://accountract.com:3002",
     "http://accountract.com",
     "http://5.78.57.46:3002",

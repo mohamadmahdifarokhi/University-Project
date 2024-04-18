@@ -86,10 +86,9 @@ const {
 const onSubmit = handleSubmit(async (values) => {
   const route = useRoute();
   const callBackUrl = route.query.callBackUrl || '/';
-  const authCode = route.query.authCode || '';
 
 
-  await authStore.login({email: values.email, password: values.password, callBackUrl: callBackUrl, authCode: authCode});
+  await authStore.login({email: values.email, password: values.password, callBackUrl: callBackUrl});
 })
 
 </script>

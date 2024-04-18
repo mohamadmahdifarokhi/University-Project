@@ -29,13 +29,11 @@ router = APIRouter(tags=["Auths"])
 def access_token(
         username: str = Form(...),
         password: str = Form(...),
-        authCode: str = Form(None),
 ):
     """
     Endpoint to generate an access token.
 
     Args:
-        authCode:
         username (str): User's username.
         password (str): User's password.
         sess (Session): SQLAlchemy database session.
