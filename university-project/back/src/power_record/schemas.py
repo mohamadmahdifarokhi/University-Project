@@ -17,6 +17,7 @@ class PowerRecordAddSchema(BaseModel):
     consumption: int
 
 class PowerRecordGetSchema(BaseModel):
+    power_record_id: str
     device_name: str
     start_time: datetime
     end_time: datetime
