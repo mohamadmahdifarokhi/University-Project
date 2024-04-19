@@ -5,6 +5,9 @@ from typing import Type, List, Optional
 
 from bson import ObjectId
 from fastapi import HTTPException
+from pymongo import MongoClient
+from sqlalchemy.orm import Session
+
 from ..db.db import client, db
 
 from .models import User, Permission, OTP, Token
