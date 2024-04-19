@@ -1,6 +1,7 @@
 import time
+from http.client import HTTPException
 
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Security, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -8,6 +9,7 @@ from src.auth.models import User
 from .schemas import ProfileRes
 from .services import ProfileService
 from src.auth.secures import get_user
+from ..auth.schemas import ProfileUpdate, ProfileOut, ProfileCreate
 from ..db.db import sess_db
 
 router = APIRouter(tags=["Profiles"])
@@ -48,7 +50,6 @@ router = APIRouter(tags=["Profiles"])
 @router.get("", response_model=ProfileRes)
 def get_profile_by_user_id(
     user: User = Security(get_user),
-    sess: Session = Depends(sess_db),
 ):
     """
     Get the current user.
@@ -60,7 +61,7 @@ def get_profile_by_user_id(
     Returns:
         dict: Dictionary containing the user's profile.
     """
-    return ProfileService(sess).get_by_user_id(user)
+    return ProfileService().get_by_user_id(user)
 
 
 # @router.get("/list")
@@ -86,7 +87,6 @@ def get_profile_by_user_id(
 @router.patch("/update/photo", response_model=ProfileRes)
 def change_photo(
     user: User = Security(get_user),
-    sess: Session = Depends(sess_db),
 ):
     """
     Change the user profile photo.
@@ -98,7 +98,7 @@ def change_photo(
     Returns:
         JSONResponse: JSON response indicating the success or failure of the photo change.
     """
-    return ProfileService(sess).change_photo(user)
+    return ProfileService().change_photo(user)
 
 # @router.patch("/update")
 # def update_profile(
@@ -151,3 +151,46 @@ def change_photo(
 #     """
 #     repo: ProfileService = ProfileService(sess)
 #     result = repo.delete(id)
+@router.post("/profiles/create", response_model=ProfileOut)
+async def create_profile(profile: ProfileCreate):
+    """
+    Create a new profile.
+    """
+    return ProfileService().create_profile(profile)
+
+@router.get("/profiles/reads")
+async def read_profiles(skip: int = 0, limit: int = 10):
+    """
+    Get a list of profiles.
+    """
+    return ProfileService().get_profiles(skip=skip, limit=limit)
+
+@router.get("/profiles/read/{profile_id}")
+async def read_profile(profile_id):
+    """
+    Get a profile by ID.
+    """
+    profile = ProfileService().get_profile(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return profile
+
+@router.patch("/profiles/update/{profile_id}")
+async def update_profile(profile_id, profile_update: ProfileUpdate):
+    """
+    Update a profile.
+    """
+    updated_profile = ProfileService().update_profile(profile_id, profile_update)
+    if not updated_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return updated_profile
+
+@router.delete("/profiles/delete/{profile_id}")
+async def delete_profile(profile_id):
+    """
+    Delete a profile.
+    """
+    deleted_profile = ProfileService().delete_profile(profile_id)
+    if not deleted_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return deleted_profile
