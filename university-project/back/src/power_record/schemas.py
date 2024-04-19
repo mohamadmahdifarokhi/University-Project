@@ -8,8 +8,16 @@ class PowerRecordSchema(BaseModel):
     device_name: str
     start_time: datetime
     end_time: datetime
+    consumption: int
 
 class PowerRecordAddSchema(BaseModel):
     device_name: str
     start_time: datetime
     end_time: datetime
+    consumption: int
+
+class PowerRecordGetSchema(BaseModel):
+    device_name: str
+    start_time: datetime
+    end_time: datetime
+    consumption: int
