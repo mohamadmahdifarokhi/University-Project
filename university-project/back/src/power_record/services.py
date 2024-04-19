@@ -12,7 +12,6 @@ from io import BytesIO
 
 def service_list_power_records(
     user_id: str,
-    db
 ):
     power_records = db["power_records"].find({"user_id": user_id})
 
@@ -29,7 +28,6 @@ def service_list_power_records(
 def service_add_power_records(
     user_id: str,
     power_record: PowerRecordAddSchema,
-    db
 ):
     base_power_record = PowerRecordSchema(
         user_id=user_id,

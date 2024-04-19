@@ -4,7 +4,7 @@ from pydantic import UUID4, BaseModel, EmailStr, constr, conint
 
 
 class PricingSchema(BaseModel):
-    id: Optional[str]
+    id: Optional[str] = None
     device_id: str
     start_time: datetime
     end_time: datetime

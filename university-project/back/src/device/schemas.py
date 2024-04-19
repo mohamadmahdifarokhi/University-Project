@@ -4,7 +4,7 @@ from pydantic import UUID4, BaseModel, EmailStr, constr, conint
 
 
 class DeviceSchema(BaseModel):
-    id: Optional[str]
+    id: Optional[str] = None
     name: str
     AC_power_consumption: int
     DC_power_consumption: int

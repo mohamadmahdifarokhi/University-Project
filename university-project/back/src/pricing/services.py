@@ -7,7 +7,6 @@ from .schemas import *
 
 def service_add_pricing(
     pricing: PricingSchema,
-    db
 ):
     pricing = PricingSchema(
         device_id=pricing.device_id,
@@ -22,7 +21,6 @@ def service_add_pricing(
     return {"detail": "pricing added"}
 
 def service_get_all_pricing(
-    db
 ):
     pricings = db["pricing"].find()
     results = []
@@ -35,14 +33,12 @@ def service_get_all_pricing(
 
 def service_get_pricing(
     pricing_id: str,
-    db
 ):
     pricing = db["pricing"].find_one({"_id": ObjectId(pricing_id)})
     return pricing
 
 def service_delete_pricing(
     pricing_id: str,
-    db
 ):
     update_result = db["pricing"].delete_one(
         {"_id": ObjectId(pricing_id)},
