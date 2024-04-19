@@ -47,3 +47,11 @@ def device_get(
     return service_device_get(
         device_id
     )
+
+@router.patch("/select", summary="select device")
+def select_device(
+    device_id: str
+):
+    return service_select_device(
+        device_id
+    )
