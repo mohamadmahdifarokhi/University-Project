@@ -5,6 +5,8 @@ from datetime import datetime
 from bson import ObjectId
 from .schemas import *
 from fastapi.responses import JSONResponse
+from src.auth.models import User
+from src.auth.secures import get_current_user
 
 
 def service_add_device(
@@ -64,6 +66,26 @@ def service_list_device_user(
         results.append(DeviceSchema(**device))
 
     return results
+
+def service_select_device(
+    device_id: str,
+    user: User = Depends(get_current_user)
+
+):
+    update_result = db["user"].update_one(
+        {
+            "_id": ObjectId(user.id),
+        },
+        {
+            "$push": {
+                "devices": device_id
+            },
+        },
+        upsert=False,
+    )
+    if update_result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="user not found")
+    return {"detail": "Comment replied."}
 
 
 
