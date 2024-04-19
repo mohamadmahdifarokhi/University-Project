@@ -32,7 +32,7 @@ def service_add_power_records(
 ):
     base_power_record = PowerRecordSchema(
         user_id=user_id,
-        device_id=power_record.device_id,
+        device_id=power_record.device_name,
         start_time=power_record.start_time,
         end_time=power_record.end_time
     ).model_dump() # check if it works, dict() is depricated
