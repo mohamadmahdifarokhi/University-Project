@@ -29,6 +29,13 @@ def service_list_power_records(
         results.append(base_power_record)
     return results
 
+def service_delete_power_records(
+        power_record_id
+):
+    update_result = db["power_records"].delete_one(
+        {"_id": ObjectId(power_record_id)},
+    )
+    return {"detail": "power record deleted."}
 
 def service_add_power_records(
     power_record: PowerRecordAddSchema,
