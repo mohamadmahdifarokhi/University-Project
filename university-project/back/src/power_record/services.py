@@ -12,7 +12,7 @@ from src.auth.models import User
 from src.auth.secures import get_current_user
 
 def service_list_power_records(
-    user_id: str,
+    user_id: str
 ):
     power_records = db["power_records"].find({"user_id": user_id})
 
@@ -20,21 +20,26 @@ def service_list_power_records(
         raise HTTPException(status_code=404, detail="Records not found")
     results = []
     for record in power_records:
-        record["user_id"] = user_id
-        del record["_id"]
-        results.append(PowerRecordSchema(**record))
+        base_power_record = PowerRecordGetSchema(
+        device_name=record["device_name"],
+        start_time=record["start_time"],
+        end_time=record["end_time"],
+        consumption=record["consumption"],
+    ).model_dump()
+        results.append(base_power_record)
     return results
 
 
 def service_add_power_records(
-    user_id: str,
     power_record: PowerRecordAddSchema,
+    user: User = Depends(get_current_user)
 ):
     base_power_record = PowerRecordSchema(
-        user_id=user_id,
-        device_id=power_record.device_name,
+        user_id=user["_id"],
+        device_name=power_record.device_name,
         start_time=power_record.start_time,
-        end_time=power_record.end_time
+        end_time=power_record.end_time,
+        consumption=power_record.consumption
     ).model_dump() # check if it works, dict() is depricated
 
     update_result = db["power_records"].insert_one(base_power_record)
