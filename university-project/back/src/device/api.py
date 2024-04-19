@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, Body
 from src.db import db
 from .schemas import *
 from .services import *
+from src.auth.models import User
+from src.auth.secures import get_current_user
 
 
 router = APIRouter(
@@ -10,11 +12,11 @@ router = APIRouter(
 )
 
 @router.get("/{user_id}/devices", summary="Get all devices of a user")
-def devices_list_all(
-    user_id: str
+def devices_list_all_by_user(
+    user: User = Depends(get_current_user)
 ):
     return service_list_device_user(
-        user_id=user_id
+        user["_id"]
     )
 
 @router.get("/", summary="Get all devices")
