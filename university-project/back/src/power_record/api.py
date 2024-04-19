@@ -26,3 +26,11 @@ def power_record_add(
         power_record,
         user_id=user["_id"]
     )
+
+@router.delete("/delete-record", summary="deletes a record from power records for a user")
+def power_record_add(
+    power_record_id: str
+):
+    return service_delete_power_records(
+        power_record_id
+    )
