@@ -29,7 +29,6 @@ def devices_list_all(
 @router.post("/add", summary="adds a device")
 def device_add(
     device: DeviceSchema,
-    user_id: str,
     db=db
 ):
     return service_add_device(
