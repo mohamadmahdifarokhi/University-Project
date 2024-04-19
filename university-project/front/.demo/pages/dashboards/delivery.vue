@@ -3,7 +3,7 @@ definePageMeta({
   title: 'Delivery',
   preview: {
     title: 'Delivery dashboard',
-    description: 'For food delivery services',
+    description: 'For food delivery services.py',
     categories: ['dashboards'],
     src: '/img/screens/dashboards-delivery.png',
     srcDark: '/img/screens/dashboards-delivery-dark.png',

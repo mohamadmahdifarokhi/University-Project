@@ -1,4 +1,4 @@
-from src.db import db
+from ..db.db import db
 from fastapi import Depends, HTTPException
 import pymongo
 from datetime import datetime
@@ -21,7 +21,7 @@ def service_list_power_records(
     results = []
     for record in power_records:
         base_power_record = PowerRecordGetSchema(
-        power_record_id=record["power_record_id"]
+        power_record_id=str(record["_id"]),
         device_name=record["device_name"],
         start_time=record["start_time"],
         end_time=record["end_time"],
@@ -40,17 +40,17 @@ def service_delete_power_records(
 
 def service_add_power_records(
     power_record: PowerRecordAddSchema,
-    user: User = Depends(get_current_user)
+    user_id
 ):
     base_power_record = PowerRecordSchema(
-        user_id=user["_id"],
+        user_id=str(user_id),
         device_name=power_record.device_name,
         start_time=power_record.start_time,
         end_time=power_record.end_time,
         consumption=power_record.consumption
     ).model_dump() # check if it works, dict() is depricated
 
-    update_result = db["power_records"].insert_one(base_power_record)
+    update_result = db.power_records.insert_one(base_power_record)
 
     return {"detail": "power record added"}
 

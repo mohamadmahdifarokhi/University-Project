@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {useAppStore} from "~/stores/app";
+import {toTypedSchema} from "@vee-validate/zod";
+import {Field, useForm} from 'vee-validate'
+import {z} from 'zod'
+
+const {t} = useI18n({useScope: "local"})
+
 definePageMeta({
   title: 'Activity',
   middleware: ['authenticated'],
@@ -11,10 +18,53 @@ definePageMeta({
     order: 1,
   },
 })
+const app = useAppStore();
 
 const areaCustomers = reactive(useAreaCustomers())
 const radialBarTeam = reactive(useRadialBarTeam())
 const barProfit = reactive(useBarProfit())
+const fetchselectedDevice = app.fetchselectedDevice;
+const initializeData = async () => {
+  await fetchselectedDevice();
+};
+initializeData()
+const VALIDATION_TEXT = {
+  EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
+  PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
+}
+const zodSchema = z.object({
+  start: z.date(),
+  end: z.date(),
+  consumption: z.string(),
+})
+
+type FormInput = z.infer<typeof zodSchema>;
+
+const validationSchema = toTypedSchema(zodSchema)
+const initialValues = computed<FormInput>(() => ({
+  start: '',
+  end: '',
+  consumption: '',
+}))
+const {
+  handleSubmit,
+  isSubmitting,
+  setFieldError,
+  meta,
+  values,
+  errors,
+  resetForm,
+  setFieldValue,
+  setErrors,
+} = useForm({
+  validationSchema,
+  initialValues,
+})
+
+const addPowerRecord = handleSubmit(async (values) => {
+  console.log("Asdqwdqwdqwd")
+  await app.addRecord(values.start, values.end, values.consumption);
+})
 
 function useAreaCustomers() {
   const {primary, info, success} = useTailwindColors()
@@ -438,7 +488,7 @@ function useBarProfit() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>Saved Energy</span>
+              <span>CONVERSION PERCENT</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -480,7 +530,7 @@ function useBarProfit() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>Sold Energy</span>
+              <span>SAVED ENERGY</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -522,7 +572,139 @@ function useBarProfit() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>Remain Energy</span>
+              <span>INVESTMENT & SAVING</span>
+            </BaseHeading>
+            <BaseIconBox
+              size="xs"
+              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              rounded="full"
+              color="none"
+            >
+              <Icon name="ri:leaf-fill" class="size-6"/>
+
+              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
+            </BaseIconBox>
+          </div>
+          <div class="mb-2">
+            <BaseHeading
+              as="h4"
+              size="3xl"
+              weight="bold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>862</span>
+            </BaseHeading>
+          </div>
+          <div
+            class="text-success-500 flex items-center gap-1 font-sans text-sm"
+          >
+            <!--            <span>+4.5%</span>-->
+            <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
+            <!--            <span class="text-muted-400 text-xs">going up</span>-->
+          </div>
+        </BaseCard>
+      </div>
+      <!-- Stat tile -->
+      <div class="col-span-12 md:col-span-4">
+        <BaseCard class="p-4">
+          <div class="mb-1 flex items-center justify-between">
+            <BaseHeading
+              as="h5"
+              size="sm"
+              weight="medium"
+              lead="tight"
+              class="text-muted-500 dark:text-muted-400"
+            >
+              <span>GREENHOUSE EMISSION SAVING</span>
+            </BaseHeading>
+            <BaseIconBox
+              size="xs"
+              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              rounded="full"
+              color="none"
+            >
+              <Icon name="ri:leaf-fill" class="size-6"/>
+
+              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
+            </BaseIconBox>
+          </div>
+          <div class="mb-2">
+            <BaseHeading
+              as="h4"
+              size="3xl"
+              weight="bold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>862</span>
+            </BaseHeading>
+          </div>
+          <div
+            class="text-success-500 flex items-center gap-1 font-sans text-sm"
+          >
+            <!--            <span>+4.5%</span>-->
+            <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
+            <!--            <span class="text-muted-400 text-xs">going up</span>-->
+          </div>
+        </BaseCard>
+      </div>
+      <!-- Stat tile -->
+      <div class="col-span-12 md:col-span-4">
+        <BaseCard class="p-4">
+          <div class="mb-1 flex items-center justify-between">
+            <BaseHeading
+              as="h5"
+              size="sm"
+              weight="medium"
+              lead="tight"
+              class="text-muted-500 dark:text-muted-400"
+            >
+              <span>POWER DIVIDED BY AC-DC</span>
+            </BaseHeading>
+            <BaseIconBox
+              size="xs"
+              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              rounded="full"
+              color="none"
+            >
+              <Icon name="ri:leaf-fill" class="size-6"/>
+
+              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
+            </BaseIconBox>
+          </div>
+          <div class="mb-2">
+            <BaseHeading
+              as="h4"
+              size="3xl"
+              weight="bold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>862</span>
+            </BaseHeading>
+          </div>
+          <div
+            class="text-success-500 flex items-center gap-1 font-sans text-sm"
+          >
+            <!--            <span>+4.5%</span>-->
+            <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
+            <!--            <span class="text-muted-400 text-xs">going up</span>-->
+          </div>
+        </BaseCard>
+      </div>
+      <!-- Stat tile -->
+      <div class="col-span-12 md:col-span-4">
+        <BaseCard class="p-4">
+          <div class="mb-1 flex items-center justify-between">
+            <BaseHeading
+              as="h5"
+              size="sm"
+              weight="medium"
+              lead="tight"
+              class="text-muted-500 dark:text-muted-400"
+            >
+              <span>EFFICIENCY</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -590,313 +772,74 @@ function useBarProfit() {
           <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>
         </BaseCard>
       </div>
-      <!-- CTA card -->
-      <!--      <div-->
-      <!--        class="ptablet:col-span-6 ltablet:col-span-4 col-span-12 lg:col-span-4"-->
-      <!--      >-->
-      <!--        <BaseCard-->
-      <!--          class="from-primary-600 to-primary-700 relative flex h-full items-center justify-center bg-gradient-to-br p-6"-->
-      <!--        >-->
-      <!--          <div class="relative z-20 flex flex-col gap-3 py-10 text-center">-->
-      <!--            <BaseHeading-->
-      <!--              as="h4"-->
-      <!--              size="lg"-->
-      <!--              weight="semibold"-->
-      <!--              lead="tight"-->
-      <!--              class="text-white"-->
-      <!--            >-->
-      <!--              <span>Hey Maya, you're doing great.</span>-->
-      <!--            </BaseHeading>-->
-      <!--            <BaseParagraph size="md" class="mx-auto max-w-[280px]">-->
-      <!--              <span class="text-white/80">-->
-      <!--                Start using our team and project management tools-->
-      <!--              </span>-->
-      <!--            </BaseParagraph>-->
-      <!--            <NuxtLink-->
-      <!--              class="font-sans text-white underline-offset-4 hover:underline"-->
-      <!--              to="#"-->
-      <!--            >-->
-      <!--              Learn More-->
-      <!--            </NuxtLink>-->
-      <!--          </div>-->
-      <!--          <div-->
-      <!--            class="absolute bottom-4 end-4 z-10 flex size-14 items-center justify-center"-->
-      <!--          >-->
-      <!--            <Icon-->
-      <!--              name="ph:crown-duotone"-->
-      <!--              class="text-primary-900/50 size-14"-->
-      <!--            />-->
-      <!--          </div>-->
-      <!--        </BaseCard>-->
-      <!--      </div>-->
-      <!-- Radial Bar card -->
-      <!--      <div-->
-      <!--        class="ptablet:col-span-6 ltablet:col-span-4 col-span-12 lg:col-span-4"-->
-      <!--      >-->
-      <!--        <BaseCard class="relative p-6">-->
-      <!--          <div class="mb-6">-->
-      <!--            <BaseHeading-->
-      <!--              as="h3"-->
-      <!--              size="md"-->
-      <!--              weight="semibold"-->
-      <!--              lead="tight"-->
-      <!--              class="text-muted-800 dark:text-white"-->
-      <!--            >-->
-      <!--              <span>Team Efficiency</span>-->
-      <!--            </BaseHeading>-->
-      <!--          </div>-->
-      <!--          <div-->
-      <!--            class="absolute inset-x-0 top-24 flex items-center justify-center gap-4"-->
-      <!--          >-->
-      <!--            <BaseAvatar src="/img/avatars/4.svg" />-->
-      <!--            <BaseAvatar-->
-      <!--              text="H"-->
-      <!--              class="bg-yellow-100 text-yellow-500 dark:bg-yellow-500 dark:text-white"-->
-      <!--            />-->
-      <!--            <BaseAvatar src="/img/avatars/3.svg" />-->
-      <!--          </div>-->
-      <!--          <AddonApexcharts v-bind="radialBarTeam" />-->
-      <!--        </BaseCard>-->
-      <!--      </div>-->
-      <!-- Bar chart card -->
-      <!--      <div class="ltablet:col-span-4 col-span-12 lg:col-span-4">-->
-      <!--        <BaseCard class="relative p-6">-->
-      <!--          <div class="mb-6">-->
-      <!--            <BaseHeading-->
-      <!--              as="h3"-->
-      <!--              size="md"-->
-      <!--              weight="semibold"-->
-      <!--              lead="tight"-->
-      <!--              class="text-muted-800 dark:text-white"-->
-      <!--            >-->
-      <!--              <span>Profit Evolution</span>-->
-      <!--            </BaseHeading>-->
-      <!--          </div>-->
-      <!--          <AddonApexcharts v-bind="barProfit" />-->
-      <!--        </BaseCard>-->
-      <!--      </div>-->
+
 
       <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-        <BaseCard rounded="lg" class="p-6">
-          <div class="mb-6 flex items-center justify-between">
-            <BaseHeading
-              as="h3"
-              size="md"
-              weight="semibold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
-            >
-              <span>Selected Products</span>
-            </BaseHeading>
-            <!--            <NuxtLink-->
-            <!--              to="#"-->
-            <!--              class="bg-muted-100 hover:bg-muted-200 dark:bg-muted-700 dark:hover:bg-muted-900 text-primary-500 rounded-lg px-4 py-2 font-sans text-sm font-medium underline-offset-4 transition-colors duration-300 hover:underline"-->
-            <!--            >-->
-            <!--              View All-->
-            <!--            </NuxtLink>-->
-          </div>
-          <div class="mb-2 space-y-5">
-            <!-- List item -->
-            <div class="flex items-center gap-2">
-<!--              <BaseIconBox-->
-<!--                rounded="full"-->
-<!--                size="xs"-->
-<!--                class="bg-blue-800 text-white shadow-xl shadow-blue-500/20 dark:shadow-blue-800/20"-->
-<!--                color="none"-->
-<!--              >-->
-<!--                <Icon name="fa6-brands:linkedin-in" class="size-3"/>-->
-<!--              </BaseIconBox>-->
-              <div>
-                <BaseHeading
-                  as="h4"
-                  size="sm"
-                  weight="medium"
-                  lead="snug"
-                  class="text-muted-800 dark:text-white"
-                >
-                  <span>Iron</span>
-                </BaseHeading>
-
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              type="date"
-
-              shape="curved"
-              placeholder="Start Date"
-              icon="ri:calendar-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              type="date"
-
-              shape="curved"
-              placeholder="End Date"
-              icon="ri:calendar-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              shape="curved"
-              placeholder="Consumption"
-              icon="ri:lightbulb-flash-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                <BaseButtonIcon rounded="full" small>
-                  <Icon name="ri:add-circle-fill"/>
-                </BaseButtonIcon>
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                <BaseButtonIcon rounded="full" small>
-                  <Icon name="ri:delete-bin-7-fill"/>
-                </BaseButtonIcon>
+        <form method="POST" action="" @submit.prevent="addPowerRecord">
+          <BaseCard rounded="lg" class="p-6">
+            <div class="mb-6 flex items-center justify-between">
+              <BaseHeading
+                as="h3"
+                size="md"
+                weight="semibold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>Selected Products</span>
+              </BaseHeading>
+            </div>
+            <div class="mb-2 space-y-5">
+              <div v-for="device in app.getselectedDevice" class="flex items-center gap-2">
+                <div class="flex items-center gap-2">
+                  <div>
+                    <BaseHeading
+                      as="h4"
+                      size="sm"
+                      weight="medium"
+                      lead="snug"
+                      class="text-muted-800 dark:text-white"
+                    >
+                      <span>{{ device.name }}</span>
+                    </BaseHeading>
+                  </div>
+                  <Field class="ms-auto flex items-center gap-1" name="start">
+                    <BaseInput
+                      type="date"
+                      shape="curved"
+                      placeholder="Start Date"
+                      icon="ri:calendar-fill"
+                    />
+                  </Field>
+                  <Field class="ms-auto flex items-center gap-1" name="end">
+                    <BaseInput
+                      type="date"
+                      shape="curved"
+                      placeholder="End Date"
+                      icon="ri:calendar-fill"
+                    />
+                  </Field>
+                  <Field class="ms-auto flex items-center gap-1" name="consumption">
+                    <BaseInput
+                      shape="curved"
+                      placeholder="Consumption"
+                      icon="ri:lightbulb-flash-fill"
+                    />
+                  </Field>
+                  <div class="ms-auto flex items-center gap-1">
+                    <button type="submit" class="BaseButtonIcon" rounded="full" small>
+                      <Icon name="ri:add-circle-fill"/>
+                    </button>
+                  </div>
+                  <div class="ms-auto flex items-center gap-1">
+                    <BaseButtonIcon rounded="full" small>
+                      <Icon name="ri:delete-bin-7-fill"/>
+                    </BaseButtonIcon>
+                  </div>
+                </div>
               </div>
             </div>
-            <!-- List item -->
-            <div class="flex items-center gap-2">
-<!--              <BaseIconBox-->
-<!--                rounded="full"-->
-<!--                size="xs"-->
-<!--                class="bg-muted-900 dark:bg-muted-100 dark:text-muted-800 text-white"-->
-<!--                color="none"-->
-<!--              >-->
-<!--                <Icon name="fa6-brands:github" class="size-3"/>-->
-<!--              </BaseIconBox>-->
-              <div>
-                <BaseHeading
-                  as="h4"
-                  size="sm"
-                  weight="medium"
-                  lead="snug"
-                  class="text-muted-800 dark:text-white"
-                >
-                  <span>Refrigerator</span>
-                </BaseHeading>
-<!--                <BaseParagraph lead="none" size="xs">-->
-<!--                  <span class="text-muted-400">Github Inc.</span>-->
-<!--                </BaseParagraph>-->
-              </div>
-                            <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              type="date"
-
-              shape="curved"
-              placeholder="Start Date"
-              icon="ri:calendar-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              type="date"
-
-              shape="curved"
-              placeholder="End Date"
-              icon="ri:calendar-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              shape="curved"
-              placeholder="Consumption"
-              icon="ri:lightbulb-flash-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                <BaseButtonIcon rounded="full" small>
-                  <Icon name="ri:add-circle-fill"/>
-                </BaseButtonIcon>
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                <BaseButtonIcon rounded="full" small>
-                  <Icon name="ri:delete-bin-7-fill"/>
-                </BaseButtonIcon>
-                <!--                <Icon-->
-                <!--                  name="ph:check-circle-duotone"-->
-                <!--                  class="text-success-500 size-4"-->
-                <!--                />-->
-                <!--                <span-->
-                <!--                  class="text-muted-600 dark:text-muted-400 font-sans text-sm font-medium"-->
-                <!--                >-->
-                <!--                  $1,478.32-->
-                <!--                </span>-->
-              </div>
-
-            </div>
-            <!-- List item -->
-            <div class="flex items-center gap-2">
-<!--              <BaseIconBox-->
-<!--                rounded="full"-->
-<!--                size="xs"-->
-<!--                class="bg-rose-500 text-white shadow-xl shadow-rose-500/20 dark:shadow-rose-800/20"-->
-<!--                color="none"-->
-<!--              >-->
-<!--                <Icon name="fa6-brands:invision" class="size-4"/>-->
-<!--              </BaseIconBox>-->
-              <div>
-                <BaseHeading
-                  as="h4"
-                  size="sm"
-                  weight="medium"
-                  lead="snug"
-                  class="text-muted-800 dark:text-white"
-                >
-                  <span>Oven</span>
-                </BaseHeading>
-<!--                <BaseParagraph lead="none" size="xs">-->
-<!--                  <span class="text-muted-400">Invision Corp.</span>-->
-<!--                </BaseParagraph>-->
-              </div>
-                            <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              type="date"
-
-              shape="curved"
-              placeholder="Start Date"
-              icon="ri:calendar-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              type="date"
-
-              shape="curved"
-              placeholder="End Date"
-              icon="ri:calendar-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                 <BaseInput
-              shape="curved"
-              placeholder="Consumption"
-              icon="ri:lightbulb-flash-fill"
-            />
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                <BaseButtonIcon rounded="full" small>
-                  <Icon name="ri:add-circle-fill"/>
-                </BaseButtonIcon>
-              </div>
-              <div class="ms-auto flex items-center gap-1">
-                <BaseButtonIcon rounded="full" small>
-                  <Icon name="ri:delete-bin-7-fill"/>
-                </BaseButtonIcon>
-                <!--                <Icon-->
-                <!--                  name="ph:check-circle-duotone"-->
-                <!--                  class="text-success-500 size-4"-->
-                <!--                />-->
-                <!--                <span-->
-                <!--                  class="text-muted-600 dark:text-muted-400 font-sans text-sm font-medium"-->
-                <!--                >-->
-                <!--                  $1,478.32-->
-                <!--                </span>-->
-              </div>
-
-            </div>
-
-          </div>
-        </BaseCard>
+          </BaseCard>
+        </form>
       </div>
 
 

@@ -83,8 +83,11 @@ class UserBase(BaseModel):
     # permissions: List[Permission] = []
 
 
-class UserCreate(UserBase):
-    pass
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    provider: str
+    permissions: List[Permission] = []
 
 
 class UserUpdate(BaseModel):

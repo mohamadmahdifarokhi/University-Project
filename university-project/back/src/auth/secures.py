@@ -118,6 +118,7 @@ def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth
     Raises:
         HTTPException: If credentials cannot be validated or if the user has insufficient permissions.
     """
+    print('fffff')
     authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

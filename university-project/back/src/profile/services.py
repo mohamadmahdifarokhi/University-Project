@@ -66,11 +66,9 @@ class ProfileService:
         Returns:
             dict: Profile object if found.
         """
-        print("weqwwqe")
         profile = self.db.profiles.find_one({"user_id":str(user["_id"])})
         # TODO Fix this
         # profile = self.db.profiles.find_one({"user_id": user["_id"], "is_active": True})
-        print("dfgdfgfdg")
 
         if not profile:
             raise HTTPException(

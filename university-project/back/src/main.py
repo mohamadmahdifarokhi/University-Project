@@ -7,6 +7,10 @@ from src.logger import logger
 from src.order.routers import router as order_router
 from src.profile.routers import router as profile_router
 from src.auth.routers import router as auth_router
+from src.device.api import router as device_router
+from src.power_record.api import router as power_record_router
+from src.pricing.api import router as pricing_router
+from src.solar_panel.routers import router as solar_panel_router
 
 from src.db import db
 
@@ -45,6 +49,12 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(profile_router, prefix="/users/profiles")
 app.include_router(order_router, prefix="/users/orders")
+
+
+app.include_router(device_router)
+app.include_router(power_record_router)
+app.include_router(pricing_router)
+app.include_router(solar_panel_router)
 
 
 # Create tables on startup

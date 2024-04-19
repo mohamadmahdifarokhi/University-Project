@@ -43,7 +43,8 @@ class Token(BaseModel):
     email: EmailStr
     expired_at: datetime
 
-
+    class Config:
+        orm_mode = True
 
 class Permission(BaseModel):
     id: ObjectIdField = None

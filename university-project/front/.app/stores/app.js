@@ -12,8 +12,11 @@ export const useAppStore = defineStore('app', {
     products: [],
     not_active_products: [],
     product: ref(),
+    devices: [],
+    records: [],
     cart: [],
     orders: [],
+    selectedDevice: [],
     email: '',
     photo: ref(''),
     flag: ref(''),
@@ -29,6 +32,15 @@ export const useAppStore = defineStore('app', {
         });
       }
       return price;
+    },
+    getDevices: (state) => {
+      return state.devices;
+    },
+    getRecords: (state) => {
+      return state.records;
+    },
+    getselectedDevice: (state) => {
+      return state.selectedDevice;
     },
     filteredProducts: (state) => {
       if (state.activeGenre === 1) {
@@ -93,22 +105,21 @@ export const useAppStore = defineStore('app', {
         if (accessToken) {
           // If an access token exists, fetch the user's profile from the server.
           const response = await axios.post(`${apiUrl}/admins/email`,
-            {
-              email: email,
-              subject: subject,
-              description: description,
-            }
-        ,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-                'accept'
-            :
-              'application/json',
-            }
-          ,
-          }
-        )
+              {
+                email: email,
+                subject: subject,
+                description: description,
+              }
+              ,
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  'accept':
+                    'application/json',
+                }
+                ,
+              }
+            )
           ;
           console.log(response)
           console.log('response')
@@ -172,6 +183,41 @@ export const useAppStore = defineStore('app', {
       try {
         const productsResponse = await axios.get(`${apiUrl}/products/?page=1&page_size=10`);
         this.products = productsResponse.data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
+
+    async fetchDevices() {
+
+      try {
+        const response = await axios.get(`${apiUrl}/device/`);
+        this.devices = response.data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
+
+    async fetchRecords() {
+      const accessToken = useCookie('access_token').value;
+
+      try {
+        const response = await axios.get(`${apiUrl}/power-records/records`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+
+          );
+        this.records = response.data;
       } catch (error) {
         console.error('Error fetching products:', error);
         const {t} = useI18n({useScope: 'local'});
@@ -260,6 +306,84 @@ export const useAppStore = defineStore('app', {
           },
         });
         this.orders = response.data;
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+
+    async addDevice(deviceId) {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.patch(`${apiUrl}/device/select?device_id=${deviceId}`, {}, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
+        if (response.status === 200) {
+          this.showSuccessToast('Add');
+
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+
+    async deleteRecord(recordId) {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.delete(`${apiUrl}/power-records/delete-record?power_record_id=${recordId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
+        if (response.status === 200) {
+  window.location.reload();
+
+          this.showSuccessToast('Delete');
+
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+
+    async addRecord(start, end, consumption) {
+      try {
+        const recordData = {
+                    start: start,
+                    end: end,
+                    consumption: consumption,
+                  };
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.post(`${apiUrl}/power-records/records`, recordData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
+        if (response.status === 200) {
+          this.showSuccessToast('Add');
+
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+
+    async fetchselectedDevice() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/device/user`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
+        if (response.status === 200) {
+          this.selectedDevice = response.data;
+        }
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
