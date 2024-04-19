@@ -85,7 +85,7 @@ def service_select_device(
     )
     if update_result.modified_count == 0:
         raise HTTPException(status_code=404, detail="user not found")
-    return {"detail": "Comment replied."}
+    return {"detail": "device added."}
 
 
 
