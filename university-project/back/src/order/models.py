@@ -10,7 +10,6 @@ from sqlalchemy.dialects.postgresql import UUID, JSON
 
 from ..auth.models import User
 from ..core.models import BaseModel
-from ..db.db import Base
 
 
 class StatusEnum(enum.Enum):

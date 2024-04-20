@@ -7,7 +7,6 @@ from sqlalchemy.orm import relationship
 
 from ..auth.models import User
 from ..core.models import BaseModel
-from ..db.db import Base
 
 
 class Profile(BaseModel):

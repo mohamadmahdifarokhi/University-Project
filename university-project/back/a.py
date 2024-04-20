@@ -63,7 +63,7 @@ def delete_operation(session: "SessionType"):
 
 
 if __name__ == "__main__":
-    mongo_engine = MongoClient("mongodb://localhost:27017")
+    mongo_engine = MongoClient('mongodb://admin:admin@university-project-db:27017/')
     db = mongo_engine['vvvvvvv']
     if User.__tablename__ not in db.list_collection_names():
         db.create_collection(User.__tablename__)

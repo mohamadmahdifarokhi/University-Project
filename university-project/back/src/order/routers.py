@@ -10,7 +10,6 @@ from .services import (
 )
 from ..auth.models import User
 from ..auth.secures import get_current_user
-from ..db.db import sess_db
 
 router = APIRouter(tags=["Orders"])
 

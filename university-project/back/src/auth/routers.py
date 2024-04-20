@@ -13,7 +13,7 @@ from .schemas import (OtpReq, OtpRes, TokenRes, VerifyOtpReq, UserRes, TokenReq,
                       OTPUpdate, OTPOut, OTPCreate, TokenUpdate, TokenCreate, TokenOut, PermissionUpdate,
                       PermissionCreate, PermissionOut)
 from ..core.utils import redis_instance, EmailSender
-from ..db.db import sess_db, db
+from ..db.db import db
 from .models import User
 from .services import UserService, TokenService, OTPService, PermissionService
 from .secures import get_current_user, authenticate, ACCESS_TOKEN_EXPIRE_MINUTES, sso, create_token, \

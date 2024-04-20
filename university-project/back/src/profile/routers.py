@@ -10,7 +10,6 @@ from .schemas import ProfileRes
 from .services import ProfileService
 from src.auth.secures import get_user
 from ..auth.schemas import ProfileUpdate, ProfileOut, ProfileCreate
-from ..db.db import sess_db
 
 router = APIRouter(tags=["Profiles"])
 

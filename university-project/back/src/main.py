@@ -11,35 +11,27 @@ from src.device.api import router as device_router
 from src.power_record.api import router as power_record_router
 from src.pricing.api import router as pricing_router
 from src.solar_panel.routers import router as solar_panel_router
-
+import os
+from dotenv import load_dotenv
 from src.db import db
+load_dotenv()
 
 app = FastAPI(title="Uuniversity Project")
-client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient(os.environ.get("DATABASE_URL"))
 # Access your database
 db = client["university"]
 # Configure CORS
 origins = [
-    "http://localhost:3002",
-    "http://accountract.com:3002",
-    "http://accountract.com",
-    "http://5.78.57.46:3002",
-    "http://localhost:3001",
-    "http://5.78.57.46:3001",
-    "http://5.78.57.46:80",
-    "http://5.78.57.46",
-    "http://localhost:8000",
-    "http://localhost:8001",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:3002",
-    "http://127.0.0.1:3001",
-    "http://5.78.57.46:8000",
-    "http://127.0.0.1:8001",
+    "http://localhost:80",
+    "http://localhost:3000",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1:3000",
+
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

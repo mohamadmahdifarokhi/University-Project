@@ -14,7 +14,6 @@ from .models import User
 from sqlalchemy.orm import Session
 
 from ..db import db
-from ..db.db import sess_db
 from ..logger import logger
 from fastapi_sso.sso.google import GoogleSSO
 
@@ -37,7 +36,7 @@ sso = GoogleSSO(
     scope=["profile", "email"]
 )
 
-client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient(os.environ.get("DATABASE_URL"))
 # Access your database
 db = client["university"]
 def get_password_hash(password):
