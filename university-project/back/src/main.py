@@ -92,11 +92,11 @@ def create_admin():
     Create an admin user in the database.
     """
     try:
-        otp = OTPService().insert({"email": "accountract@gmail.com"})
+        otp = OTPService().insert({"email": "admin@gmail.com"})
         print("asdasdsad")
         UserService().insert(req={
-            "email": "accountract@gmail.com",
-            "password": "accountract",
+            "email": "admin@gmail.com",
+            "password": "admin",
             "otp_code": otp['otp_code'],
         }, admin=True)
     except Exception as e:
