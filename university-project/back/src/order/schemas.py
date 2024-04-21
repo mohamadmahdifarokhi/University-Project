@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import UUID4, BaseModel
 
@@ -135,3 +135,10 @@ class OrderResList(BaseModel):
 #     price: float = None
 #     discount_price: float = None
 #     status: StatusEnum = None
+
+class OrderCreateSchema(BaseModel):
+    user_id: Optional[str] = None
+    solar_panel_id: str
+    amount: int
+    fee: Optional[int] = None
+

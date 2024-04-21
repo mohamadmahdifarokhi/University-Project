@@ -21,7 +21,7 @@ def service_list_power_records(
     results = []
     for record in power_records:
         base_power_record = PowerRecordGetSchema(
-        power_record_id=record["power_record_id"]
+        power_record_id=str(record["_id"]),
         device_name=record["device_name"],
         start_time=record["start_time"],
         end_time=record["end_time"],
