@@ -73,10 +73,11 @@ def service_get_order_all(
 def service_get_order_buy_user(
     user_id: str,
 ):
-    orders = db["orders"].find({"_id": ObjectId(user_id)})
+    orders = db["orders"].find({"user_id": str(user_id)})
     results = []
     for order in orders:
         order["id"] = str(order["_id"])
+        order["created_at"] = order(["created_at"]).strftime("%d-%b-%Y")
         del order["_id"]
         results.append(OrderCreateSchema(**order))
     return results
@@ -84,10 +85,11 @@ def service_get_order_buy_user(
 def service_get_order_sell_user(
     user_id: str,
 ):
-    orders = db["orders"].find({"seller_id": user_id})
+    orders = db["orders"].find({"seller_id": str(user_id)})
     results = []
     for order in orders:
         order["id"] = str(order["_id"])
+        order["created_at"] = order(["created_at"]).strftime("%d-%b-%Y")
         del order["_id"]
         results.append(OrderCreateSchema(**order))
     return results
@@ -112,12 +114,12 @@ def service_last_orders(
         results.append(OrderCreateSchema(**order))
     return results
 
-class OrderService:
-    def __init__(self, sess: Session):
-        self.sess: Session = sess
 
-    def insert(self, req: OrderReq) -> Order:
+# class OrderService:
+#     def __init__(self, sess: Session):
+#         self.sess: Session = sess
 
+#     def insert(self, req: OrderReq) -> Order:
 
 # class OrderService:
 #     def __init__(self, sess: Session):
@@ -149,178 +151,240 @@ class OrderService:
 #             logger.info(f"Inserted Order with ID: {new_order.id}")
 #             return new_order
 
-class OrderService:
-    def __init__(self):
-        self.db = db
+#         except HTTPException:
+#             raise
 
-    def insert(self, req):
-        """
-        Insert a new order.
+#         except Exception as e:
+#             self.sess.rollback()
+#             logger.error(f"Error inserting Order: {str(e)}")
+#             raise HTTPException(status_code=500, detail="Internal server error")
 
-        Args:
-            req: The order information to be inserted.
+#     def get_order_by_id(self, orderId: UUID):
+#         """Retrieve an order by its ID along with associated order items."""
+#         order = self.sess.query(Order).filter_by(id=orderId).first()
+#         if not order:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail=Error(
+#                     message="Order not found",
+#                     code=404,
+#                 ).dict(),
+#             )
+# class OrderService:
+#     def __init__(self):
+#         self.db = db
 
-        Returns:
-            Order: The inserted order.
-            dict: The inserted order.
+#     def insert(self, req):
+#         """
+#         Insert a new order.
 
-        Raises:
-            HTTPException: If the transaction ID already exists or internal server error occurs.
-        """
-        try:
-            existing_order = (self.sess.query(Order).filter_by(transaction_id=req.transaction_id, is_active=True)
-                              .first())
-            if existing_order:
-                raise HTTPException(status_code=400, detail="Transaction id already exists")
+#         Args:
+#             req: The order information to be inserted.
 
-            new_order = Order(**req.__dict__)
-            self.sess.add(new_order)
-            self.sess.commit()
+#         Returns:
+#             Order: The inserted order.
+#             dict: The inserted order.
 
-            logger.info(f"Inserted Order with ID: {new_order.id}")
-            return new_order
+#         Raises:
+#             HTTPException: If the transaction ID already exists or internal server error occurs.
+#         """
+#         try:
+#             existing_order = (self.sess.query(Order).filter_by(transaction_id=req.transaction_id, is_active=True)
+#                               .first())
+#             if existing_order:
+#                 raise HTTPException(status_code=400, detail="Transaction id already exists")
 
-        except HTTPException:
-            raise
+#             new_order = Order(**req.__dict__)
+#             self.sess.add(new_order)
+#             self.sess.commit()
 
-        except Exception as e:
-            self.sess.rollback()
-            logger.error(f"Error inserting Order: {str(e)}")
-            raise HTTPException(status_code=500, detail="Internal server error")
+#             logger.info(f"Inserted Order with ID: {new_order.id}")
+#             return new_order
 
-    def get_order_by_id(self, orderId: UUID):
-        """Retrieve an order by its ID along with associated order items."""
-        order = self.sess.query(Order).filter_by(id=orderId).first()
-        if not order:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=Error(
-                    message="Order not found",
-                    code=404,
-                ).dict(),
-            )
+#         except HTTPException:
+#             raise
+
+#         except Exception as e:
+#             self.sess.rollback()
+#             logger.error(f"Error inserting Order: {str(e)}")
+#             raise HTTPException(status_code=500, detail="Internal server error")
+
+#     def get_order_by_id(self, orderId: UUID):
+#         """Retrieve an order by its ID along with associated order items."""
+#         order = self.sess.query(Order).filter_by(id=orderId).first()
+#         if not order:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail=Error(
+#                     message="Order not found",
+#                     code=404,
+#                 ).dict(),
+#             )
     
-        order_items = self.sess.query(OrderItem).filter_by(orderId=orderId).all()
-        order.orderItem = order_items
-        print("-------")
-        print(type(order))
-        # print(order)
-        print(order.__dict__)
-        print("-------")
-        return order
+#         order_items = self.sess.query(OrderItem).filter_by(orderId=orderId).all()
+#         order.orderItem = order_items
+#         print("-------")
+#         print(type(order))
+#         # print(order)
+#         print(order.__dict__)
+#         print("-------")
+#         return order
 
-    def get_by_user_id(self, user: User, page: int, page_size: int):
-        """
-        Retrieve orders by user ID along with associated order items and products with pagination.
+#     def get_by_user_id(self, user: User, page: int, page_size: int):
+#         """
+#         Retrieve orders by user ID along with associated order items and products with pagination.
 
-        Args:
-            user: The user for whom to retrieve orders.
-            page: The page number for pagination.
-            page_size: Number of orders per page.
+#         Args:
+#             user: The user for whom to retrieve orders.
+#             page: The page number for pagination.
+#             page_size: Number of orders per page.
 
-        Returns:
-            dict: A dictionary containing a list of orders and the total count.
+#         Returns:
+#             dict: A dictionary containing a list of orders and the total count.
 
-        Raises:
-            HTTPException: If orders are not found or internal server error occurs.
-        """
-        try:
-            offset = (page - 1) * page_size
-            count = self.sess.query(Order).filter_by(user_id=user.id, is_active=True).count()
-            orders = self.sess.query(Order).filter_by(user_id=user.id, is_active=True).order_by(
-                Order.created.desc()).offset(offset).limit(page_size).all()
+#         Raises:
+#             HTTPException: If orders are not found or internal server error occurs.
+#         """
+#         try:
+#             offset = (page - 1) * page_size
+#             count = self.sess.query(Order).filter_by(user_id=user.id, is_active=True).count()
+#             orders = self.sess.query(Order).filter_by(user_id=user.id, is_active=True).order_by(
+#                 Order.created.desc()).offset(offset).limit(page_size).all()
 
-            if not orders:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail={"message": "Orders not found", "code": 404},
-                )
-            prices = read_prices()
-            for order in orders:
-                for order_item in order.order_items:
-                    order_item.price = float(prices["usd"]["value"]) * float(order_item.price)
-            return {"orders": orders, "count": count}
+#             if not orders:
+#                 raise HTTPException(
+#                     status_code=status.HTTP_404_NOT_FOUND,
+#                     detail={"message": "Orders not found", "code": 404},
+#                 )
+#             prices = read_prices()
+#             for order in orders:
+#                 for order_item in order.order_items:
+#                     order_item.price = float(prices["usd"]["value"]) * float(order_item.price)
+#             return {"orders": orders, "count": count}
 
-        except HTTPException:
-            raise
+#         except HTTPException:
+#             raise
 
-        except Exception as e:
-            logger.error(f"Error retrieving orders: {str(e)}")
-            raise HTTPException(status_code=500, detail="Internal server error")
+#         except Exception as e:
+#             logger.error(f"Error retrieving orders: {str(e)}")
+#             raise HTTPException(status_code=500, detail="Internal server error")
 
-    def update_order(self, orderId: UUID, order_input: OrderUpdate):
-        """Update an order with patch update."""
-        order = self.get_order_by_id(orderId)
+#     def update_order(self, orderId: UUID, order_input: OrderUpdate):
+#         """Update an order with patch update."""
+#         order = self.get_order_by_id(orderId)
     
-        if order:
-            for field, value in order_input.dict(exclude_unset=True).items():
-                setattr(order, field, value)
+#         if order:
+#             for field, value in order_input.dict(exclude_unset=True).items():
+#                 setattr(order, field, value)
     
-            self.sess.commit()
-            self.sess.refresh(order)
+#             self.sess.commit()
+#             self.sess.refresh(order)
     
-        return order
+#         return order
 
-    def delete_order(self, orderId: UUID):
-        """Delete an order by its ID."""
-        order = self.get_order_by_id(orderId)
-        if order:
-            self.sess.delete(order)
-            self.sess.commit()
+#     def delete_order(self, orderId: UUID):
+#         """Delete an order by its ID."""
+#         order = self.get_order_by_id(orderId)
+#         if order:
+#             self.sess.delete(order)
+#             self.sess.commit()
 
 
 
-  def get_orderItem_by_id(self, orderItem_id: UUID):
-        """Retrieve an order item by its ID."""
+#   def get_orderItem_by_id(self, orderItem_id: UUID):
+#         """Retrieve an order item by its ID."""
 
-        orderItem = self.sess.query(OrderItem).filter_by(id=orderItem_id).first()
-        if not orderItem:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=Error(
-                    message="Order not found",
-                    code=404,
-                ).dict(),
-            )
-        return orderItem
+#         orderItem = self.sess.query(OrderItem).filter_by(id=orderItem_id).first()
+#         if not orderItem:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail=Error(
+#                     message="Order not found",
+#                     code=404,
+#                 ).dict(),
+#             )
+#         return orderItem
 
-    def update_orderItem(self, orderItem_id: UUID, orderItem_input: OrderItemUpdate):
-        """Update an order item with patch update."""
-        orderItem = self.get_orderItem_by_id(orderItem_id)
+#     def update_orderItem(self, orderItem_id: UUID, orderItem_input: OrderItemUpdate):
+#         """Update an order item with patch update."""
+#         orderItem = self.get_orderItem_by_id(orderItem_id)
 
-        if orderItem:
-            for field, value in orderItem_input.dict(exclude_unset=True).items():
-                setattr(orderItem, field, value)
+#         if orderItem:
+#             for field, value in orderItem_input.dict(exclude_unset=True).items():
+#                 setattr(orderItem, field, value)
 
-            self.sess.commit()
-            self.sess.refresh(orderItem)
+#             self.sess.commit()
+#             self.sess.refresh(orderItem)
 
-        return orderItem
+#         return orderItem
 
-    def delete_orderItem(self, orderItem_id: UUID):
-        """Delete an order item by its ID."""
-        orderItem = self.get_orderItem_by_id(orderItem_id)
-        if orderItem:
-            self.sess.delete(orderItem)
-            self.sess.commit()
-=======
-            existing_order = self.db.orders.find_one({"transaction_id": req.transaction_id, "is_active": True})
-            if existing_order:
-                raise HTTPException(status_code=400, detail="Transaction id already exists")
+#     def delete_orderItem(self, orderItem_id: UUID):
+#         """Delete an order item by its ID."""
+#         orderItem = self.get_orderItem_by_id(orderItem_id)
+#         if orderItem:
+#             self.sess.delete(orderItem)
+#             self.sess.commit()
+#         return order
 
-            new_order = {
-                "transaction_id": req.transaction_id,
-                "user_id": req.user_id,
-                "order_items": req.order_items,
-                "created": datetime.utcnow(),
-                "is_active": True
-            }
+#     def delete_order(self, orderId: UUID):
+#         """Delete an order by its ID."""
+#         order = self.get_order_by_id(orderId)
+#         if order:
+#             self.sess.delete(order)
+#             self.sess.commit()
 
-            result = self.db.orders.insert_one(new_order)
-            new_order["_id"] = str(result.inserted_id)
 
-            logger.info(f"Inserted Order with ID: {new_order['_id']}")
-            return new_order
+
+#   def get_orderItem_by_id(self, orderItem_id: UUID):
+#         """Retrieve an order item by its ID."""
+
+#         orderItem = self.sess.query(OrderItem).filter_by(id=orderItem_id).first()
+#         if not orderItem:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail=Error(
+#                     message="Order not found",
+#                     code=404,
+#                 ).dict(),
+#             )
+#         return orderItem
+
+#     def update_orderItem(self, orderItem_id: UUID, orderItem_input: OrderItemUpdate):
+#         """Update an order item with patch update."""
+#         orderItem = self.get_orderItem_by_id(orderItem_id)
+
+#         if orderItem:
+#             for field, value in orderItem_input.dict(exclude_unset=True).items():
+#                 setattr(orderItem, field, value)
+
+#             self.sess.commit()
+#             self.sess.refresh(orderItem)
+
+#         return orderItem
+
+#     def delete_orderItem(self, orderItem_id: UUID):
+#         """Delete an order item by its ID."""
+#         orderItem = self.get_orderItem_by_id(orderItem_id)
+#         if orderItem:
+#             self.sess.delete(orderItem)
+#             self.sess.commit()
+#             existing_order = self.db.orders.find_one({"transaction_id": req.transaction_id, "is_active": True})
+#             if existing_order:
+#                 raise HTTPException(status_code=400, detail="Transaction id already exists")
+
+#             new_order = {
+#                 "transaction_id": req.transaction_id,
+#                 "user_id": req.user_id,
+#                 "order_items": req.order_items,
+#                 "created": datetime.utcnow(),
+#                 "is_active": True
+#             }
+
+#             result = self.db.orders.insert_one(new_order)
+#             new_order["_id"] = str(result.inserted_id)
+
+#             logger.info(f"Inserted Order with ID: {new_order['_id']}")
+#             return new_order
 
 
 #         except HTTPException:
