@@ -60,7 +60,7 @@ const layerTree = [
         children: [
           {
             item: {
-              name: 'index.vue',
+              name: 'dashboard.vue',
               tooltip: 'Your home page',
               icon: 'vscode-icons:file-type-vue',
             },
@@ -617,7 +617,7 @@ const mergedTree = [
     children: [
       {
         item: {
-          name: 'index.vue',
+          name: 'dashboard.vue',
           tooltip: 'from your app layer',
           icon: 'vscode-icons:file-type-vue',
         },

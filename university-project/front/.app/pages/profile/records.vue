@@ -40,8 +40,8 @@ const query = computed(() => {
     page: page.value,
   }
 })
-function addDevice (deviceId){
-  app.addDevice(deviceId)
+function deleteRecord(recordId){
+  app.deleteRecord(recordId)
 }
 const formatPrice = (price: number) => {
   if (price) {
@@ -49,7 +49,7 @@ const formatPrice = (price: number) => {
 
   }
 };
-const fetchDevices = app.fetchDevices;
+const fetchRecords = app.fetchRecords;
 
 
 function statusColor(itemStatus: string) {
@@ -86,7 +86,7 @@ const getItemProgress = (item) => {
   return statusItemMap[item.status];
 };
 const initializeData = async () => {
-  await fetchDevices();
+  await fetchRecords();
 };
 initializeData()
 
@@ -121,27 +121,30 @@ initializeData()
             lead="tight"
             class="text-muted-800 dark:text-white"
           >
-            <span>Available Products</span>
+            <span>Records</span>
           </BaseHeading>
 
         </div>
         <div class="mb-2 space-y-5">
 
-          <div v-for="device in app.getDevices" class="flex items-center gap-2">
+          <div v-for="record in app.getRecords" class="flex items-center gap-2">
                           <div>
                           <BaseHeading
                             as="h4"
                             size="sm"
                             weight="medium"
                             lead="snug"
-                            class="text-muted-800 dark:text-white"
+                            class="text-muted-800 dark:text-white mb-10"
                           >
-                            <span>{{ device.name }}</span>
+                            <div>Device Name: {{ record.device_name }}</div>
+                            <div>Start Time: {{ record.start_time }}</div>
+                            <div>End Time: {{ record.end_time }}</div>
+                            <div>Consumption: {{ record.consumption }}</div>
                           </BaseHeading>
                         </div>
                         <div class="ms-auto flex items-center gap-1">
-                          <BaseButtonIcon @click="addDevice(device.id)" rounded="full" small>
-                            <Icon name="ri:add-circle-fill" />
+                          <BaseButtonIcon @click="deleteRecord(record.power_record_id)" rounded="full" small>
+                            <Icon name="ri:delete-bin-fill" />
                           </BaseButtonIcon>
                         </div>
 

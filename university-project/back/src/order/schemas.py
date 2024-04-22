@@ -1,78 +1,13 @@
-from typing import List
+from typing import List, Optional
+from datetime import datetime
+
+from typing import List, Optional, Annotated
 
 from pydantic import UUID4, BaseModel
 
 from .models import StatusEnum
-from ..product.schemas import ProductRes
-
-
-class OrderItemReq(BaseModel):
-    """
-    Request model for creating an order item.
-
-    Attributes:
-    - name (dict): Name of the order item.
-    - price (float): Regular price of the order item.
-    - discount_price (float): Discounted price of the order item.
-    - email (str | None): Email associated with the order item (optional).
-    - password (str | None): Password associated with the order item (optional).
-    - description (str | None): Description of the order item (optional).
-    - status (str): Status of the order item.
-    - orderId (UUID4): Unique identifier of the associated order.
-    - product_id (UUID4): Unique identifier of the associated product.
-    """
-    name: dict
-    price: float
-    discount_price: float
-    email: str | None = None
-    password: str | None = None
-    description: str | None = None
-    status: str
-    orderId: UUID4
-    product_id: UUID4
-
-
-class OrderItemRes(BaseModel):
-    """
-    Response model for retrieving order item information.
-
-    Attributes:
-    - id (UUID4): Unique identifier for the order item.
-    - name (dict): Name of the order item.
-    - price (float): Regular price of the order item.
-    - discount_price (float): Discounted price of the order item.
-    - email (str): Email associated with the order item.
-    - password (str): Password associated with the order item.
-    - description (str): Description of the order item.
-    - count (int): Quantity of the order item.
-    - status (StatusEnum): Status of the order item.
-    - orderId (UUID4): Unique identifier of the associated order.
-    - product (ProductRes): Product information associated with the order item.
-    """
-
-    id: UUID4
-    name: dict
-    price: float
-    discount_price: float
-    email: str | None = None
-    password: str | None = None
-    description: str | None = None
-    status: StatusEnum
-    orderId: UUID4
-    product: ProductRes
-
-
-# class OrderItemUp(BaseModel):
-#     name: str = None
-#     price: float = None
-#     discount_price: float = None
-#     email: str = None
-#     password: str = None
-#     description: str = None
-#     count: int = None
-#     status: str = None
-#     orderId: UUID4 = None
-#     product_id: UUID4 = None
+from ..auth.schemas import ObjectIdPydanticAnnotation
+from bson import ObjectId
 
 
 class OrderReq(BaseModel):
@@ -86,7 +21,7 @@ class OrderReq(BaseModel):
     - discount_price (float): Discounted price of the order.
     - status (str): Status of the order.
     """
-    user_id: UUID4
+    user_id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     transaction_id: str
     price: float
     discount_price: float
@@ -107,13 +42,14 @@ class OrderRes(BaseModel):
     - orderItem (List[OrderItemRes]): List of order items associated with the order.
     """
 
-    id: UUID4
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     transaction_id: str
     price: float
     discount_price: float
     status: StatusEnum
     user_id: UUID4
-    order_items: List[OrderItemRes] | None = None
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class OrderResList(BaseModel):
@@ -135,3 +71,33 @@ class OrderResList(BaseModel):
 #     price: float = None
 #     discount_price: float = None
 #     status: StatusEnum = None
+
+class OrderCreateSchema(BaseModel):
+    user_id: Optional[str] = None
+    solar_panel_id: str
+    seller_id: Optional[str] = None
+    amount: int
+    fee: Optional[int] = None
+    created_at: Optional[datetime]
+
+class OrderCreate(BaseModel):
+    price: float = 0.0
+    status: str
+    user_id: str
+
+class OrderUpdate(BaseModel):
+    price: Optional[float] = None
+    status: Optional[str] = None
+    volume: Optional[float] = None
+
+
+
+
+class OrderOut(BaseModel):
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    price: float | None = None
+    status: str | None = None
+    volume: float | None = None
+    user_id: str | None = None
+    class Config:
+        arbitrary_types_allowed = True

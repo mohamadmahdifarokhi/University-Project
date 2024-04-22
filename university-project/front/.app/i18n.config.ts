@@ -90,7 +90,7 @@ export default defineI18nConfig(() => ({
           "fetchFailed": "Error fetching cart."
         }
       },
-      "AccountOptions": "Beyond offering various account options for sale, we also provide additional services aimed at enhancing your experience on the platform",
+      "AccountOptions": "Beyond offering various account options for sale, we also provide additional services.py aimed at enhancing your experience on the platform",
       "Shop": "Shop",
       "Soon": "Coming Soon",
       "Current": "Current existing models in AI chatbots include",

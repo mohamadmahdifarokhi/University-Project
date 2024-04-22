@@ -73,6 +73,16 @@ const {t} = useI18n({useScope: "local"})
             </li>
             <li>
               <NuxtLink
+                :to="localPath('/profile/records')"
+                exact-active-class="!text-primary-500 !bg-primary-500/10"
+                class="text-muted-400 hover:text-muted-600 dark:hover:text-muted-200 hover:bg-muted-50 dark:hover:bg-muted-700/50 flex items-center gap-2 rounded-lg p-3 transition-colors duration-300"
+              >
+                <Icon name="ri:git-commit-fill" class="size-5"/>
+                <span>{{ t('Records') }}</span>
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
                 :to="localPath('/profile/settings')"
                 exact-active-class="!text-primary-500 !bg-primary-500/10"
                 class="text-muted-400 hover:text-muted-600 dark:hover:text-muted-200 hover:bg-muted-50 dark:hover:bg-muted-700/50 flex items-center gap-2 rounded-lg p-3 transition-colors duration-300"
