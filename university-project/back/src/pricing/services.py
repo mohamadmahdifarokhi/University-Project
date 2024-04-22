@@ -35,7 +35,7 @@ def service_get_pricing(
     pricing_id: str,
 ):
     pricing = db["pricing"].find_one({"_id": ObjectId(pricing_id)})
-    return pricing
+    return PricingSchema(**pricing)
 
 def service_delete_pricing(
     pricing_id: str,

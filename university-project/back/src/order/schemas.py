@@ -61,6 +61,20 @@ class OrderResList(BaseModel):
     orders: List[OrderRes] | None = None
     count: int
 
+# class OrderUp(BaseModel):
+#     user_id: UUID4 = None
+#     coupon_id: UUID4 = None
+#     transaction_id: str = None
+#     price: float = None
+#     discount_price: float = None
+#     status: StatusEnum = None
+
+class OrderCreateSchema(BaseModel):
+    user_id: Optional[str] = None
+    solar_panel_id: str
+    amount: int
+    fee: Optional[int] = None
+
 class OrderCreate(BaseModel):
     price: float = 0.0
     status: str
