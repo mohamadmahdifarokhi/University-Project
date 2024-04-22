@@ -6,10 +6,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
   if (authStore.isAuthenticated) {
     if (from.path.startsWith('/en/')) {
       // Redirect to '/en/'
-      return navigateTo('/en/');
+      return navigateTo('/en/dashboard');
     } else {
       // Redirect to '/'
-      return navigateTo('/');
+      return navigateTo('/dashboard');
     }
   }
 })

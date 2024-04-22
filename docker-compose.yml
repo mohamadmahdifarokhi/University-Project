@@ -1,70 +1,71 @@
 services:
-  # Service for the accountract application
-  accountract:
-    build: ./accountract/back
-    container_name: accountract-back
-    command: uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+  # Service for the university-project application
+  university-project:
+    build: ./university-project/back
+    container_name: university-project-back
+    command: uvicorn src.main:app --reload --host 0.0.0.0 --port 8002
     volumes:
-      - ./accountract/back:/usr/src/app
+      - ./university-project/back:/usr/src/app
     ports:
-      - "8000:8000"
+      - "8002:8002"
     env_file: .env
     restart: always
     depends_on:
-      - accountract-db
+      - university-project-db
     networks:
-      - accountract-network
+      - university-project-network
 
   redis:
     container_name: redis
     image: redis:7.2
     networks:
-      - accountract-network
+      - university-project-network
     ports:
-      - 6379:6379
+      - 6389:6379
     restart: always
     volumes:
       - redis_data:/data
 
-  # PostgreSQL database for accountract
-  accountract-db:
-    image: postgres:15.3
-    container_name: accountract-db
+  # MongoDB for university-project
+  university-project-db:
+    image: mongo
+    container_name: university-project-mongo
     ports:
-      - "5432:5432"
+      - "27018:27017"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=accountract
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=university
     networks:
-      - accountract-network
+      - university-project-network
     volumes:
-      - accountract-db-data:/var/lib/postgresql/data
-    restart: on-failure
-
-  # pgAdmin for database management
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    ports:
-      - "8080:80"
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=accountractadminteam@gmail.com
-      - PGADMIN_DEFAULT_PASSWORD=Ac179234.Ac
-    depends_on:
-      - accountract-db
-    networks:
-      - accountract-network
+      - university-project-db-data:/data/db
     restart: always
 
-  # Service for the accountract front
-  accountract-front:
-    build: ./accountract/front
-    container_name: accountract-front
+  # Mongo Compass for database management
+  mongo-compass:
+    image: mongo-express
+    container_name: mongo-compass
+    ports:
+      - "8082:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:admin@university-project-db:27017/
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=admin
+    depends_on:
+      - university-project-db
+    networks:
+      - university-project-network
+    restart: always
+
+  # Service for the university-project front
+  university-project-front:
+    build: ./university-project/front
+    container_name: university-project-front
     # command: "node .app/.output/server/index.mjs"
     working_dir: /usr/src/app
     volumes:
-      - ./accountract/front:/usr/src/app
+      - ./university-project/front:/usr/src/app
       - /usr/src/app/node_modules
       - /usr/src/app/.app/node_modules
       - /usr/src/app/.demo/node_modules
@@ -73,20 +74,21 @@ services:
       - /usr/src/app/.demo/.nuxt
     ports:
       - "80:3000"
+    env_file: ./university-project/front/.app/.env
     depends_on:
-      - accountract
-      - accountract-db
+      - university-project
+      - university-project-db
     networks:
-      - accountract-network
+      - university-project-network
     restart: always
 
 networks:
-  accountract-network:
+  university-project-network:
     driver: bridge
 
 volumes:
-  # Volume for accountract database data
-  accountract-db-data:
+  # Volume for university-project MongoDB data
+  university-project-db-data:
 
   redis_data:
 

@@ -1,57 +1,35 @@
-import uvicorn
 from fastapi import FastAPI
-from sqlalchemy.orm import Session
+from pymongo import MongoClient
 from starlette.middleware.cors import CORSMiddleware
-from src.device.models import Device
-from src.block.models import Block
-from src.auth.models import Permission
-from src.auth.routers import router as auth_router
-from src.auth.schemas import VerifyOtpReq, OtpReq
-from src.auth.services import UserService, OTPService
+
+from src.auth.services import OTPService, UserService
+from src.logger import logger
 from src.order.routers import router as order_router
-from src.product.routers import router as product_router
 from src.profile.routers import router as profile_router
-from src.auth.admins import UserAdmin, OTPAdmin, TokenAdmin, PermissionAdmin, PermissionSetAdmin
-from src.order.admins import OrderAdmin
-from src.product.admins import ProductAdmin
-from src.profile.admins import ProfileAdmin
-from src.core.admins import authentication_backend
-from src.db.db import Base, engine, sess_db
-from sqladmin import Admin
-from .logger import logger
+from src.auth.routers import router as auth_router
+from src.device.api import router as device_router
+from src.power_record.api import router as power_record_router
+from src.pricing.api import router as pricing_router
+from src.solar_panel.routers import router as solar_panel_router
+import os
+from dotenv import load_dotenv
+from src.db import db
+load_dotenv()
 
 app = FastAPI(title="Uuniversity Project")
-
-# Initialize SQL Admin
-admin: Admin = Admin(app, engine, title="Uuniversity Project Service", authentication_backend=authentication_backend)
-
-admin.add_view(UserAdmin)
-admin.add_view(OTPAdmin)
-admin.add_view(TokenAdmin)
-admin.add_view(PermissionAdmin)
-admin.add_view(PermissionSetAdmin)
-
-admin.add_view(OrderAdmin)
-admin.add_view(ProductAdmin)
-admin.add_view(ProfileAdmin)
-
+client = MongoClient(os.environ.get("DATABASE_URL"))
+# Access your database
+db = client["university"]
 # Configure CORS
 origins = [
-    "http://localhost:3002",
-    "http://accountract.com:3002",
-    "http://accountract.com",
-    "http://5.78.57.46:3002",
-    "http://localhost:3001",
-    "http://5.78.57.46:3001",
-    "http://5.78.57.46:80",
-    "http://5.78.57.46",
-    "http://localhost:8000",
-    "http://localhost:8001",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:3002",
-    "http://127.0.0.1:3001",
-    "http://5.78.57.46:8000",
-    "http://127.0.0.1:8001",
+    "http://localhost:80",
+    "http://localhost:3000",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1:3000",
+    "http://91.107.243.202",
+    "http://91.107.243.202:3000",
+    "http://91.107.243.202:80"
+
 ]
 
 app.add_middleware(
@@ -62,61 +40,68 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(auth_router)
+app.include_router(profile_router, prefix="/users/profiles")
+app.include_router(order_router, prefix="/users/orders")
+
+
+app.include_router(device_router)
+app.include_router(power_record_router)
+app.include_router(pricing_router)
+app.include_router(solar_panel_router)
+
 
 # Create tables on startup
 @app.get("/startup", tags=["Startup"])
 async def on_startup():
     """
-    Create tables on application startup.
+    Create collections on application startup.
     """
-    Base.metadata.create_all(bind=engine)
-
-# Include routers
-app.include_router(auth_router)
-app.include_router(profile_router, prefix="/users/profiles")
-app.include_router(product_router, prefix="/products")
-app.include_router(order_router, prefix="/users/orders")
-
-Base.metadata.create_all(bind=engine)
+    # Define your MongoDB collections here
+    db.create_collection('users')
+    db.create_collection('permissions')
+    db.create_collection('profiles')
+    db.create_collection('carts')
 
 
-def create_user_permission(sess: Session = next(sess_db())):
+# Define functions for creating permissions and admin user
+def create_user_permission():
     """
-    Create a 'user' permission in the database.
+    Create a 'user' permission in the database if it does not exist.
     """
     try:
-        permission = Permission(name="user", description="user")
-        sess.add(permission)
-        sess.commit()
-
+        existing_permission = db.permissions.find_one({"name": "user"})
+        if existing_permission is None:
+            db.permissions.insert_one({"name": "user", "description": "user"})
     except Exception as e:
-        sess.rollback()
         logger.error(f"Error creating user permission: {e}")
 
 
-def create_admin_permission(sess: Session = next(sess_db())):
+def create_admin_permission():
     """
-    Create an 'admin' permission in the database.
+    Create an 'admin' permission in the database if it does not exist.
     """
     try:
-        permission = Permission(name="admin", description="admin")
-        sess.add(permission)
-        sess.commit()
-
+        existing_permission = db.permissions.find_one({"name": "admin"})
+        if existing_permission is None:
+            db.permissions.insert_one({"name": "admin", "description": "admin"})
     except Exception as e:
-        sess.rollback()
         logger.error(f"Error creating admin permission: {e}")
 
 
-def create_admin(sess: Session = next(sess_db())):
+def create_admin():
     """
     Create an admin user in the database.
     """
     try:
-        otp = OTPService(sess).insert(OtpReq(email="accountract@gmail.com"))
-        UserService(sess).insert(
-            req=VerifyOtpReq(email="accountract@gmail.com", password="accountract", otp_code=otp.otp_code),
-            admin=True)
+        otp = OTPService().insert({"email": "admin@gmail.com"})
+        print("asdasdsad")
+        UserService().insert(req={
+            "email": "admin@gmail.com",
+            "password": "admin",
+            "otp_code": otp['otp_code'],
+        }, admin=True)
     except Exception as e:
         logger.error(f"Error creating admin user: {e}")
 
@@ -128,4 +113,6 @@ create_admin()
 
 # Run the application using Uvicorn
 if __name__ == '__main__':
+    import uvicorn
+
     uvicorn.run('app:app', host="127.0.0.1", port=8010)

@@ -101,7 +101,7 @@ const videos = [
   },
   {
     id: 7,
-    title: '5 Differences between promoting your services and a product',
+    title: '5 Differences between promoting your services.py and a product',
     slug: '',
     cover: '/img/illustrations/dashboards/video/8.jpg',
     uploaded: 'Yesterday',

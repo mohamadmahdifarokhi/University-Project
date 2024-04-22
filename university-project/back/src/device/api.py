@@ -4,14 +4,14 @@ from .schemas import *
 from .services import *
 from src.auth.models import User
 from src.auth.secures import get_current_user
-
+from ..auth.secures import get_user
 
 router = APIRouter(
     prefix="/device",
     tags=["Device"],
 )
 
-@router.get("/{user_id}/devices", summary="Get all devices of a user")
+@router.get("/user", summary="Get all devices of a user")
 def devices_list_all_by_user(
     user: User = Depends(get_current_user)
 ):
@@ -51,9 +51,12 @@ def device_get(
     )
 
 @router.patch("/select", summary="select device")
-def select_device(
-    device_id: str
+async def select_device(
+    device_id: str,
+    user: User = Depends(get_user)
+
 ):
+    print(user)
     return service_select_device(
-        device_id
+        device_id, user
     )
