@@ -1,5 +1,5 @@
 from typing import List, Optional
-
+from datetime import datetime
 from pydantic import UUID4, BaseModel
 
 from .models import StatusEnum
@@ -142,4 +142,5 @@ class OrderCreateSchema(BaseModel):
     seller_id: str
     amount: int
     fee: Optional[int] = None
+    created_at: Optional[datetime]
 
