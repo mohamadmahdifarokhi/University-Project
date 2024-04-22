@@ -139,7 +139,7 @@ class OrderResList(BaseModel):
 class OrderCreateSchema(BaseModel):
     user_id: Optional[str] = None
     solar_panel_id: str
-    seller_id: str
+    seller_id: Optional[str] = None
     amount: int
     fee: Optional[int] = None
     created_at: Optional[datetime]
