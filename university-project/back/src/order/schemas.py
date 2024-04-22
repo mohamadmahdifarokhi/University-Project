@@ -1,3 +1,6 @@
+from typing import List, Optional
+from datetime import datetime
+
 from typing import List, Optional, Annotated
 
 from pydantic import UUID4, BaseModel
@@ -72,8 +75,10 @@ class OrderResList(BaseModel):
 class OrderCreateSchema(BaseModel):
     user_id: Optional[str] = None
     solar_panel_id: str
+    seller_id: str
     amount: int
     fee: Optional[int] = None
+    created_at: Optional[datetime]
 
 class OrderCreate(BaseModel):
     price: float = 0.0
