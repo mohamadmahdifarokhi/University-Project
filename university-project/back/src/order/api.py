@@ -22,7 +22,7 @@ def devices_list_all_by_user(
 def devices_list_all_by_user(
     user: User = Depends(get_current_user)
 ):
-    return service_get_order_bu_user(
+    return service_get_order_by_user(
         user["_id"]
     )
 

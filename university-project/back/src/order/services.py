@@ -19,9 +19,11 @@ def service_create_order(
     if solar_panel["saved_capacity"] < order.amount:
         raise HTTPException(status_code=400, detail="Insufficient saved capacity.")
     
+    seller_id = db["solar_panels"].find_one({"_id": ObjectId(order.solar_panel_id)})["user_id"]
     base_order = OrderCreateSchema(
         user_id=order.user_id,
         solar_panel_id=order.solar_panel_id,
+        seller_id=seller_id,
         amount=order.amount,
         fee=order.amount*50
     ).model_dump()
@@ -54,10 +56,21 @@ def service_get_order_all(
     return results
 
 
-def service_get_order_bu_user(
+def service_get_order_buy_user(
     user_id: str,
 ):
     orders = db["orders"].find({"_id": ObjectId(user_id)})
+    results = []
+    for order in orders:
+        order["id"] = str(order["_id"])
+        del order["_id"]
+        results.append(OrderCreateSchema(**order))
+    return results
+
+def service_get_order_sell_user(
+    user_id: str,
+):
+    orders = db["orders"].find({"seller_id": user_id})
     results = []
     for order in orders:
         order["id"] = str(order["_id"])
