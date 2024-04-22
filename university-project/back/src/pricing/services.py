@@ -1,4 +1,4 @@
-from src.db import db
+from ..db.db import client, db
 from fastapi import Depends, HTTPException
 import pymongo
 from datetime import datetime

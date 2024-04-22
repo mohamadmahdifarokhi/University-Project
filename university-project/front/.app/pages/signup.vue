@@ -100,14 +100,14 @@ const onSubmit = handleSubmit(async (values) => {
 const loginWithGoogle = async () => {
   const route = useRoute();
 
-  const redirect_uri = route.query.callBackUrl || '/shop';
+  const redirect_uri = route.query.callBackUrl || '/dashboard';
 
   await authStore.loginWithGoogle(redirect_uri);
 }
 const submitOTP = handleSubmit(async (values) => {
   const route = useRoute();
 
-  const callBackUrl = route.query.callBackUrl || '/shop';
+  const callBackUrl = route.query.callBackUrl || '/dashboard';
   await authStore.verifyOTP({otp: +values.otp, callBackUrl: callBackUrl});
 });
 </script>

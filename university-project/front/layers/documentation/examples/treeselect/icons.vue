@@ -54,7 +54,7 @@ const tree = [
         ],
       },
       {
-        item: 'index.vue',
+        item: 'dashboard.vue',
       },
     ],
   },

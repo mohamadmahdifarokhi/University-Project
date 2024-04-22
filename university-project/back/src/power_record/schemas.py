@@ -1,10 +1,13 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Annotated
 from pydantic import UUID4, BaseModel, EmailStr, constr, conint
+from bson import ObjectId
+
+from src.auth.schemas import ObjectIdPydanticAnnotation
 
 
 class PowerRecordSchema(BaseModel):
-    user_id: str 
+    user_id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     device_name: str
     start_time: datetime
     end_time: datetime

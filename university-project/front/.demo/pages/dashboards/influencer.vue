@@ -57,7 +57,7 @@ const companies = [
     logo: 'logos:slack-icon',
     title: 'Product Designer',
     description:
-      'Slack is a cloud-based set of team collaboration tools and services.',
+      'Slack is a cloud-based set of team collaboration tools and services.py.',
     tags: ['Full Time', 'Product design', 'Marketing'],
     stats: [
       {
@@ -121,7 +121,7 @@ const companies = [
     logo: 'logos:google-icon',
     title: 'Product Owner',
     description:
-      'Google is an American multinational technology company that specializes in Internet-related services and products.',
+      'Google is an American multinational technology company that specializes in Internet-related services.py and products.',
     tags: ['Full Time', 'Scrum master', 'Management'],
     stats: [
       {
