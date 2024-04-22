@@ -7,10 +7,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
   if (!authStore.isAdmin) {
     if (from.path.startsWith('/en/')) {
       // Redirect to '/en/login'
-      return navigateTo('/en/');
+      return navigateTo('/en/dashboard');
     } else {
       // Redirect to '/login'
-      return navigateTo('/');
+      return navigateTo('/dashboard');
     }
   }
 });

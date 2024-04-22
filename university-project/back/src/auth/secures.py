@@ -2,14 +2,18 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
+from bson import ObjectId
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status, Security
 from passlib.context import CryptContext
 from fastapi.security import SecurityScopes, OAuth2PasswordBearer
 from jose import jwt, JWTError
+from pymongo import MongoClient
+
 from .models import User
 from sqlalchemy.orm import Session
-from ..db.db import sess_db
+
+from ..db import db
 from ..logger import logger
 from fastapi_sso.sso.google import GoogleSSO
 
@@ -32,7 +36,9 @@ sso = GoogleSSO(
     scope=["profile", "email"]
 )
 
-
+client = MongoClient(os.environ.get("DATABASE_URL"))
+# Access your database
+db = client["university"]
 def get_password_hash(password):
     """
     Hash the password using the CryptContext.
@@ -90,22 +96,20 @@ def authenticate(password, user):
         bool: True if authentication is successful, raises HTTPException otherwise.
     """
     try:
-        password_check = verify_password(password, user.password)
+        password_check = verify_password(password, user['password'])
         return password_check
     except Exception as e:
         logger.error(f"Authentication error: {e}")
         raise HTTPException(status_code=400, detail="Invalid account")
 
 
-def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme),
-                     sess: Session = Depends(sess_db)):
+def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)):
     """
     Get the current user based on the provided token.
 
     Args:
         security_scopes (SecurityScopes): The security scopes required.
         token (str): The OAuth2 token.
-        sess (Session): The SQLAlchemy database session.
 
     Returns:
         User: The current authenticated user.
@@ -113,25 +117,29 @@ def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth
     Raises:
         HTTPException: If credentials cannot be validated or if the user has insufficient permissions.
     """
+    print('fffff')
     authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": authenticate_value},
     )
-
+    print("aaaaa")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: uuid = payload.get("sub")
+        user_id: str = payload.get("sub")
+        print(user_id)
         if user_id is None:
             raise credentials_exception
         token_scopes = payload.get("scopes", [])
     except JWTError:
         raise credentials_exception
-
-    user = sess.query(User).filter_by(id=user_id).first()
+    print("vvvv")
+    user = db.users.find_one({"_id": ObjectId(user_id)})
+    print(user)
     if user is None:
         raise credentials_exception
+    print(user)
 
     for scope in security_scopes.scopes:
         if scope not in token_scopes:

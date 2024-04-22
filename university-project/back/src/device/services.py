@@ -1,4 +1,4 @@
-from src.db import db
+from ..db.db import client, db
 from fastapi import Depends, HTTPException
 import pymongo
 from datetime import datetime
@@ -59,6 +59,7 @@ def service_list_device_user(
 ):
     devices = db["users"].find_one({"_id": ObjectId(user_id)})["devices"]
     results = []
+    print(devices, "loplop")
     for device_id in devices:
         device = db["device"].find_one({"_id": ObjectId(device_id)})
         device["id"] = str(device["_id"])
@@ -69,12 +70,11 @@ def service_list_device_user(
 
 def service_select_device(
     device_id: str,
-    user: User = Depends(get_current_user)
-
+user
 ):
-    update_result = db["user"].update_one(
+    update_result = db["users"].update_one(
         {
-            "_id": ObjectId(user.id),
+            "_id": ObjectId(user['_id']),
         },
         {
             "$push": {
