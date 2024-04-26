@@ -349,18 +349,20 @@ export const useAppStore = defineStore('app', {
       }
     },
 
-    async addRecord(start, end, consumption) {
+    async addRecord(device_name, start, end, consumption) {
       try {
-        const recordData = {
-                    start: start,
-                    end: end,
-                    consumption: consumption,
-                  };
+       const recordData = {
+      device_name: device_name,
+      start_time: start,
+      end_time: end,
+      consumption: consumption
+    };
+        console.log(recordData,'kok')
         const accessToken = useCookie('access_token').value;
-        const response = await axios.post(`${apiUrl}/power-records/records`, recordData, {
+        const response = await axios.post(`${apiUrl}/power-records/add-record`, recordData, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
           }
         });
         if (response.status === 200) {

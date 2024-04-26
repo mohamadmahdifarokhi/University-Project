@@ -33,9 +33,10 @@ const VALIDATION_TEXT = {
   PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
 }
 const zodSchema = z.object({
-  start: z.date(),
-  end: z.date(),
+  start: z.string(),
+  end: z.string(),
   consumption: z.string(),
+  deviceId: z.string(),
 })
 
 type FormInput = z.infer<typeof zodSchema>;
@@ -45,6 +46,7 @@ const initialValues = computed<FormInput>(() => ({
   start: '',
   end: '',
   consumption: '',
+  deviceId: '',
 }))
 const {
   handleSubmit,
@@ -62,8 +64,8 @@ const {
 })
 
 const addPowerRecord = handleSubmit(async (values) => {
-  console.log("Asdqwdqwdqwd")
-  await app.addRecord(values.start, values.end, values.consumption);
+  console.log("Asdqwdqwdqwd", values)
+  await app.addRecord(values.deviceId,values.start, values.end, values.consumption);
 })
 
 function useAreaCustomers() {
@@ -775,7 +777,7 @@ function useBarProfit() {
 
 
       <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-        <form method="POST" action="" @submit.prevent="addPowerRecord">
+        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
           <BaseCard rounded="lg" class="p-6">
             <div class="mb-6 flex items-center justify-between">
               <BaseHeading
@@ -799,30 +801,57 @@ function useBarProfit() {
                       lead="snug"
                       class="text-muted-800 dark:text-white"
                     >
-                      <span>{{ device.name }}</span>
+                      <span>{{ device.name  }}</span>
                     </BaseHeading>
                   </div>
-                  <Field class="ms-auto flex items-center gap-1" name="start">
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" :value="device.name" name="deviceId">
                     <BaseInput
-                      type="date"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
+                     type="hidden"
+                      shape="curved"
+                    />
+                  </Field>
+
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" name="start">
+                    <BaseInput
+                      :model-value="field.value"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
+                      type="datetime-local"
                       shape="curved"
                       placeholder="Start Date"
                       icon="ri:calendar-fill"
                     />
                   </Field>
-                  <Field class="ms-auto flex items-center gap-1" name="end">
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" name="end">
                     <BaseInput
-                      type="date"
+                      :model-value="field.value"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
+                      type="datetime-local"
                       shape="curved"
                       placeholder="End Date"
                       icon="ri:calendar-fill"
                     />
                   </Field>
-                  <Field class="ms-auto flex items-center gap-1" name="consumption">
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" name="consumption">
                     <BaseInput
+                      :model-value="field.value"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
                       shape="curved"
                       placeholder="Consumption"
                       icon="ri:lightbulb-flash-fill"
+
                     />
                   </Field>
                   <div class="ms-auto flex items-center gap-1">
