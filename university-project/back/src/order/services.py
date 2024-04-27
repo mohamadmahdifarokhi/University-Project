@@ -104,7 +104,7 @@ def service_delete_order(
 
 
 def service_last_orders(
-        db
+
 ):
     orders = db["orders"].find().sort({"created_at": -1}).limit(5)
     results = []
