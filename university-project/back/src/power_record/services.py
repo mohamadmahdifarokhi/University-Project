@@ -1,7 +1,8 @@
+import json
 from ..db.db import db
 from fastapi import Depends, HTTPException
 import pymongo
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 from .schemas import *
 from fastapi import File, UploadFile
@@ -73,3 +74,27 @@ def upload_excel_file(file: UploadFile = File(...),
     result = db["power_records"].insert_many(records)
     
     return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
+
+def service_show_records_on_chart(
+    device_name,
+    user_id
+):
+    time_24_hours_ago = datetime.now() - timedelta(days=1)
+    query = {
+        "user_id": ObjectId(user_id),
+        "device_name": device_name,
+        "start_time": {"$gte": time_24_hours_ago}
+    }
+    user_device_record = db["power_records"].find(query)
+    result = {device_name: {}}
+
+    for record in user_device_record:
+        duration_seconds = (record['end_time'] - record['start_time']).total_seconds()
+        time_key = record['start_time'] + timedelta(seconds=duration_seconds)
+        time_key_str = time_key.strftime("%Y-%m-%d %H:%M:%S")
+        
+        result[device_name][time_key_str] = record['consumption']
+    
+    return result
+
+    
