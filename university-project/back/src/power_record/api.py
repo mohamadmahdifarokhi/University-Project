@@ -44,7 +44,7 @@ def power_record_delete(
     user: User = Depends(get_current_user)
 
 ):
-    return service_delete_power_records(
+    return service_show_records_on_chart(
         device_name=device_name,
         user_id=user["_id"]
     )
