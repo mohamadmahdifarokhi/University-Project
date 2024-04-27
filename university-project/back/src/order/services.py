@@ -39,7 +39,7 @@ def service_create_order(
         seller_id=seller_id,
         amount=order.amount,
         fee=order.amount*50,
-        created_at=datetime.now()
+        created_at=str(datetime.now())
     ).model_dump()
     db["orders"].insert_one(base_order)
     update_result = db["solar_panels"].update_one(
@@ -79,7 +79,7 @@ def service_get_order_buy_user(
         order["id"] = str(order["_id"])
         order["created_at"] = order["created_at"].strftime("%d-%b-%Y")
         del order["_id"]
-        results.append(OrderCreateSchema(**order))
+        results.append(OrderOutputSchema(**order))
     return results
 
 def service_get_order_sell_user(
@@ -91,7 +91,7 @@ def service_get_order_sell_user(
         order["id"] = str(order["_id"])
         order["created_at"] = order["created_at"].strftime("%d-%b-%Y")
         del order["_id"]
-        results.append(OrderCreateSchema(**order))
+        results.append(OrderOutputSchema(**order))
     return results
 
 def service_delete_order(

@@ -78,7 +78,16 @@ class OrderCreateSchema(BaseModel):
     seller_id: Optional[str] = None
     amount: int
     fee: Optional[int] = None
-    created_at: Optional[str]
+    created_at: datetime | None  = None
+
+
+class OrderOutputSchema(BaseModel):
+    user_id: Optional[str] = None
+    solar_panel_id: str
+    seller_id: Optional[str] = None
+    amount: int
+    fee: Optional[int] = None
+    created_at: str | None  = None
 
 class OrderCreate(BaseModel):
     price: float = 0.0

@@ -22,7 +22,7 @@ class SolarPanelService:
         for panel in panels:
             user = self.db.users.find_one({"_id": ObjectId(panel['user_id'])})
             print(user)
-            panel["_id"] = str(panel["_id"])
+            panel["id"] = str(panel["_id"])
             panel["email"] = str(user["email"])
             panel["status"] = 'available'
         return panels
@@ -35,7 +35,7 @@ class SolarPanelService:
         panel["email"] = str(user["email"])
         panel["status"] = 'available'
         if panel:
-            panel["_id"] = str(panel["_id"])
+            panel["id"] = str(panel["_id"])
             return panel
         return None
 

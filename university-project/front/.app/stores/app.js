@@ -436,7 +436,30 @@ async fetchSolarPanels() {
         console.error('Error fetching orders:', error);
       }
     },
+async addOrder(user_id, solar_panel_id, amount, fee) {
+  try {
+    const orderData = {
+      user_id: user_id,
+      solar_panel_id: solar_panel_id,
+      amount: amount,
+      fee: fee
+    };
 
+    console.log(orderData, 'kok');
+    const accessToken = useCookie('access_token').value;
+    const response = await axios.post(`${apiUrl}/users/orders/order/`, orderData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      }
+    });
+    if (response.status === 200) {
+      this.showSuccessToast('Add');
+    }
+  } catch (error) {
+    console.error('Error adding order:', error);
+  }
+},
     async fetchselectedDevice() {
       try {
         const accessToken = useCookie('access_token').value;

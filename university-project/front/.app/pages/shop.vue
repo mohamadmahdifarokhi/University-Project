@@ -2,6 +2,7 @@
 import {onMounted} from "vue";
 import {storeToRefs} from "pinia";
 import {useAppStore} from "~/stores/app";
+const app = useAppStore();
 
 definePageMeta({
   title: 'Table List',
@@ -14,11 +15,19 @@ definePageMeta({
     order: 44,
   },
 })
-
+function addOrder(user_id, solar_panel_id, amount, fee) {
+  app.addOrder(user_id, solar_panel_id, amount, fee)
+}
+const config = useRuntimeConfig()
+if (import.meta.dev && !config.public.mapboxToken) {
+  console.warn(
+    'NUXT_PUBLIC_MAPBOX_TOKEN environment variable is not defined, mapbox features are disabled',
+  )
+}
 const route = useRoute()
 const router = useRouter()
 const page = computed(() => parseInt((route.query.page as string) ?? '1'))
-
+const amount = 0
 const filter = ref('')
 const perPage = ref(10)
 
@@ -29,7 +38,6 @@ watch([filter, perPage], () => {
     },
   })
 })
-const app = useAppStore();
 
 const query = computed(() => {
   return {
@@ -268,7 +276,15 @@ onMounted(async () => {
 
                 <TairoTableCell spaced>
                   <div class="flex justify-center">
-                    <BaseButtonIcon rounded="full" small>
+                    <BaseInput
+    v-model="amount"
+    type="number"
+    placeholder="Enter amount..."
+    :classes="{
+      wrapper: 'w-full sm:w-auto',
+    }"
+  />
+                    <BaseButtonIcon @click="addOrder(item.user_id, item.id, amount, item.fee)" rounded="full" small>
                   <Icon name="ri:add-circle-fill"/>
                 </BaseButtonIcon>
 <!--                    <BaseDropdown-->
