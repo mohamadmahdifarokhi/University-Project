@@ -69,7 +69,6 @@ const {
 })
 
 const addPowerRecord = handleSubmit(async (values) => {
-  console.log("Asdqwdqwdqwd", values)
   await app.addRecord(values.deviceId,values.start, values.end, values.consumption);
 })
 
@@ -105,12 +104,18 @@ function useAreaCustomers() {
       type: 'datetime',
       categories: [
         '2020-09-19T00:00:00.000Z',
-        '2020-09-25T01:30:00.000Z',
-        '2020-09-29T02:30:00.000Z',
-        '2020-10-07T03:30:00.000Z',
-        '2020-10-12T04:30:00.000Z',
-        '2020-10-24T05:30:00.000Z',
-        '2020-10-25T06:30:00.000Z',
+        '2020-09-19T03:00:00.000Z',
+        '2020-09-19T06:00:00.000Z',
+        '2020-09-19T09:00:00.000Z',
+        '2020-09-19T12:00:00.000Z',
+        '2020-09-19T18:00:00.000Z',
+        '2020-09-20T00:00:00.000Z',
+        // '2020-09-25T01:30:00.000Z',
+        // '2020-09-29T02:30:00.000Z',
+        // '2020-10-07T03:30:00.000Z',
+        // '2020-10-12T04:30:00.000Z',
+        // '2020-10-24T05:30:00.000Z',
+        // '2020-10-25T06:30:00.000Z',
       ],
     },
     tooltip: {
@@ -311,9 +316,126 @@ function useBarProfit() {
     series,
   }
 }
+
+const demoTimeline = reactive(useDemoTimeline())
+
+function useDemoTimeline() {
+  const { primary, info, success, warning, danger } = useTailwindColors()
+  const type = 'rangeBar'
+  const height = 280
+
+  const options = {
+    title: {
+      text: '',
+      align: 'left',
+    },
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    colors: [
+      primary.value,
+      info.value,
+      success.value,
+      warning.value,
+      danger.value,
+    ],
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        distributed: true,
+        dataLabels: {
+          hideOverflowingLabels: false,
+        },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: function (val: string, opts: any) {
+        const label = opts.w.globals.labels[opts.dataPointIndex]
+        const a = val[0]
+        const b = val[1]
+        const diff = 0
+        return label + ': ' + diff + (diff > 1 ? 'D' : 'd')
+      },
+      style: {
+        colors: ['#f3f4f5', '#fff'],
+        weight: 400,
+      },
+    },
+    xaxis: {
+      type: 'datetime',
+    },
+    yaxis: {
+      show: false,
+    },
+    grid: {
+      row: {
+        colors: ['transparent'],
+        opacity: 1,
+      },
+    },
+  }
+
+  const series = shallowRef([
+    {
+      data: [
+        {
+          x: 'Analysis',
+          y: [
+            new Date('2019-02-27').getTime(),
+            new Date('2019-03-04').getTime(),
+          ],
+          fillColor: primary.value,
+        },
+        {
+          x: 'Design',
+          y: [
+            new Date('2019-03-04').getTime(),
+            new Date('2019-03-08').getTime(),
+          ],
+          fillColor: info.value,
+        },
+        {
+          x: 'Coding',
+          y: [
+            new Date('2019-03-07').getTime(),
+            new Date('2019-03-10').getTime(),
+          ],
+          fillColor: success.value,
+        },
+        {
+          x: 'Testing',
+          y: [
+            new Date('2019-03-08').getTime(),
+            new Date('2019-03-12').getTime(),
+          ],
+          fillColor: warning.value,
+        },
+        {
+          x: 'Deployment',
+          y: [
+            new Date('2019-03-12').getTime(),
+            new Date('2019-03-17').getTime(),
+          ],
+          fillColor: danger.value,
+        },
+      ],
+    },
+  ])
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  }
+}
 </script>
 
 <template>
+
   <div>
     <!-- Header -->
     <!--    <div class="mb-8 flex flex-col justify-between md:flex-row md:items-center">-->
@@ -744,6 +866,28 @@ function useBarProfit() {
           </div>
         </BaseCard>
       </div>
+
+
+  <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+    <BaseCard class="p-6">
+      <!-- Title -->
+      <div class="mb-6">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Timeline Chart</span>
+        </BaseHeading>
+      </div>
+      <AddonApexcharts v-bind="demoTimeline" />
+    </BaseCard>
+  </div>
+
+
+
       <!-- Area Chart card -->
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
         <BaseCard class="p-6">
@@ -756,7 +900,7 @@ function useBarProfit() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>Products</span>
+              <span>List Of Appliance</span>
             </BaseHeading>
           </div>
           <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>

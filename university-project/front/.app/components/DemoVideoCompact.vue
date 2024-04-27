@@ -11,7 +11,7 @@ const {t} = useI18n({useScope: "local"})
 
 const followers = [
   {
-    'data-nui-tooltip': 'Uuniversity Project',
+    'data-nui-tooltip': 'DC Micro-grid Planner',
     'src': '/img/accountract.png',
   },
   {
