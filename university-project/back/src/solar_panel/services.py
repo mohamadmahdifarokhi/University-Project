@@ -20,11 +20,20 @@ class SolarPanelService:
     def get_solar_panels(self, skip: int = 0, limit: int = 10) -> List[SolarPanelOut]:
         panels = list(self.db.solar_panels.find().skip(skip).limit(limit))
         for panel in panels:
+            user = self.db.users.find_one({"_id": ObjectId(panel['user_id'])})
+            print(user)
             panel["_id"] = str(panel["_id"])
+            panel["email"] = str(user["email"])
+            panel["status"] = 'available'
         return panels
 
     def get_solar_panel(self, panel_id: str) -> Optional[SolarPanelOut]:
         panel = self.db.solar_panels.find_one({"_id": ObjectId(panel_id)})
+        user = self.db.users.find_one({"_id": ObjectId(panel['user_id'])})
+        print(user)
+        panel["_id"] = str(panel["_id"])
+        panel["email"] = str(user["email"])
+        panel["status"] = 'available'
         if panel:
             panel["_id"] = str(panel["_id"])
             return panel

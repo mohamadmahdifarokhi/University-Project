@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 
 from typing import List, Optional, Annotated
 
@@ -78,7 +78,7 @@ class OrderCreateSchema(BaseModel):
     seller_id: Optional[str] = None
     amount: int
     fee: Optional[int] = None
-    created_at: Optional[datetime]
+    created_at: Optional[str]
 
 class OrderCreate(BaseModel):
     price: float = 0.0

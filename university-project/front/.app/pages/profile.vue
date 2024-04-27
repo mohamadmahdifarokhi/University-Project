@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {storeToRefs} from "pinia";
 import {useAppStore} from "~/stores/app";
+import {onMounted} from "vue";
 
 const localPath = useLocalePath();
 const {locale, locales} = useI18n()
@@ -23,6 +24,7 @@ const app = useAppStore();
 const {email, photo} = storeToRefs(app);
 
 const {t} = useI18n({useScope: "local"})
+
 
 </script>
 

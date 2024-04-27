@@ -16,6 +16,9 @@ export const useAppStore = defineStore('app', {
     records: [],
     cart: [],
     orders: [],
+    sellOrders: [],
+    solarPanels: [],
+    buyOrders: [],
     selectedDevice: [],
     email: '',
     photo: ref(''),
@@ -38,6 +41,13 @@ export const useAppStore = defineStore('app', {
     },
     getRecords: (state) => {
       return state.records;
+    },
+    getBuyOrders: (state) => {
+
+      return state.buyOrders;
+    },
+     getSellOrders: (state) => {
+      return state.sellOrders;
     },
     getselectedDevice: (state) => {
       return state.selectedDevice;
@@ -203,7 +213,18 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
+async fetchSolarPanels() {
 
+      try {
+        const response = await axios.get(`${apiUrl}/solar-panels/read`);
+        this.solarPanels = response.data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
     async fetchRecords() {
       const accessToken = useCookie('access_token').value;
 
@@ -292,6 +313,49 @@ export const useAppStore = defineStore('app', {
       const storedEmail = localStorage.getItem('email');
       this.email = storedEmail;
     },
+    async fetchSellOrders() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/users/orders/order/sell`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          // params: {
+          //   page: page,
+          //   page_size: perPage,
+          // },
+        });
+        // console.log(response.data,'sellsell')
+        this.sellOrders = response.data;
+        // console.log(this.sellOrders,'sellsellz')
+
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+    async fetchBuyOrders() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/users/orders/order/buy`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          // params: {
+          //   page: page,
+          //   page_size: perPage,
+          // },
+        });
+        // console.log(response.data,'buybuy')
+
+        this.buyOrders = response.data;
+        // console.log(this.buyOrders,'buybuyz')
+
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
     async fetchOrders(page, perPage) {
       try {
         const accessToken = useCookie('access_token').value;
@@ -310,7 +374,6 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-
     async addDevice(deviceId) {
       try {
         const accessToken = useCookie('access_token').value;

@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from src.auth.services import OTPService, UserService
 from src.logger import logger
-from src.order.routers import router as order_router
+from src.order.api import router as order_router
 from src.profile.routers import router as profile_router
 from src.auth.routers import router as auth_router
 from src.device.api import router as device_router
