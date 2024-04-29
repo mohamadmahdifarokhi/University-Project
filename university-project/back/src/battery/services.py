@@ -11,7 +11,11 @@ from src.auth.secures import get_current_user
 
 def service_add_battery(
     battery: BatterySchema,
-):
+    user_id: str
+):  
+    user_battery = db["battery"].find_one({"user_id": user_id})
+    if user_battery is not None:
+        raise HTTPException(status_code=403, detail="This user has a battery") 
     battery = BatterySchema(
         user_id=battery.user_id,
         solar_panel_id=battery.solar_panel_id,

@@ -25,37 +25,37 @@ from bson import ObjectId
 def service_create_order(
     order: OrderCreateSchema
 ):
-    solar_panel = db["solar_panels"].find_one({"_id": ObjectId(order.solar_panel_id)})
-    if solar_panel is None:
-        raise HTTPException(status_code=404, detail="Solar panel not found.")
+    battery = db["battery"].find_one({"_id": ObjectId(order.battery_id)})
+    if battery is None:
+        raise HTTPException(status_code=404, detail="Battery not found.")
 
-    if solar_panel["saved_capacity"] < order.amount:
-        raise HTTPException(status_code=400, detail="Insufficient saved capacity.")
+    if battery["saved_energy"] < order.amount:
+        raise HTTPException(status_code=400, detail="Insufficient saved energy.")
     
     seller_id = db["solar_panels"].find_one({"_id": ObjectId(order.solar_panel_id)})["user_id"]
     base_order = OrderCreateSchema(
         user_id=order.user_id,
-        solar_panel_id=order.solar_panel_id,
+        solar_panel_id=order.battery_id,
         seller_id=seller_id,
         amount=order.amount,
         fee=order.amount*50,
         created_at=datetime.now()
     ).model_dump()
     db["orders"].insert_one(base_order)
-    update_result = db["solar_panels"].update_one(
+    update_result = db["battery"].update_one(
         {
-            "_id": ObjectId(order.solar_panel_id),
+            "_id": ObjectId(order.battery_id),
         },
         {
             "$set": {
-                "saved_capacity": solar_panel["saved_capacity"] - order.amount,
-                "sold_capacity": solar_panel["sold_capacity"] + order.amount,
+                "saved_capacity": battery["saved_energy"] - order.amount,
+                "sold_capacity": battery["sold_energy"] + order.amount,
             },
         },
         upsert=False,
     )
     if update_result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Solar panel not found")
+        raise HTTPException(status_code=404, detail="Battery not found")
     return {"detail": "order added"}
     
 def service_get_order_all(
