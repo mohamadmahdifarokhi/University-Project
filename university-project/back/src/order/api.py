@@ -44,9 +44,11 @@ def devices_list_last_orders(
 @router.post("/", summary="creates an order")
 def order_create(
     order: OrderCreateSchema,
+    user: User = Depends(get_current_user)
 ):
     return service_create_order(
-        order
+        order,
+        user["_id"]
     )
 
 @router.delete("/", summary="deletes an order by order id")

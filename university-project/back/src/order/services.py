@@ -23,19 +23,20 @@ from bson import ObjectId
 
 
 def service_create_order(
-    order: OrderCreateSchema
+    order: OrderCreateSchema,
+    user_id
 ):
-    battery = db["battery"].find_one({"_id": ObjectId(order.battery_id)})
+    battery = db["battery"].find_one({"user_id": ObjectId(order.battery_id)})
     if battery is None:
         raise HTTPException(status_code=404, detail="Battery not found.")
 
     if battery["saved_energy"] < order.amount:
         raise HTTPException(status_code=400, detail="Insufficient saved energy.")
     
-    seller_id = db["solar_panels"].find_one({"_id": ObjectId(order.solar_panel_id)})["user_id"]
+    seller_id = db["battery"].find_one({"_id": ObjectId(order.battery_id)})["user_id"]
     base_order = OrderCreateSchema(
-        user_id=order.user_id,
-        solar_panel_id=order.battery_id,
+        user_id=user_id,
+        battery_id=order.battery_id,
         seller_id=seller_id,
         amount=order.amount,
         fee=order.amount*50,
