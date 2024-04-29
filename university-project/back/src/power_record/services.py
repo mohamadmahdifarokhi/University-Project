@@ -76,19 +76,24 @@ def upload_excel_file(file: UploadFile = File(...),
     return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
 
 def service_show_records_on_chart(
-    device_name,
     user_id
 ):
     time_24_hours_ago = datetime.now() - timedelta(days=1)
+    
     query = {
         "user_id": ObjectId(user_id),
-        "device_name": device_name,
         "start_time": {"$gte": time_24_hours_ago}
     }
+    
     user_device_record = db["power_records"].find(query)
-    result = {device_name: {}}
+
+    result = {}
 
     for record in user_device_record:
+        device_name = record['device_name']
+        if device_name not in result:
+            result[device_name] = {}
+
         duration_seconds = (record['end_time'] - record['start_time']).total_seconds()
         time_key = record['start_time'] + timedelta(seconds=duration_seconds)
         time_key_str = time_key.strftime("%Y-%m-%d %H:%M:%S")
