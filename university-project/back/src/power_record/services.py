@@ -103,3 +103,35 @@ def service_show_records_on_chart(
     return result
 
     
+from datetime import datetime, timedelta
+from bson.objectid import ObjectId
+
+def service_show_records_on_chart(user_id, date=None):
+    if date is None:
+        date = datetime.now().date()
+    else:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+
+    start_time = datetime.combine(date, datetime.min.time())
+    end_time = datetime.combine(date, datetime.max.time())
+
+    # Construct the query to fetch records for the specified user and day
+    query = {
+        "user_id": ObjectId(user_id),
+        "start_time": {"$gte": start_time, "$lt": end_time}
+    }
+
+    user_device_record = db["power_records"].find(query)
+    result = {}
+    for record in user_device_record:
+        device_name = record['device_name']
+        if device_name not in result:
+            result[device_name] = {'ac': 0, 'dc': 0}
+
+        # Update the consumption sums for AC and DC
+        if 'ac' in record:
+            result[device_name]['ac'] += record['consumption']
+        if 'dc' in record:
+            result[device_name]['dc'] += record['consumption']
+
+    return result
