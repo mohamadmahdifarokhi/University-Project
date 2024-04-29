@@ -26,7 +26,7 @@ def service_create_order(
     order: OrderCreateSchema,
     user_id
 ):
-    battery = db["battery"].find_one({"user_id": ObjectId(order.battery_id)})
+    battery = db["battery"].find_one({"_id": ObjectId(order.battery_id)})
     if battery is None:
         raise HTTPException(status_code=404, detail="Battery not found.")
 
@@ -35,7 +35,7 @@ def service_create_order(
     
     seller_id = db["battery"].find_one({"_id": ObjectId(order.battery_id)})["user_id"]
     base_order = OrderCreateSchema(
-        user_id=user_id,
+        user_id=str(user_id),
         battery_id=order.battery_id,
         seller_id=seller_id,
         amount=order.amount,

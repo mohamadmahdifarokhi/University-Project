@@ -480,7 +480,7 @@ export const useAppStore = defineStore('app', {
       try {
         const orderData = {
           user_id: user_id,
-          solar_panel_id: solar_panel_id,
+          battery_id: solar_panel_id,
           amount: amount,
           fee: fee
         };
