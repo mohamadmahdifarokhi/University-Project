@@ -27,7 +27,7 @@ def battery_list_all(
 
 @router.post("/", summary="adds a battery")
 def device_add(
-    battery: BatterySchema,
+    battery: BatteryAddSchema,
     user: User = Depends(get_current_user)
 ):
     return service_add_battery(

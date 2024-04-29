@@ -14,6 +14,8 @@ export const useAppStore = defineStore('app', {
     product: ref(),
     devices: [],
     records: [],
+    battery: ref(''),
+    batteries: [],
     cart: [],
     orders: [],
     sellOrders: [],
@@ -46,7 +48,7 @@ export const useAppStore = defineStore('app', {
 
       return state.buyOrders;
     },
-     getSellOrders: (state) => {
+    getSellOrders: (state) => {
       return state.sellOrders;
     },
     getselectedDevice: (state) => {
@@ -213,7 +215,7 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-async fetchSolarPanels() {
+    async fetchSolarPanels() {
 
       try {
         const response = await axios.get(`${apiUrl}/solar-panels/read`);
@@ -236,8 +238,7 @@ async fetchSolarPanels() {
               'Content-Type': 'application/x-www-form-urlencoded',
             }
           }
-
-          );
+        );
         this.records = response.data;
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -246,7 +247,46 @@ async fetchSolarPanels() {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
+    async fetchBattery() {
+      const accessToken = useCookie('access_token').value;
 
+      try {
+        const response = await axios.get(`${apiUrl}/battery/`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+        );
+        this.battery = response.data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
+     async fetchAllBattery() {
+      const accessToken = useCookie('access_token').value;
+
+      try {
+        const response = await axios.get(`${apiUrl}/battery/all`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+        );
+        this.batteries = response.data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
     async fetchNotActiveProducts() {
 
       try {
@@ -402,7 +442,7 @@ async fetchSolarPanels() {
           }
         });
         if (response.status === 200) {
-  window.location.reload();
+          window.location.reload();
 
           this.showSuccessToast('Delete');
 
@@ -414,18 +454,18 @@ async fetchSolarPanels() {
 
     async addRecord(device_name, start, end, consumption) {
       try {
-       const recordData = {
-      device_name: device_name,
-      start_time: start,
-      end_time: end,
-      consumption: consumption
-    };
-        console.log(recordData,'kok')
+        const recordData = {
+          device_name: device_name,
+          start_time: start,
+          end_time: end,
+          consumption: consumption
+        };
+        console.log(recordData, 'kok')
         const accessToken = useCookie('access_token').value;
         const response = await axios.post(`${apiUrl}/power-records/add-record`, recordData, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+            'Content-Type': 'application/json',
           }
         });
         if (response.status === 200) {
@@ -436,30 +476,30 @@ async fetchSolarPanels() {
         console.error('Error fetching orders:', error);
       }
     },
-async addOrder(user_id, solar_panel_id, amount, fee) {
-  try {
-    const orderData = {
-      user_id: user_id,
-      solar_panel_id: solar_panel_id,
-      amount: amount,
-      fee: fee
-    };
+    async addOrder(user_id, solar_panel_id, amount, fee) {
+      try {
+        const orderData = {
+          user_id: user_id,
+          solar_panel_id: solar_panel_id,
+          amount: amount,
+          fee: fee
+        };
 
-    console.log(orderData, 'kok');
-    const accessToken = useCookie('access_token').value;
-    const response = await axios.post(`${apiUrl}/users/orders/order/`, orderData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
+        console.log(orderData, 'kok');
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.post(`${apiUrl}/users/orders/order/`, orderData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        if (response.status === 200) {
+          this.showSuccessToast('Add');
+        }
+      } catch (error) {
+        console.error('Error adding order:', error);
       }
-    });
-    if (response.status === 200) {
-      this.showSuccessToast('Add');
-    }
-  } catch (error) {
-    console.error('Error adding order:', error);
-  }
-},
+    },
     async fetchselectedDevice() {
       try {
         const accessToken = useCookie('access_token').value;

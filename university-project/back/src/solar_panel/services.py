@@ -21,7 +21,6 @@ class SolarPanelService:
         panels = list(self.db.solar_panels.find().skip(skip).limit(limit))
         for panel in panels:
             user = self.db.users.find_one({"_id": ObjectId(panel['user_id'])})
-            print(user)
             panel["id"] = str(panel["_id"])
             panel["email"] = str(user["email"])
             panel["status"] = 'available'

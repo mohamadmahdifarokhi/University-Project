@@ -48,21 +48,24 @@ const {t} = useI18n({useScope: "local"})
         </div>
         <div class="mt-8 max-w-[240px]">
           <ul class="space-y-1 font-sans text-sm">
-            <li>
-              <BaseHeading class="ms-1 mb-5" tag="h2" size="md" weight="medium" lead="none">
-                AC Consumption : 100
-              </BaseHeading>
-            </li>
-            <li>
-              <BaseHeading class="ms-1 mb-5" tag="h2" size="md" weight="medium" lead="none">
-                DC Consumption : 150
-              </BaseHeading>
-            </li>
-            <li>
-              <BaseHeading class="ms-1 mb-10" tag="h2" size="md" weight="medium" lead="none">
-                ...
-              </BaseHeading>
-            </li>
+            <BaseCard class="p-6 mb-10">
+          <DemoNotificationsCompact />
+        </BaseCard>
+<!--            <li>-->
+<!--              <BaseHeading class="ms-1 mb-5" tag="h2" size="md" weight="medium" lead="none">-->
+<!--                AC Consumption : 100-->
+<!--              </BaseHeading>-->
+<!--            </li>-->
+<!--            <li>-->
+<!--              <BaseHeading class="ms-1 mb-5" tag="h2" size="md" weight="medium" lead="none">-->
+<!--                DC Consumption : 150-->
+<!--              </BaseHeading>-->
+<!--            </li>-->
+<!--            <li>-->
+<!--              <BaseHeading class="ms-1 mb-10" tag="h2" size="md" weight="medium" lead="none">-->
+<!--                ...-->
+<!--              </BaseHeading>-->
+<!--            </li>-->
             <li>
               <NuxtLink
                 :to="localPath('/profile/orders')"

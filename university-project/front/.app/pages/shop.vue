@@ -69,13 +69,15 @@ function toggleAllVisibleSelection() {
   }
 }
 
-const {solarPanels} = storeToRefs(app);
+const {solarPanels, batteries} = storeToRefs(app);
 
 const fetchSolarPanels = app.fetchSolarPanels;
+const fetchAllBattery = app.fetchAllBattery;
 
 
 const initializeData = async () => {
   await fetchSolarPanels();
+  await fetchAllBattery();
 }
 onMounted(async () => {
     await initializeData();
@@ -196,7 +198,7 @@ onMounted(async () => {
                 </TairoTableCell>
               </TairoTableRow>
 
-              <TairoTableRow v-for="item in solarPanels">
+              <TairoTableRow v-for="item in batteries">
 <!--                <TairoTableCell spaced>-->
 <!--                  <div class="flex items-center">-->
 <!--                    <BaseCheckbox-->
@@ -226,7 +228,7 @@ onMounted(async () => {
                   </div>
                 </TairoTableCell>
                 <TairoTableCell light spaced>
-                  {{ item.saved_capacity }}
+                  {{ item.saved_energy }}
                 </TairoTableCell>
                 <TairoTableCell spaced class="capitalize">
                   <BaseTag
@@ -271,7 +273,7 @@ onMounted(async () => {
                   </BaseTag>
                 </TairoTableCell>
                 <TairoTableCell spaced>
-                  {{ item.sold_capacity }}
+                  {{ item.sold_energy }}
                 </TairoTableCell>
 
                 <TairoTableCell spaced>

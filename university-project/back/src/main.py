@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from src.auth.services import OTPService, UserService
 from src.logger import logger
 from src.order.api import router as order_router
+from src.battery.api import router as battery_router
 from src.profile.routers import router as profile_router
 from src.auth.routers import router as auth_router
 from src.device.api import router as device_router
@@ -46,6 +47,7 @@ app.include_router(profile_router, prefix="/users/profiles")
 app.include_router(order_router, prefix="/users/orders")
 
 
+app.include_router(battery_router)
 app.include_router(device_router)
 app.include_router(power_record_router)
 app.include_router(pricing_router)

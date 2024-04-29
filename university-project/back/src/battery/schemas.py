@@ -9,4 +9,11 @@ class BatterySchema(BaseModel):
     solar_panel_id: str
     saved_energy: int
     sold_energy: int
+    status: str
+    email: str
+
+class BatteryAddSchema(BaseModel):
+    id: Optional[str] = None
+    saved_energy: int
+    sold_energy: int
 

@@ -14,11 +14,13 @@ def service_add_battery(
     user_id: str
 ):  
     user_battery = db["battery"].find_one({"user_id": user_id})
+    solar_panel_id = db["solar_panels"].find_one({"user_id": str(user_id)})["_id"]
+
     if user_battery is not None:
         raise HTTPException(status_code=403, detail="This user has a battery") 
     battery = BatterySchema(
-        user_id=battery.user_id,
-        solar_panel_id=battery.solar_panel_id,
+        user_id=str(user_id),
+        solar_panel_id=str(solar_panel_id),
         saved_energy=battery.saved_energy,
         sold_energy=battery.sold_energy
         ).model_dump()
@@ -51,9 +53,14 @@ def service_battery_get_by_id(
 def service_list_battery_all(
 ):
     battery = db["battery"].find()
+
     results = []
     for battery in battery:
+        user = db["users"].find_one({"_id": ObjectId(battery['user_id'])})
+
         battery["id"] = str(battery["_id"])
+        battery["email"] = str(user["email"])
+        battery["status"] = 'available'
         del battery["_id"]
         results.append(BatterySchema(**battery))
 
@@ -62,7 +69,7 @@ def service_list_battery_all(
 def service_battery_by_user_id(
     user_id: str,
 ):
-    battery = db["battery"].find_one({"user_id": ObjectId(user_id)})
+    battery = db["battery"].find_one({"user_id": str(user_id)})
     battery["id"] = str(battery["_id"])
     del battery["_id"]
 
