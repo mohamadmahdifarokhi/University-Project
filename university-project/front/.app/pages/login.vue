@@ -143,7 +143,7 @@ const onSubmit = handleSubmit(async (values) => {
             :to="localPath('/')"
             aria-label="Go to homepage"
           >
-            <span class="text-muted-800 dark:text-white items-center">Uuniversity Project</span>
+            <span class="text-muted-800 dark:text-white items-center">DC Micro-grid Planner</span>
           </NuxtLink>
         </BaseHeading>
         <BaseParagraph size="sm" class="text-muted-400 mb-6">

@@ -25,13 +25,15 @@ class SolarPanelUpdate(BaseModel):
     fee: float | None = None
 
 class SolarPanelOut(BaseModel):
-    # id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
-    name: Dict[str, Any]
+    id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    # name: Dict[str, Any]
     max_capacity: float
     saved_capacity: float
     sold_capacity: float
-    user_id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
+    user_id: str
     fee: float
+    status: str
+    email: str
 
     class Config:
         arbitrary_types_allowed = True

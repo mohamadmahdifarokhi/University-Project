@@ -3,6 +3,7 @@ import {useAppStore} from "~/stores/app";
 import {toTypedSchema} from "@vee-validate/zod";
 import {Field, useForm} from 'vee-validate'
 import {z} from 'zod'
+import {storeToRefs} from "pinia";
 
 const {t} = useI18n({useScope: "local"})
 
@@ -19,13 +20,17 @@ definePageMeta({
   },
 })
 const app = useAppStore();
+const {orders} = storeToRefs(app);
 
 const areaCustomers = reactive(useAreaCustomers())
 const radialBarTeam = reactive(useRadialBarTeam())
 const barProfit = reactive(useBarProfit())
 const fetchselectedDevice = app.fetchselectedDevice;
+const fetchOrders = app.fetchOrders;
+
 const initializeData = async () => {
   await fetchselectedDevice();
+  await fetchOrders();
 };
 initializeData()
 const VALIDATION_TEXT = {
@@ -33,9 +38,10 @@ const VALIDATION_TEXT = {
   PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
 }
 const zodSchema = z.object({
-  start: z.date(),
-  end: z.date(),
+  start: z.string(),
+  end: z.string(),
   consumption: z.string(),
+  deviceId: z.string(),
 })
 
 type FormInput = z.infer<typeof zodSchema>;
@@ -45,6 +51,7 @@ const initialValues = computed<FormInput>(() => ({
   start: '',
   end: '',
   consumption: '',
+  deviceId: '',
 }))
 const {
   handleSubmit,
@@ -62,8 +69,7 @@ const {
 })
 
 const addPowerRecord = handleSubmit(async (values) => {
-  console.log("Asdqwdqwdqwd")
-  await app.addRecord(values.start, values.end, values.consumption);
+  await app.addRecord(values.deviceId,values.start, values.end, values.consumption);
 })
 
 function useAreaCustomers() {
@@ -98,12 +104,18 @@ function useAreaCustomers() {
       type: 'datetime',
       categories: [
         '2020-09-19T00:00:00.000Z',
-        '2020-09-25T01:30:00.000Z',
-        '2020-09-29T02:30:00.000Z',
-        '2020-10-07T03:30:00.000Z',
-        '2020-10-12T04:30:00.000Z',
-        '2020-10-24T05:30:00.000Z',
-        '2020-10-25T06:30:00.000Z',
+        '2020-09-19T03:00:00.000Z',
+        '2020-09-19T06:00:00.000Z',
+        '2020-09-19T09:00:00.000Z',
+        '2020-09-19T12:00:00.000Z',
+        '2020-09-19T18:00:00.000Z',
+        '2020-09-20T00:00:00.000Z',
+        // '2020-09-25T01:30:00.000Z',
+        // '2020-09-29T02:30:00.000Z',
+        // '2020-10-07T03:30:00.000Z',
+        // '2020-10-12T04:30:00.000Z',
+        // '2020-10-24T05:30:00.000Z',
+        // '2020-10-25T06:30:00.000Z',
       ],
     },
     tooltip: {
@@ -304,9 +316,126 @@ function useBarProfit() {
     series,
   }
 }
+
+const demoTimeline = reactive(useDemoTimeline())
+
+function useDemoTimeline() {
+  const { primary, info, success, warning, danger } = useTailwindColors()
+  const type = 'rangeBar'
+  const height = 280
+
+  const options = {
+    title: {
+      text: '',
+      align: 'left',
+    },
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    colors: [
+      primary.value,
+      info.value,
+      success.value,
+      warning.value,
+      danger.value,
+    ],
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        distributed: true,
+        dataLabels: {
+          hideOverflowingLabels: false,
+        },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: function (val: string, opts: any) {
+        const label = opts.w.globals.labels[opts.dataPointIndex]
+        const a = val[0]
+        const b = val[1]
+        const diff = 0
+        return label + ': ' + diff + (diff > 1 ? 'D' : 'd')
+      },
+      style: {
+        colors: ['#f3f4f5', '#fff'],
+        weight: 400,
+      },
+    },
+    xaxis: {
+      type: 'datetime',
+    },
+    yaxis: {
+      show: false,
+    },
+    grid: {
+      row: {
+        colors: ['transparent'],
+        opacity: 1,
+      },
+    },
+  }
+
+  const series = shallowRef([
+    {
+      data: [
+        {
+          x: 'Analysis',
+          y: [
+            new Date('2019-02-27').getTime(),
+            new Date('2019-03-04').getTime(),
+          ],
+          fillColor: primary.value,
+        },
+        {
+          x: 'Design',
+          y: [
+            new Date('2019-03-04').getTime(),
+            new Date('2019-03-08').getTime(),
+          ],
+          fillColor: info.value,
+        },
+        {
+          x: 'Coding',
+          y: [
+            new Date('2019-03-07').getTime(),
+            new Date('2019-03-10').getTime(),
+          ],
+          fillColor: success.value,
+        },
+        {
+          x: 'Testing',
+          y: [
+            new Date('2019-03-08').getTime(),
+            new Date('2019-03-12').getTime(),
+          ],
+          fillColor: warning.value,
+        },
+        {
+          x: 'Deployment',
+          y: [
+            new Date('2019-03-12').getTime(),
+            new Date('2019-03-17').getTime(),
+          ],
+          fillColor: danger.value,
+        },
+      ],
+    },
+  ])
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  }
+}
 </script>
 
 <template>
+
   <div>
     <!-- Header -->
     <!--    <div class="mb-8 flex flex-col justify-between md:flex-row md:items-center">-->
@@ -737,6 +866,28 @@ function useBarProfit() {
           </div>
         </BaseCard>
       </div>
+
+
+  <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+    <BaseCard class="p-6">
+      <!-- Title -->
+      <div class="mb-6">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Timeline Chart</span>
+        </BaseHeading>
+      </div>
+      <AddonApexcharts v-bind="demoTimeline" />
+    </BaseCard>
+  </div>
+
+
+
       <!-- Area Chart card -->
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
         <BaseCard class="p-6">
@@ -749,7 +900,7 @@ function useBarProfit() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>Products</span>
+              <span>List Of Appliance</span>
             </BaseHeading>
           </div>
           <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>
@@ -775,7 +926,7 @@ function useBarProfit() {
 
 
       <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-        <form method="POST" action="" @submit.prevent="addPowerRecord">
+        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
           <BaseCard rounded="lg" class="p-6">
             <div class="mb-6 flex items-center justify-between">
               <BaseHeading
@@ -799,30 +950,57 @@ function useBarProfit() {
                       lead="snug"
                       class="text-muted-800 dark:text-white"
                     >
-                      <span>{{ device.name }}</span>
+                      <span>{{ device.name  }}</span>
                     </BaseHeading>
                   </div>
-                  <Field class="ms-auto flex items-center gap-1" name="start">
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" :value="device.name" name="deviceId">
                     <BaseInput
-                      type="date"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
+                     type="hidden"
+                      shape="curved"
+                    />
+                  </Field>
+
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" name="start">
+                    <BaseInput
+                      :model-value="field.value"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
+                      type="datetime-local"
                       shape="curved"
                       placeholder="Start Date"
                       icon="ri:calendar-fill"
                     />
                   </Field>
-                  <Field class="ms-auto flex items-center gap-1" name="end">
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" name="end">
                     <BaseInput
-                      type="date"
+                      :model-value="field.value"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
+                      type="datetime-local"
                       shape="curved"
                       placeholder="End Date"
                       icon="ri:calendar-fill"
                     />
                   </Field>
-                  <Field class="ms-auto flex items-center gap-1" name="consumption">
+                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                         class="ms-auto flex items-center gap-1" name="consumption">
                     <BaseInput
+                      :model-value="field.value"
+                      :error="errorMessage"
+                      @update:model-value="handleChange"
+                      @blur="handleBlur"
                       shape="curved"
                       placeholder="Consumption"
                       icon="ri:lightbulb-flash-fill"
+
                     />
                   </Field>
                   <div class="ms-auto flex items-center gap-1">
@@ -842,7 +1020,100 @@ function useBarProfit() {
         </form>
       </div>
 
-
     </div>
+
+
+      <template>
+<BaseHeading
+                as="h3"
+                size="md"
+                weight="semibold"
+                lead="tight"
+                class="text-muted-800 dark:text-white mt-10 my-5"
+              >
+                <span>Latest order</span>
+              </BaseHeading>
+        <div class="space-y-2 pt-6">
+          <TransitionGroup
+            enter-active-class="transform-gpu"
+            enter-from-class="opacity-0 -translate-x-full"
+            enter-to-class="opacity-100 translate-x-0"
+            leave-active-class="absolute transform-gpu"
+            leave-from-class="opacity-100 translate-x-0"
+            leave-to-class="opacity-0 -translate-x-full"
+          >
+
+            <DemoFlexTableRow
+              v-for="(item, index) in orders"
+              :key="index"
+              rounded="sm"
+            >
+                        <template #start>
+                <DemoFlexTableStart
+                  label="Buyer"
+                  :hide-label="index > 0"
+                  :title="item.user_id"
+                />
+                <DemoFlexTableStart
+                  label="Amount"
+                  :hide-label="index > 0"
+                  :title="item.amount"
+                  class="ms-20"
+
+                />
+                 <DemoFlexTableStart
+                  label="Fee"
+                  :hide-label="index > 0"
+                  :title="item.fee"
+                  class="ms-20"
+
+                />
+              </template>
+
+              <template #end>
+                <DemoFlexTableCell
+                  label="Create"
+                  :hide-label="index > 0"
+                  tablet-hidden
+                  class="w-full sm:w-36"
+                >
+                  <span
+                    class="text-muted-500 dark:text-muted-400 font-sans text-sm"
+                  >
+                    {{ item.created_at }}
+                  </span>
+                </DemoFlexTableCell>
+                <DemoFlexTableCell
+                  label="Price"
+                  :hide-label="index > 0"
+                  class="w-full sm:w-32"
+                >
+                  <div
+                    class="flex w-full items-center justify-end gap-1 sm:justify-center"
+                  >
+
+                    <span
+                      class="text-muted-500 dark:text-muted-400 font-sans text-sm"
+                    >
+                      20
+                    </span>
+                  </div>
+                </DemoFlexTableCell>
+
+              </template>
+            </DemoFlexTableRow>
+          </TransitionGroup>
+
+<!--          <div v-if="!pending && data?.data.length !== 0" class="pt-6">-->
+<!--            <BasePagination-->
+<!--              :total-items="data?.total ?? 0"-->
+<!--              :item-per-page="perPage"-->
+<!--              :current-page="page"-->
+<!--              rounded="full"-->
+<!--            />-->
+<!--          </div>-->
+        </div>
+      </template>
+
   </div>
 </template>

@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import {onMounted} from "vue";
+import {storeToRefs} from "pinia";
+import {useAppStore} from "~/stores/app";
+const app = useAppStore();
+
 definePageMeta({
   title: 'Table List',
   preview: {
@@ -10,11 +15,19 @@ definePageMeta({
     order: 44,
   },
 })
-
+function addOrder(user_id, solar_panel_id, amount, fee) {
+  app.addOrder(user_id, solar_panel_id, amount, fee)
+}
+const config = useRuntimeConfig()
+if (import.meta.dev && !config.public.mapboxToken) {
+  console.warn(
+    'NUXT_PUBLIC_MAPBOX_TOKEN environment variable is not defined, mapbox features are disabled',
+  )
+}
 const route = useRoute()
 const router = useRouter()
 const page = computed(() => parseInt((route.query.page as string) ?? '1'))
-
+const amount = 0
 const filter = ref('')
 const perPage = ref(10)
 
@@ -55,6 +68,19 @@ function toggleAllVisibleSelection() {
     selected.value = data.value?.data.map(item => item.id) ?? []
   }
 }
+
+const {solarPanels} = storeToRefs(app);
+
+const fetchSolarPanels = app.fetchSolarPanels;
+
+
+const initializeData = async () => {
+  await fetchSolarPanels();
+}
+onMounted(async () => {
+    await initializeData();
+  });
+
 </script>
 
 <template>
@@ -116,25 +142,25 @@ function toggleAllVisibleSelection() {
           <div class="w-full">
             <TairoTable rounded="sm" :scrollable="false">
               <template #header>
-                <TairoTableHeading
-                  uppercase
-                  spaced
-                  class="p-4"
+<!--                <TairoTableHeading-->
+<!--                  uppercase-->
+<!--                  spaced-->
+<!--                  class="p-4"-->
 
-                >
-                  <div class="flex items-center">
-                    <BaseCheckbox
-                      :model-value="isAllVisibleSelected"
-                      :indeterminate="
-                        selected.length > 0 && !isAllVisibleSelected
-                      "
-                      name="table-1-main"
-                      rounded="sm"
-                      color="primary"
-                      @click="toggleAllVisibleSelection"
-                    />
-                  </div>
-                </TairoTableHeading>
+<!--                >-->
+<!--                  <div class="flex items-center">-->
+<!--                    <BaseCheckbox-->
+<!--                      :model-value="isAllVisibleSelected"-->
+<!--                      :indeterminate="-->
+<!--                        selected.length > 0 && !isAllVisibleSelected-->
+<!--                      "-->
+<!--                      name="table-1-main"-->
+<!--                      rounded="sm"-->
+<!--                      color="primary"-->
+<!--                      @click="toggleAllVisibleSelection"-->
+<!--                    />-->
+<!--                  </div>-->
+<!--                </TairoTableHeading>-->
                 <TairoTableHeading uppercase spaced>
                   Users
                 </TairoTableHeading>
@@ -170,37 +196,37 @@ function toggleAllVisibleSelection() {
                 </TairoTableCell>
               </TairoTableRow>
 
-              <TairoTableRow v-for="item in data?.data" :key="item.id">
+              <TairoTableRow v-for="item in solarPanels">
+<!--                <TairoTableCell spaced>-->
+<!--                  <div class="flex items-center">-->
+<!--                    <BaseCheckbox-->
+<!--                      v-model="selected"-->
+<!--                      :value="item.id"-->
+<!--                      :name="`item-checkbox-${item.id}`"-->
+<!--                      rounded="sm"-->
+<!--                      color="primary"-->
+<!--                    />-->
+<!--                  </div>-->
+<!--                </TairoTableCell>-->
                 <TairoTableCell spaced>
                   <div class="flex items-center">
-                    <BaseCheckbox
-                      v-model="selected"
-                      :value="item.id"
-                      :name="`item-checkbox-${item.id}`"
-                      rounded="sm"
-                      color="primary"
-                    />
-                  </div>
-                </TairoTableCell>
-                <TairoTableCell spaced>
-                  <div class="flex items-center">
-                    <BaseAvatar
-                      :src="item.picture"
-                      :text="item.initials"
-                      :class="getRandomColor()"
-                    />
+<!--                    <BaseAvatar-->
+<!--                      :src="item.picture"-->
+<!--                      :text="item.initials"-->
+<!--                      :class="getRandomColor()"-->
+<!--                    />-->
                     <div class="ms-3 leading-none">
                       <h4 class="font-sans text-sm font-medium">
-                        {{ item.username }}
+                        {{ item.email }}
                       </h4>
                       <p class="text-muted-400 font-sans text-xs">
-                        {{ item.position }}
+                        {{  }}
                       </p>
                     </div>
                   </div>
                 </TairoTableCell>
                 <TairoTableCell light spaced>
-                  {{ item.location }}
+                  {{ item.saved_capacity }}
                 </TairoTableCell>
                 <TairoTableCell spaced class="capitalize">
                   <BaseTag
@@ -245,29 +271,20 @@ function toggleAllVisibleSelection() {
                   </BaseTag>
                 </TairoTableCell>
                 <TairoTableCell spaced>
-                  <div class="flex items-center">
-                    <div class="relative">
-                      <BaseProgressCircle
-                        :value="item.completed"
-                        :thickness="1"
-                        :size="50"
-                        class="text-success-500"
-                      />
-                      <span
-                        class="absolute start-1/2 top-1/2 z-10 ms-0.5 -translate-x-1/2 -translate-y-1/2 font-sans text-[0.65rem] font-semibold rtl:me-0.5 rtl:ms-0 rtl:translate-x-1/2"
-                      >
-                        {{ item.completed }}
-                      </span>
-                    </div>
-<!--                    <span class="text-muted-400 font-sans text-xs">-->
-<!--                      Tasks completed-->
-<!--                    </span>-->
-                  </div>
+                  {{ item.sold_capacity }}
                 </TairoTableCell>
 
                 <TairoTableCell spaced>
                   <div class="flex justify-center">
-                    <BaseButtonIcon rounded="full" small>
+                    <BaseInput
+    v-model="amount"
+    type="number"
+    placeholder="Enter amount..."
+    :classes="{
+      wrapper: 'w-full sm:w-auto',
+    }"
+  />
+                    <BaseButtonIcon @click="addOrder(item.user_id, item.id, amount, item.fee)" rounded="full" small>
                   <Icon name="ri:add-circle-fill"/>
                 </BaseButtonIcon>
 <!--                    <BaseDropdown-->
