@@ -76,19 +76,24 @@ def upload_excel_file(file: UploadFile = File(...),
     return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
 
 def service_show_records_on_chart(
-    device_name,
     user_id
 ):
     time_24_hours_ago = datetime.now() - timedelta(days=1)
+    
     query = {
         "user_id": ObjectId(user_id),
-        "device_name": device_name,
         "start_time": {"$gte": time_24_hours_ago}
     }
+    
     user_device_record = db["power_records"].find(query)
-    result = {device_name: {}}
+
+    result = {}
 
     for record in user_device_record:
+        device_name = record['device_name']
+        if device_name not in result:
+            result[device_name] = {}
+
         duration_seconds = (record['end_time'] - record['start_time']).total_seconds()
         time_key = record['start_time'] + timedelta(seconds=duration_seconds)
         time_key_str = time_key.strftime("%Y-%m-%d %H:%M:%S")
@@ -98,3 +103,35 @@ def service_show_records_on_chart(
     return result
 
     
+from datetime import datetime, timedelta
+from bson.objectid import ObjectId
+
+def service_show_records_on_chart(user_id, date=None):
+    if date is None:
+        date = datetime.now().date()
+    else:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+
+    start_time = datetime.combine(date, datetime.min.time())
+    end_time = datetime.combine(date, datetime.max.time())
+
+    # Construct the query to fetch records for the specified user and day
+    query = {
+        "user_id": ObjectId(user_id),
+        "start_time": {"$gte": start_time, "$lt": end_time}
+    }
+
+    user_device_record = db["power_records"].find(query)
+    result = {}
+    for record in user_device_record:
+        device_name = record['device_name']
+        if device_name not in result:
+            result[device_name] = {'ac': 0, 'dc': 0}
+
+        # Update the consumption sums for AC and DC
+        if 'ac' in record:
+            result[device_name]['ac'] += record['consumption']
+        if 'dc' in record:
+            result[device_name]['dc'] += record['consumption']
+
+    return result

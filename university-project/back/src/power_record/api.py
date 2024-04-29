@@ -45,6 +45,5 @@ def power_record_24(
 
 ):
     return service_show_records_on_chart(
-        device_name=device_name,
         user_id=user["_id"]
     )
