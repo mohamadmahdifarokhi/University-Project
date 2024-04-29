@@ -40,7 +40,6 @@ def power_record_delete(
 
 @router.get("/24hour-chart", summary="shows all consumptions of devices in recent 24 hours")
 def power_record_24(
-    device_name: str,
     user: User = Depends(get_current_user)
 
 ):
