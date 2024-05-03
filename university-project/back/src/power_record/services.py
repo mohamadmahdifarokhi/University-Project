@@ -106,7 +106,7 @@ def service_show_records_on_chart(
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 
-def service_show_records_on_chart(user_id, date=None):
+def service_show_records_on_chart(db, user_id, date=None):
     if date is None:
         date = datetime.now().date()
     else:
@@ -115,23 +115,30 @@ def service_show_records_on_chart(user_id, date=None):
     start_time = datetime.combine(date, datetime.min.time())
     end_time = datetime.combine(date, datetime.max.time())
 
-    # Construct the query to fetch records for the specified user and day
-    query = {
-        "user_id": ObjectId(user_id),
-        "start_time": {"$gte": start_time, "$lt": end_time}
-    }
+    # Aggregation pipeline to sum up consumption for each device
+    pipeline = [
+        {
+            "$match": {
+                "user_id": ObjectId(user_id),
+                "start_time": {"$gte": start_time, "$lt": end_time}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$device_name",  # Group by device name
+                "total_consumption": {"$sum": "$consumption"}  # Sum up consumption
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "device_name": "$_id",
+                "total_consumption": 1
+            }
+        }
+    ]
 
-    user_device_record = db["power_records"].find(query)
-    result = {}
-    for record in user_device_record:
-        device_name = record['device_name']
-        if device_name not in result:
-            result[device_name] = {'ac': 0, 'dc': 0}
+    results = db["power_records"].aggregate(pipeline)
+    result_dict = {doc["device_name"]: doc["total_consumption"] for doc in results}
 
-        # Update the consumption sums for AC and DC
-        if 'ac' in record:
-            result[device_name]['ac'] += record['consumption']
-        if 'dc' in record:
-            result[device_name]['dc'] += record['consumption']
-
-    return result
+    return result_dict
