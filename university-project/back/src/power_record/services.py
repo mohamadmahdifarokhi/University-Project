@@ -106,7 +106,7 @@ def service_show_records_on_chart(
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 
-def service_show_records_on_chart(db, user_id, date=None):
+def service_show_records_on_chart(user_id, date=None):
     if date is None:
         date = datetime.now().date()
     else:
@@ -119,7 +119,7 @@ def service_show_records_on_chart(db, user_id, date=None):
     pipeline = [
         {
             "$match": {
-                "user_id": ObjectId(user_id),
+                "user_id": ObjectId(str(user_id)),
                 "start_time": {"$gte": start_time, "$lt": end_time}
             }
         },

@@ -14,6 +14,8 @@ export const useAppStore = defineStore('app', {
     product: ref(),
     devices: [],
     records: [],
+    categories24: [],
+    values24: [],
     battery: ref(''),
     batteries: [],
     cart: [],
@@ -227,6 +229,29 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
+    async fetch24Records() {
+      const accessToken = useCookie('access_token').value;
+
+      try {
+        const response = await axios.get(`${apiUrl}/power-records/24hour-chart`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+        );
+        this.categories24 = response.data['categories'];
+        this.values24 = response.data['values'];
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
+
+
     async fetchRecords() {
       const accessToken = useCookie('access_token').value;
 
@@ -247,6 +272,8 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
+
+
     async fetchBattery() {
       const accessToken = useCookie('access_token').value;
 

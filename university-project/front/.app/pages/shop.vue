@@ -221,9 +221,7 @@ onMounted(async () => {
                       <h4 class="font-sans text-sm font-medium">
                         {{ item.email }}
                       </h4>
-                      <p class="text-muted-400 font-sans text-xs">
-                        {{  }}
-                      </p>
+
                     </div>
                   </div>
                 </TairoTableCell>

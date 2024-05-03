@@ -51,6 +51,15 @@ function useDemoPie() {
 <template>
   <div class="relative">
     <BaseCard class="p-6">
+      <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Seasonal Consumption</span>
+        </BaseHeading>
       <AddonApexcharts v-bind="demoPie" />
     </BaseCard>
   </div>

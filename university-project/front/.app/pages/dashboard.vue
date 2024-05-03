@@ -6,93 +6,7 @@ import {z} from 'zod'
 import {storeToRefs} from "pinia";
 
 const {t} = useI18n({useScope: "local"})
-const demoBarMulti = reactive(useDemoBarMulti())
 
-function useDemoBarMulti() {
-  const { primary, info, success, warning } = useTailwindColors()
-  const type = 'bar'
-  const height = 280
-
-  const options = {
-    chart: {
-      toolbar: {
-        show: false,
-      },
-    },
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: '55%',
-        endingShape: 'rounded',
-      },
-    },
-    colors: [primary.value, success.value, info.value, warning.value],
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      show: true,
-      width: 2,
-      colors: ['transparent'],
-    },
-    xaxis: {
-      categories: [
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-      ],
-    },
-    yaxis: {
-      title: {
-        text: '$ (thousands)',
-      },
-    },
-    fill: {
-      opacity: 1,
-    },
-    legend: {
-      position: 'top',
-      horizontalAlign: 'center',
-    },
-    title: {
-      text: '',
-      align: 'left',
-    },
-    tooltip: {
-      y: {
-        formatter: asKDollar,
-      },
-    },
-  }
-
-  const series = shallowRef([
-    {
-      name: 'AC',
-      data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
-    },
-    {
-      name: 'DC',
-      data: [76, 85, 101, 98, 87, 105, 91, 114, 94],
-    },
-    // {
-    //   name: 'Free Cash Flow',
-    //   data: [35, 41, 36, 26, 45, 48, 52, 53, 41],
-    // },
-  ])
-
-  return {
-    type,
-    height,
-    options,
-    series,
-  }
-}
 definePageMeta({
   title: 'Activity',
   middleware: ['authenticated'],
@@ -106,17 +20,19 @@ definePageMeta({
   },
 })
 const app = useAppStore();
-const {orders} = storeToRefs(app);
+const {orders, categories24, values24} = storeToRefs(app);
 
 const areaCustomers = reactive(useAreaCustomers())
 const radialBarTeam = reactive(useRadialBarTeam())
 const barProfit = reactive(useBarProfit())
 const fetchselectedDevice = app.fetchselectedDevice;
 const fetchOrders = app.fetchOrders;
+const fetch24Records = app.fetch24Records;
 
 const initializeData = async () => {
   await fetchselectedDevice();
   await fetchOrders();
+  await fetch24Records();
 };
 initializeData()
 const VALIDATION_TEXT = {
@@ -155,7 +71,7 @@ const {
 })
 
 const addPowerRecord = handleSubmit(async (values) => {
-  await app.addRecord(values.deviceId,values.start, values.end, values.consumption);
+  await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
 })
 
 function useAreaCustomers() {
@@ -406,7 +322,7 @@ function useBarProfit() {
 const demoTimeline = reactive(useDemoTimeline())
 
 function useDemoTimeline() {
-  const { primary, info, success, warning, danger } = useTailwindColors()
+  const {primary, info, success, warning, danger} = useTailwindColors()
   const type = 'rangeBar'
   const height = 280
 
@@ -518,10 +434,167 @@ function useDemoTimeline() {
     series,
   }
 }
+
+
+const demoBarMulti = reactive(useDemoBarMulti())
+const demoBarMulti3 = reactive(useDemoBarMulti3())
+
+function useDemoBarMulti() {
+  const {primary, info, success, warning} = useTailwindColors()
+  const type = 'bar'
+  const height = 280
+
+  const options = {
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '55%',
+        endingShape: 'rounded',
+      },
+    },
+    colors: [primary.value, success.value, info.value, warning.value],
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent'],
+    },
+    xaxis: {
+      categories: categories24,
+
+    },
+    yaxis: {
+      title: {
+        text: 'Consumption (kw/h)',
+      },
+    },
+    fill: {
+      opacity: 1,
+    },
+    legend: {
+      position: 'top',
+      horizontalAlign: 'center',
+    },
+    title: {
+      text: '',
+      align: 'left',
+    },
+    tooltip: {
+      y: {
+        formatter: asKDollar,
+      },
+    },
+  }
+
+  const series = shallowRef([
+    // {
+    //   name: 'AC',
+    //   data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
+    // },
+    {
+      name: 'DC',
+      data: values24,
+    },
+    // {
+    //   name: 'Free Cash Flow',
+    //   data: [35, 41, 36, 26, 45, 48, 52, 53, 41],
+    // },
+  ])
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  }
+}
+
+function useDemoBarMulti3() {
+  const {primary, info, success, warning} = useTailwindColors()
+  const type = 'bar'
+  const height = 280
+
+  const options = {
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: '55%',
+        endingShape: 'rounded',
+      },
+    },
+    colors: [primary.value, success.value, info.value, warning.value],
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ['transparent'],
+    },
+    xaxis: {
+      categories: [
+        'Spring' , 'Autumn', 'Fall','Winter'
+      ],
+
+    },
+    yaxis: {
+      title: {
+        text: 'Consumption (kw/h)',
+      },
+    },
+    fill: {
+      opacity: 1,
+    },
+    legend: {
+      position: 'top',
+      horizontalAlign: 'center',
+    },
+    title: {
+      text: '',
+      align: 'left',
+    },
+    tooltip: {
+      y: {
+        formatter: asKDollar,
+      },
+    },
+  }
+
+  const series = shallowRef([
+    {
+      name: 'AC (non-optimized)',
+      data: [44, 55, 57, 56],
+    },
+    {
+      name: 'DC (optimized)',
+      data: [35, 41, 36, 26],
+    },
+  ])
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  }
+}
+
+
 </script>
 
 <template>
-
   <div>
     <!-- Header -->
     <!--    <div class="mb-8 flex flex-col justify-between md:flex-row md:items-center">-->
@@ -808,7 +881,7 @@ function useDemoTimeline() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>862</span>
+              <span>812</span>
             </BaseHeading>
           </div>
           <div
@@ -896,7 +969,7 @@ function useDemoTimeline() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>862</span>
+              <span>270</span>
             </BaseHeading>
           </div>
           <div
@@ -940,7 +1013,7 @@ function useDemoTimeline() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>862</span>
+              <span>832</span>
             </BaseHeading>
           </div>
           <div
@@ -953,44 +1026,110 @@ function useDemoTimeline() {
         </BaseCard>
       </div>
 
+      <div class="col-span-12 md:col-span-6">
+        <BaseCard class="p-4">
+          <div class="mb-1 flex items-center justify-between">
+            <BaseHeading
+              as="h5"
+              size="sm"
+              weight="medium"
+              lead="tight"
+              class="text-muted-500 dark:text-muted-400"
+            >
+              <span>PV GENERATION</span>
+            </BaseHeading>
+            <BaseIconBox
+              size="xs"
+              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              rounded="full"
+              color="none"
+            >
+              <Icon name="ri:leaf-fill" class="size-6"/>
 
-<!--  <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">-->
-<!--    <BaseCard class="p-6">-->
-<!--      &lt;!&ndash; Title &ndash;&gt;-->
-<!--      <div class="mb-6">-->
-<!--        <BaseHeading-->
-<!--          as="h3"-->
-<!--          size="md"-->
-<!--          weight="semibold"-->
-<!--          lead="tight"-->
-<!--          class="text-muted-800 dark:text-white"-->
-<!--        >-->
-<!--          <span>Timeline Chart</span>-->
-<!--        </BaseHeading>-->
-<!--      </div>-->
-<!--      <AddonApexcharts v-bind="demoTimeline" />-->
-<!--    </BaseCard>-->
-<!--  </div>-->
-<div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-    <BaseCard class="p-6">
-      <!-- Title -->
-      <div class="mb-6">
-        <BaseHeading
-          as="h3"
-          size="md"
-          weight="semibold"
-          lead="tight"
-          class="text-muted-800 dark:text-white"
-        >
-          <span>Multiple Bars</span>
-        </BaseHeading>
+              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
+            </BaseIconBox>
+          </div>
+          <div class="mb-2">
+            <BaseHeading
+              as="h4"
+              size="3xl"
+              weight="bold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>262</span>
+            </BaseHeading>
+          </div>
+          <div
+            class="text-success-500 flex items-center gap-1 font-sans text-sm"
+          >
+            <!--            <span>+4.5%</span>-->
+            <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
+            <!--            <span class="text-muted-400 text-xs">going up</span>-->
+          </div>
+        </BaseCard>
       </div>
-      <AddonApexcharts v-bind="demoBarMulti" />
-    </BaseCard>
-  </div>
+      <div class="col-span-12 md:col-span-6">
+        <BaseCard class="p-4">
+          <div class="mb-1 flex items-center justify-between">
+            <BaseHeading
+              as="h5"
+              size="sm"
+              weight="medium"
+              lead="tight"
+              class="text-muted-500 dark:text-muted-400"
+            >
+              <span>STORAGE CAPACITY</span>
+            </BaseHeading>
+            <BaseIconBox
+              size="xs"
+              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              rounded="full"
+              color="none"
+            >
+              <Icon name="ri:leaf-fill" class="size-6"/>
 
+              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
+            </BaseIconBox>
+          </div>
+          <div class="mb-2">
+            <BaseHeading
+              as="h4"
+              size="3xl"
+              weight="bold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>762</span>
+            </BaseHeading>
+          </div>
+          <div
+            class="text-success-500 flex items-center gap-1 font-sans text-sm"
+          >
+            <!--            <span>+4.5%</span>-->
+            <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
+            <!--            <span class="text-muted-400 text-xs">going up</span>-->
+          </div>
+        </BaseCard>
+      </div>
 
-<!--       Area Chart card-->
+      <!--  <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">-->
+      <!--    <BaseCard class="p-6">-->
+      <!--      &lt;!&ndash; Title &ndash;&gt;-->
+      <!--      <div class="mb-6">-->
+      <!--        <BaseHeading-->
+      <!--          as="h3"-->
+      <!--          size="md"-->
+      <!--          weight="semibold"-->
+      <!--          lead="tight"-->
+      <!--          class="text-muted-800 dark:text-white"-->
+      <!--        >-->
+      <!--          <span>Timeline Chart</span>-->
+      <!--        </BaseHeading>-->
+      <!--      </div>-->
+      <!--      <AddonApexcharts v-bind="demoTimeline" />-->
+      <!--    </BaseCard>-->
+      <!--  </div>-->
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
         <BaseCard class="p-6">
           <!-- Title -->
@@ -1002,10 +1141,10 @@ function useDemoTimeline() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>List Of Appliance</span>
+              <span>Daily Consumption</span>
             </BaseHeading>
           </div>
-          <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>
+          <AddonApexcharts v-bind="demoBarMulti"/>
         </BaseCard>
       </div>
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
@@ -1019,12 +1158,96 @@ function useDemoTimeline() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>AC To DC</span>
+              <span>Monthly Consumption</span>
             </BaseHeading>
           </div>
-          <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>
+          <AddonApexcharts v-bind="demoBarMulti"/>
         </BaseCard>
       </div>
+      <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
+
+        <DemoChartPie/>
+
+      </div>
+      <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
+
+        <BaseCard class="p-14 py-30" rounded="lg">
+          <!-- Title -->
+          <div class="mb-8 flex items-center justify-between">
+            <BaseHeading
+              as="h3"
+              size="md"
+              weight="semibold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>Max Power Consumption</span>
+            </BaseHeading>
+            <!--          <NuxtLink-->
+            <!--            to="#"-->
+            <!--            class="bg-muted-100 hover:bg-muted-200 dark:bg-muted-700 dark:hover:bg-muted-900 text-primary-500 rounded-lg px-4 py-2 font-sans text-sm font-medium underline-offset-4 transition-colors duration-300 hover:underline"-->
+            <!--          >-->
+            <!--            View All-->
+            <!--          </NuxtLink>-->
+          </div>
+          <DemoTrendingSkills/>
+        </BaseCard>
+
+      </div>
+      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+        <BaseCard class="p-6">
+          <!-- Title -->
+          <div class="mb-6">
+            <BaseHeading
+              as="h3"
+              size="md"
+              weight="semibold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>Seasonal Comparison</span>
+            </BaseHeading>
+          </div>
+          <AddonApexcharts v-bind="demoBarMulti3"/>
+        </BaseCard>
+      </div>
+
+
+      <!--       Area Chart card-->
+      <!--      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">-->
+      <!--        <BaseCard class="p-6">-->
+      <!--          &lt;!&ndash; Title &ndash;&gt;-->
+      <!--          <div class="mb-6">-->
+      <!--            <BaseHeading-->
+      <!--              as="h3"-->
+      <!--              size="md"-->
+      <!--              weight="semibold"-->
+      <!--              lead="tight"-->
+      <!--              class="text-muted-800 dark:text-white"-->
+      <!--            >-->
+      <!--              <span>List Of Appliance</span>-->
+      <!--            </BaseHeading>-->
+      <!--          </div>-->
+      <!--          <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>-->
+      <!--        </BaseCard>-->
+      <!--      </div>-->
+      <!--      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">-->
+      <!--        <BaseCard class="p-6">-->
+      <!--          &lt;!&ndash; Title &ndash;&gt;-->
+      <!--          <div class="mb-6">-->
+      <!--            <BaseHeading-->
+      <!--              as="h3"-->
+      <!--              size="md"-->
+      <!--              weight="semibold"-->
+      <!--              lead="tight"-->
+      <!--              class="text-muted-800 dark:text-white"-->
+      <!--            >-->
+      <!--              <span>AC To DC</span>-->
+      <!--            </BaseHeading>-->
+      <!--          </div>-->
+      <!--          <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>-->
+      <!--        </BaseCard>-->
+      <!--      </div>-->
 
 
       <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
@@ -1042,79 +1265,84 @@ function useDemoTimeline() {
               </BaseHeading>
             </div>
             <div class="mb-2 space-y-5">
-              <div v-for="device in app.getselectedDevice" class="flex items-center gap-2">
-                <div class="flex items-center gap-2">
-                  <div>
-                    <BaseHeading
-                      as="h4"
+              <div v-for="device in app.getselectedDevice" :key="device.id"
+                   class="flex flex-col md:flex-row items-center md:items-start gap-2">
+                <div class="flex items-center gap-2 md:w-1/4">
+                  <BaseHeading
+                    as="h4"
+                    size="sm"
+                    weight="medium"
+                    lead="snug"
+                    class="text-muted-800 dark:text-white"
+                  >
+                    <span>{{ device.name }}</span>
+                    <BaseTag
+                      color="success"
+                      variant="pastel"
+                      rounded="full"
                       size="sm"
-                      weight="medium"
-                      lead="snug"
-                      class="text-muted-800 dark:text-white"
+                      class="font-medium ms-3"
                     >
-                      <span>{{ device.name  }}</span>
-                    </BaseHeading>
-                  </div>
-                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
-                         class="ms-auto flex items-center gap-1" :value="device.name" name="deviceId">
-                    <BaseInput
-                      :error="errorMessage"
-                      @update:model-value="handleChange"
-                      @blur="handleBlur"
-                     type="hidden"
-                      shape="curved"
-                    />
-                  </Field>
+                      ON
+                    </BaseTag>
+                  </BaseHeading>
+                </div>
+                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"
+                       :value="device.name" name="deviceId">
+                  <BaseInput
+                    :error="errorMessage"
+                    @update:model-value="handleChange"
+                    @blur="handleBlur"
+                    type="hidden"
+                    shape="curved"
+                  />
+                </Field>
+                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="start">
+                  <BaseInput
+                    :model-value="field.value"
+                    :error="errorMessage"
+                    @update:model-value="handleChange"
+                    @blur="handleBlur"
+                    type="datetime-local"
+                    shape="curved"
+                    placeholder="Start Date"
+                    icon="ri:calendar-fill"
+                  />
+                </Field>
+                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="end">
+                  <BaseInput
+                    :model-value="field.value"
+                    :error="errorMessage"
+                    @update:model-value="handleChange"
+                    @blur="handleBlur"
+                    type="datetime-local"
+                    shape="curved"
+                    placeholder="End Date"
+                    icon="ri:calendar-fill"
+                  />
+                </Field>
+                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"
+                       name="consumption">
+                  <BaseInput
+                    :model-value="field.value"
+                    :error="errorMessage"
+                    @update:model-value="handleChange"
+                    @blur="handleBlur"
+                    shape="curved"
+                    placeholder="Consumption"
+                    icon="ri:lightbulb-flash-fill"
+                  />
+                </Field>
+                <!--          <div class="flex items-center gap-1">-->
 
-                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
-                         class="ms-auto flex items-center gap-1" name="start">
-                    <BaseInput
-                      :model-value="field.value"
-                      :error="errorMessage"
-                      @update:model-value="handleChange"
-                      @blur="handleBlur"
-                      type="datetime-local"
-                      shape="curved"
-                      placeholder="Start Date"
-                      icon="ri:calendar-fill"
-                    />
-                  </Field>
-                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
-                         class="ms-auto flex items-center gap-1" name="end">
-                    <BaseInput
-                      :model-value="field.value"
-                      :error="errorMessage"
-                      @update:model-value="handleChange"
-                      @blur="handleBlur"
-                      type="datetime-local"
-                      shape="curved"
-                      placeholder="End Date"
-                      icon="ri:calendar-fill"
-                    />
-                  </Field>
-                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"
-                         class="ms-auto flex items-center gap-1" name="consumption">
-                    <BaseInput
-                      :model-value="field.value"
-                      :error="errorMessage"
-                      @update:model-value="handleChange"
-                      @blur="handleBlur"
-                      shape="curved"
-                      placeholder="Consumption"
-                      icon="ri:lightbulb-flash-fill"
-
-                    />
-                  </Field>
-                  <div class="ms-auto flex items-center gap-1">
-                    <button type="submit" class="BaseButtonIcon" rounded="full" small>
-                      <Icon name="ri:add-circle-fill"/>
-                    </button>
-                  </div>
-                  <div class="ms-auto flex items-center gap-1">
-                    <BaseButtonIcon rounded="full" small>
-                      <Icon name="ri:delete-bin-7-fill"/>
-                    </BaseButtonIcon>
-                  </div>
+                <!--          </div>-->
+                <div class="flex items-center gap-1">
+                  <button type="submit" class="BaseButtonIcon" rounded="full" small>
+                    <Icon name="ri:add-circle-fill"/>
+                  </button>
+                  <BaseButtonIcon rounded="full" small class="ms-3">
+                    <Icon name="ri:delete-bin-7-fill"/>
+                  </BaseButtonIcon>
                 </div>
               </div>
             </div>
@@ -1122,100 +1350,209 @@ function useDemoTimeline() {
         </form>
       </div>
 
+
+      <!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->
+      <!--        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>-->
+      <!--          <BaseCard rounded="lg" class="p-6">-->
+      <!--            <div class="mb-6 flex items-center justify-between">-->
+      <!--              <BaseHeading-->
+      <!--                as="h3"-->
+      <!--                size="md"-->
+      <!--                weight="semibold"-->
+      <!--                lead="tight"-->
+      <!--                class="text-muted-800 dark:text-white"-->
+      <!--              >-->
+      <!--                <span>Selected Products</span>-->
+      <!--              </BaseHeading>-->
+      <!--            </div>-->
+      <!--            <div class="mb-2 space-y-5">-->
+      <!--              <div v-for="device in app.getselectedDevice" class="flex items-center gap-2">-->
+      <!--                <div class="flex items-center gap-2 justify-between">-->
+      <!--                  <div>-->
+      <!--                    <BaseHeading-->
+      <!--                      as="h4"-->
+      <!--                      size="sm"-->
+      <!--                      weight="medium"-->
+      <!--                      lead="snug"-->
+      <!--                      class="text-muted-800 dark:text-white"-->
+      <!--                    >-->
+      <!--                      <span>{{ device.name  }}</span>-->
+      <!--                      <BaseTag-->
+      <!--                    color="success"-->
+      <!--                    variant="pastel"-->
+      <!--                    rounded="full"-->
+      <!--                    size="sm"-->
+      <!--                    class="font-medium ms-3"-->
+      <!--                  >-->
+      <!--                    ON-->
+      <!--                  </BaseTag>-->
+      <!--                    </BaseHeading>-->
+
+      <!--                  </div>-->
+      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
+      <!--                         class="ms-auto flex items-center gap-1" :value="device.name" name="deviceId">-->
+      <!--                    <BaseInput-->
+      <!--                      :error="errorMessage"-->
+      <!--                      @update:model-value="handleChange"-->
+      <!--                      @blur="handleBlur"-->
+      <!--                     type="hidden"-->
+      <!--                      shape="curved"-->
+      <!--                    />-->
+      <!--                  </Field>-->
+
+      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
+      <!--                         class="ms-auto flex items-center gap-1" name="start">-->
+      <!--                    <BaseInput-->
+      <!--                      :model-value="field.value"-->
+      <!--                      :error="errorMessage"-->
+      <!--                      @update:model-value="handleChange"-->
+      <!--                      @blur="handleBlur"-->
+      <!--                      type="datetime-local"-->
+      <!--                      shape="curved"-->
+      <!--                      placeholder="Start Date"-->
+      <!--                      icon="ri:calendar-fill"-->
+      <!--                    />-->
+      <!--                  </Field>-->
+      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
+      <!--                         class="ms-auto flex items-center gap-1" name="end">-->
+      <!--                    <BaseInput-->
+      <!--                      :model-value="field.value"-->
+      <!--                      :error="errorMessage"-->
+      <!--                      @update:model-value="handleChange"-->
+      <!--                      @blur="handleBlur"-->
+      <!--                      type="datetime-local"-->
+      <!--                      shape="curved"-->
+      <!--                      placeholder="End Date"-->
+      <!--                      icon="ri:calendar-fill"-->
+      <!--                    />-->
+      <!--                  </Field>-->
+      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
+      <!--                         class="ms-auto flex items-center gap-1" name="consumption">-->
+      <!--                    <BaseInput-->
+      <!--                      :model-value="field.value"-->
+      <!--                      :error="errorMessage"-->
+      <!--                      @update:model-value="handleChange"-->
+      <!--                      @blur="handleBlur"-->
+      <!--                      shape="curved"-->
+      <!--                      placeholder="Consumption"-->
+      <!--                      icon="ri:lightbulb-flash-fill"-->
+
+      <!--                    />-->
+      <!--                  </Field>-->
+      <!--                  <div class="ms-auto flex items-center gap-1">-->
+      <!--                    <button type="submit" class="BaseButtonIcon" rounded="full" small>-->
+      <!--                      <Icon name="ri:add-circle-fill"/>-->
+      <!--                    </button>-->
+      <!--                  </div>-->
+      <!--                  <div class="ms-auto flex items-center gap-1">-->
+      <!--                    <BaseButtonIcon rounded="full" small>-->
+      <!--                      <Icon name="ri:delete-bin-7-fill"/>-->
+      <!--                    </BaseButtonIcon>-->
+      <!--                  </div>-->
+      <!--                </div>-->
+      <!--              </div>-->
+      <!--            </div>-->
+      <!--          </BaseCard>-->
+      <!--        </form>-->
+      <!--      </div>-->
+
+
     </div>
 
 
-      <template>
-<BaseHeading
-                as="h3"
-                size="md"
-                weight="semibold"
-                lead="tight"
-                class="text-muted-800 dark:text-white mt-10 my-5"
-              >
-                <span>Latest order</span>
-              </BaseHeading>
-        <div class="space-y-2 pt-6">
-          <TransitionGroup
-            enter-active-class="transform-gpu"
-            enter-from-class="opacity-0 -translate-x-full"
-            enter-to-class="opacity-100 translate-x-0"
-            leave-active-class="absolute transform-gpu"
-            leave-from-class="opacity-100 translate-x-0"
-            leave-to-class="opacity-0 -translate-x-full"
+    <div class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
+      <BaseHeading
+        as="h3"
+        size="md"
+        weight="semibold"
+        lead="tight"
+        class="text-muted-800 dark:text-white mt-10 my-5"
+      >
+        <span>Latest order</span>
+      </BaseHeading>
+      <div class="space-y-2 pt-6">
+        <TransitionGroup
+          enter-active-class="transform-gpu"
+          enter-from-class="opacity-0 -translate-x-full"
+          enter-to-class="opacity-100 translate-x-0"
+          leave-active-class="absolute transform-gpu"
+          leave-from-class="opacity-100 translate-x-0"
+          leave-to-class="opacity-0 -translate-x-full"
+        >
+
+          <DemoFlexTableRow
+            v-for="(item, index) in orders"
+            :key="index"
+            rounded="sm"
           >
+            <template #start>
+              <DemoFlexTableStart
+                label="Buyer"
+                :hide-label="index > 0"
+                :title="item.user_id"
+              />
+              <DemoFlexTableStart
+                label="Amount"
+                :hide-label="index > 0"
+                :title="item.amount"
+                class="ms-20"
 
-            <DemoFlexTableRow
-              v-for="(item, index) in orders"
-              :key="index"
-              rounded="sm"
-            >
-                        <template #start>
-                <DemoFlexTableStart
-                  label="Buyer"
-                  :hide-label="index > 0"
-                  :title="item.user_id"
-                />
-                <DemoFlexTableStart
-                  label="Amount"
-                  :hide-label="index > 0"
-                  :title="item.amount"
-                  class="ms-20"
+              />
+              <DemoFlexTableStart
+                label="Fee"
+                :hide-label="index > 0"
+                :title="item.fee"
+                class="ms-20"
 
-                />
-                 <DemoFlexTableStart
-                  label="Fee"
-                  :hide-label="index > 0"
-                  :title="item.fee"
-                  class="ms-20"
+              />
+            </template>
 
-                />
-              </template>
-
-              <template #end>
-                <DemoFlexTableCell
-                  label="Create"
-                  :hide-label="index > 0"
-                  tablet-hidden
-                  class="w-full sm:w-36"
-                >
+            <template #end>
+              <DemoFlexTableCell
+                label="Create"
+                :hide-label="index > 0"
+                tablet-hidden
+                class="w-full sm:w-36"
+              >
                   <span
                     class="text-muted-500 dark:text-muted-400 font-sans text-sm"
                   >
                     {{ item.created_at }}
                   </span>
-                </DemoFlexTableCell>
-                <DemoFlexTableCell
-                  label="Price"
-                  :hide-label="index > 0"
-                  class="w-full sm:w-32"
+              </DemoFlexTableCell>
+              <DemoFlexTableCell
+                label="Price"
+                :hide-label="index > 0"
+                class="w-full sm:w-32"
+              >
+                <div
+                  class="flex w-full items-center justify-end gap-1 sm:justify-center"
                 >
-                  <div
-                    class="flex w-full items-center justify-end gap-1 sm:justify-center"
-                  >
 
                     <span
                       class="text-muted-500 dark:text-muted-400 font-sans text-sm"
                     >
                       20
                     </span>
-                  </div>
-                </DemoFlexTableCell>
+                </div>
+              </DemoFlexTableCell>
 
-              </template>
-            </DemoFlexTableRow>
-          </TransitionGroup>
+            </template>
+          </DemoFlexTableRow>
+        </TransitionGroup>
 
-<!--          <div v-if="!pending && data?.data.length !== 0" class="pt-6">-->
-<!--            <BasePagination-->
-<!--              :total-items="data?.total ?? 0"-->
-<!--              :item-per-page="perPage"-->
-<!--              :current-page="page"-->
-<!--              rounded="full"-->
-<!--            />-->
-<!--          </div>-->
-        </div>
-      </template>
+        <!--          <div v-if="!pending && data?.data.length !== 0" class="pt-6">-->
+        <!--            <BasePagination-->
+        <!--              :total-items="data?.total ?? 0"-->
+        <!--              :item-per-page="perPage"-->
+        <!--              :current-page="page"-->
+        <!--              rounded="full"-->
+        <!--            />-->
+        <!--          </div>-->
+      </div>
+
+    </div>
+
 
   </div>
 </template>
