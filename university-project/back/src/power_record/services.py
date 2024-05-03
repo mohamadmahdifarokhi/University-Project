@@ -140,5 +140,9 @@ def service_show_records_on_chart(db, user_id, date=None):
 
     results = db["power_records"].aggregate(pipeline)
     result_dict = {doc["device_name"]: doc["total_consumption"] for doc in results}
+    res = {
+        "categories": list(result_dict.keys()),
+        "values": list(result_dict.values())
+    }
 
-    return result_dict
+    return res
