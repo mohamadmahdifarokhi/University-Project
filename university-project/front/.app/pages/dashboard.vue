@@ -4,6 +4,7 @@ import {toTypedSchema} from "@vee-validate/zod";
 import {Field, useForm} from 'vee-validate'
 import {z} from 'zod'
 import {storeToRefs} from "pinia";
+import {onMounted} from "vue";
 
 const {t} = useI18n({useScope: "local"})
 
@@ -34,7 +35,9 @@ const initializeData = async () => {
   await fetchOrders();
   await fetch24Records();
 };
-initializeData()
+onMounted(async () => {
+    await initializeData();
+  });
 const VALIDATION_TEXT = {
   EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
   PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
@@ -486,11 +489,11 @@ function useDemoBarMulti() {
       text: '',
       align: 'left',
     },
-    tooltip: {
-      y: {
-        formatter: asKDollar,
-      },
-    },
+    // tooltip: {
+    //   y: {
+    //     formatter: asKDollar,
+    //   },
+    // },
   }
 
   const series = shallowRef([
@@ -565,11 +568,11 @@ function useDemoBarMulti3() {
       text: '',
       align: 'left',
     },
-    tooltip: {
-      y: {
-        formatter: asKDollar,
-      },
-    },
+    // tooltip: {
+    //   y: {
+    //     formatter: asKDollar,
+    //   },
+    // },
   }
 
   const series = shallowRef([
@@ -1250,105 +1253,187 @@ function useDemoBarMulti3() {
       <!--      </div>-->
 
 
-      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
-          <BaseCard rounded="lg" class="p-6">
-            <div class="mb-6 flex items-center justify-between">
-              <BaseHeading
-                as="h3"
-                size="md"
-                weight="semibold"
-                lead="tight"
-                class="text-muted-800 dark:text-white"
-              >
-                <span>Selected Products</span>
-              </BaseHeading>
-            </div>
-            <div class="mb-2 space-y-5">
-              <div v-for="device in app.getselectedDevice" :key="device.id"
-                   class="flex flex-col md:flex-row items-center md:items-start gap-2">
-                <div class="flex items-center gap-2 md:w-1/4">
-                  <BaseHeading
-                    as="h4"
-                    size="sm"
-                    weight="medium"
-                    lead="snug"
-                    class="text-muted-800 dark:text-white"
-                  >
-                    <span>{{ device.name }}</span>
-                    <BaseTag
-                      color="success"
-                      variant="pastel"
-                      rounded="full"
-                      size="sm"
-                      class="font-medium ms-3"
-                    >
-                      ON
-                    </BaseTag>
-                  </BaseHeading>
-                </div>
-                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"
-                       :value="device.name" name="deviceId">
-                  <BaseInput
-                    :error="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                    type="hidden"
-                    shape="curved"
-                  />
-                </Field>
-                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="start">
-                  <BaseInput
-                    :model-value="field.value"
-                    :error="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                    type="datetime-local"
-                    shape="curved"
-                    placeholder="Start Date"
-                    icon="ri:calendar-fill"
-                  />
-                </Field>
-                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="end">
-                  <BaseInput
-                    :model-value="field.value"
-                    :error="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                    type="datetime-local"
-                    shape="curved"
-                    placeholder="End Date"
-                    icon="ri:calendar-fill"
-                  />
-                </Field>
-                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"
-                       name="consumption">
-                  <BaseInput
-                    :model-value="field.value"
-                    :error="errorMessage"
-                    @update:model-value="handleChange"
-                    @blur="handleBlur"
-                    shape="curved"
-                    placeholder="Consumption"
-                    icon="ri:lightbulb-flash-fill"
-                  />
-                </Field>
-                <!--          <div class="flex items-center gap-1">-->
+<!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->
+<!--        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>-->
+<!--          <BaseCard rounded="lg" class="p-6">-->
+<!--            <div class="mb-6 flex items-center justify-between">-->
+<!--              <BaseHeading-->
+<!--                as="h3"-->
+<!--                size="md"-->
+<!--                weight="semibold"-->
+<!--                lead="tight"-->
+<!--                class="text-muted-800 dark:text-white"-->
+<!--              >-->
+<!--                <span>Selected Products</span>-->
+<!--              </BaseHeading>-->
+<!--            </div>-->
+<!--            <div class="mb-2 space-y-5">-->
+<!--              <div v-for="device in app.getselectedDevice" :key="device.id"-->
+<!--                   class="flex flex-col md:flex-row items-center md:items-start gap-2">-->
 
-                <!--          </div>-->
-                <div class="flex items-center gap-1">
-                  <button type="submit" class="BaseButtonIcon" rounded="full" small>
-                    <Icon name="ri:add-circle-fill"/>
-                  </button>
-                  <BaseButtonIcon rounded="full" small class="ms-3">
-                    <Icon name="ri:delete-bin-7-fill"/>
-                  </BaseButtonIcon>
-                </div>
-              </div>
-            </div>
-          </BaseCard>
-        </form>
+<!--                <div class="flex items-center gap-2 md:w-1/4">-->
+<!--                  <BaseHeading-->
+<!--                    as="h4"-->
+<!--                    size="sm"-->
+<!--                    weight="medium"-->
+<!--                    lead="snug"-->
+<!--                    class="text-muted-800 dark:text-white"-->
+<!--                  >-->
+<!--                    <span>{{ device.name }}</span>-->
+<!--                    <BaseTag-->
+<!--                      color="success"-->
+<!--                      variant="pastel"-->
+<!--                      rounded="full"-->
+<!--                      size="sm"-->
+<!--                      class="font-medium ms-3"-->
+<!--                    >-->
+<!--                      ON-->
+<!--                    </BaseTag>-->
+<!--                  </BaseHeading>-->
+<!--                </div>-->
+<!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
+<!--                       :value="device.name" name="deviceId">-->
+<!--                  <BaseInput-->
+<!--                    :error="errorMessage"-->
+<!--                    @update:model-value="handleChange"-->
+<!--                    @blur="handleBlur"-->
+<!--                    type="hidden"-->
+<!--                    shape="curved"-->
+<!--                  />-->
+<!--                </Field>-->
+<!--                <Field  v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="start">-->
+<!--                  <BaseInput-->
+<!--                    :model-value="field.value"-->
+<!--                    :error="errorMessage"-->
+<!--                    @update:model-value="handleChange"-->
+<!--                    @blur="handleBlur"-->
+<!--                    type="datetime-local"-->
+<!--                    shape="curved"-->
+<!--                    placeholder="Start Date"-->
+<!--                    icon="ri:calendar-fill"-->
+<!--                  />-->
+<!--                </Field>-->
+<!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="end">-->
+<!--                  <BaseInput-->
+<!--                    :model-value="field.value"-->
+<!--                    :error="errorMessage"-->
+<!--                    @update:model-value="handleChange"-->
+<!--                    @blur="handleBlur"-->
+<!--                    type="datetime-local"-->
+<!--                    shape="curved"-->
+<!--                    placeholder="End Date"-->
+<!--                    icon="ri:calendar-fill"-->
+<!--                  />-->
+<!--                </Field>-->
+<!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
+<!--                       name="consumption">-->
+<!--                  <BaseInput-->
+<!--                    :model-value="field.value"-->
+<!--                    :error="errorMessage"-->
+<!--                    @update:model-value="handleChange"-->
+<!--                    @blur="handleBlur"-->
+<!--                    shape="curved"-->
+<!--                    placeholder="Consumption"-->
+<!--                    icon="ri:lightbulb-flash-fill"-->
+<!--                  />-->
+<!--                </Field>-->
+<!--                &lt;!&ndash;          <div class="flex items-center gap-1">&ndash;&gt;-->
+
+<!--                &lt;!&ndash;          </div>&ndash;&gt;-->
+<!--                <div class="flex items-center gap-1 mt-3">-->
+<!--                  <button type="submit" class="BaseButtonIcon" rounded="full" small>-->
+<!--                    <Icon name="ri:add-circle-fill"/>-->
+<!--                  </button>-->
+<!--                  <BaseButtonIcon rounded="full" small class="ms-3">-->
+<!--                    <Icon name="ri:delete-bin-7-fill"/>-->
+<!--                  </BaseButtonIcon>-->
+<!--                </div>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </BaseCard>-->
+<!--        </form>-->
+<!--      </div>-->
+
+
+      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+  <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
+    <BaseCard rounded="lg" class="p-6">
+      <div class="mb-6 flex items-center justify-between">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Selected Products</span>
+        </BaseHeading>
       </div>
+      <!-- Single input for device selection -->
+      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="deviceId">
+        <BaseSelect
+          :model-value="field.value"
+          :error="errorMessage"
+          @update:model-value="handleChange"
+          @blur="handleBlur"
+          shape="curved"
+          placeholder="Select Device"
+          icon="ri:device-fill"
+        >
+          <!-- Options for device selection -->
+          <option v-for="device in app.getselectedDevice" :key="device.id" :value="device.id">{{ device.name }}</option>
+        </BaseSelect>
+      </Field>
+      <!-- Other input fields -->
+      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="start">
+        <BaseInput
+          :model-value="field.value"
+          :error="errorMessage"
+          @update:model-value="handleChange"
+          @blur="handleBlur"
+          type="datetime-local"
+          shape="curved"
+          placeholder="Start Date"
+          icon="ri:calendar-fill"
+        />
+      </Field>
+      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="end">
+        <BaseInput
+          :model-value="field.value"
+          :error="errorMessage"
+          @update:model-value="handleChange"
+          @blur="handleBlur"
+          type="datetime-local"
+          shape="curved"
+          placeholder="End Date"
+          icon="ri:calendar-fill"
+        />
+      </Field>
+      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">
+        <BaseInput
+          :model-value="field.value"
+          :error="errorMessage"
+          @update:model-value="handleChange"
+          @blur="handleBlur"
+          shape="curved"
+          placeholder="Consumption"
+          icon="ri:lightbulb-flash-fill"
+        />
+      </Field>
+      <div class="flex items-center gap-1 mt-5">
+        <button type="submit" class="BaseButtonIcon" rounded="full" small>
+          <BaseButtonIcon rounded="full" small>
+          <Icon name="ri:add-circle-fill"/>
+
+        </BaseButtonIcon>
+        </button>
+        <BaseButtonIcon rounded="full" small class="ms-2">
+          <Icon name="ri:delete-bin-7-fill"/>
+        </BaseButtonIcon>
+      </div>
+    </BaseCard>
+  </form>
+</div>
 
 
       <!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->

@@ -14,7 +14,7 @@ function useDemoPie() {
       },
     },
     colors: [primary.value, success.value, info.value, danger.value],
-    labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
+    labels: ['Spring' , 'Autumn', 'Fall','Winter'],
     responsive: [
       {
         breakpoint: 480,
@@ -37,7 +37,7 @@ function useDemoPie() {
     },
   }
 
-  const series = shallowRef([44, 55, 13, 43, 22])
+  const series = shallowRef([44, 55, 13, 43])
 
   return {
     type,

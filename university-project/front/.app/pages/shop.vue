@@ -284,7 +284,7 @@ onMounted(async () => {
       wrapper: 'w-full sm:w-auto',
     }"
   />
-                    <BaseButtonIcon @click="addOrder(item.user_id, item.id, amount, item.fee)" rounded="full" small>
+                    <BaseButtonIcon class="ms-3" @click="addOrder(item.user_id, item.id, amount, item.fee)" rounded="full" small>
                   <Icon name="ri:add-circle-fill"/>
                 </BaseButtonIcon>
 <!--                    <BaseDropdown-->
