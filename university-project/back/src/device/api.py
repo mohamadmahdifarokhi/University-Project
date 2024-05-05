@@ -41,7 +41,7 @@ def device_delete(
 
 ):
     return service_delete_device(
-        device_id
+        device_id, user['_id']
     )
 
 @router.get("/{device_id}/get", summary="gets a device")

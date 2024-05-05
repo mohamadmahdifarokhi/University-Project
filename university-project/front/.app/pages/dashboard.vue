@@ -7,7 +7,71 @@ import {storeToRefs} from "pinia";
 import {onMounted} from "vue";
 
 const {t} = useI18n({useScope: "local"})
+const demoAreaMulti = reactive(useDemoAreaMulti())
 
+function useDemoAreaMulti() {
+  const { primary, info, success } = useTailwindColors()
+  const type = 'area'
+  const height = 280
+
+  const options = {
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    colors: [primary.value, info.value, success.value],
+    title: {
+      text: '',
+      align: 'left',
+    },
+    legend: {
+      position: 'top',
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      width: [2, 2, 2],
+      curve: 'smooth',
+    },
+    xaxis: {
+      type: 'datetime',
+      categories: [
+        '2018-09-19T00:00:00.000Z',
+        '2018-09-20T01:30:00.000Z',
+        '2018-09-22T02:30:00.000Z',
+        '2018-09-25T03:30:00.000Z',
+        '2018-10-5T04:30:00.000Z',
+        '2018-10-10T05:30:00.000Z',
+        '2018-10-19T06:30:00.000Z',
+      ],
+    },
+    tooltip: {
+      x: {
+        format: 'dd/MM/yy HH:mm',
+      },
+    },
+  }
+
+  const series = shallowRef([
+    {
+      name: 'iron',
+      data: [31, 40, 28, 51, 42, 109, 100],
+    },
+    {
+      name: 'heater',
+      data: [11, 32, 45, 32, 34, 52, 41],
+    },
+  ])
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  }
+}
 definePageMeta({
   title: 'Activity',
   middleware: ['authenticated'],
@@ -784,7 +848,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>CONVERSION PERCENT</span>
+              <span>CONVERSION PERCENT (%)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -831,7 +895,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>SAVED ENERGY</span>
+              <span>SAVED ENERGY (kwh/day)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -877,7 +941,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>INVESTMENT & SAVING</span>
+              <span>INVESTMENT & SAVING (€)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -926,7 +990,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>GREENHOUSE EMISSION SAVING</span>
+              <span>GREENHOUSE EMISSION SAVING (CO2/kwh)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1024,7 +1088,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>EFFICIENCY</span>
+              <span>EFFICIENCY (%)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1073,7 +1137,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>PV GENERATION</span>
+              <span>PV GENERATION (kwh)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1121,7 +1185,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>STORAGE CAPACITY</span>
+              <span>STORAGE CAPACITY (kwh)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1195,22 +1259,27 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-        <BaseCard class="p-6">
-          <!-- Title -->
-          <div class="mb-6">
-            <BaseHeading
-              as="h3"
-              size="md"
-              weight="semibold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
-            >
-              <span>Monthly Consumption</span>
-            </BaseHeading>
-          </div>
-          <AddonApexcharts v-bind="demoBarMulti"/>
-        </BaseCard>
+      <div class="relative">
+    <BaseCard class="p-6">
+      <!-- Title -->
+      <div class="mb-6">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Monthly Consumption</span>
+        </BaseHeading>
       </div>
+      <AddonApexcharts v-bind="demoAreaMulti" />
+    </BaseCard>
+  </div>
+
+      </div>
+
+
       <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
 
         <DemoChartPie/>
