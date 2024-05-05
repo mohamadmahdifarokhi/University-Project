@@ -24,11 +24,16 @@ def service_add_device(
 
 def service_delete_device(
     device_id: str,
+    user_id
 ):
-    update_result = db["device"].delete_one(
-        {"_id": ObjectId(device_id)},
-    )
-    return {"detail": "device deleted."}
+    update_result = db["users"].find_one_and_update(
+        {"_id": user_id},
+        {"$pull": {"devices": device_id}})
+    if update_result:
+        return {"detail": "Device deleted successfully."}
+    else:
+        return {"detail": "User not found or device could not be deleted."}
+
 
 
 def service_update_device(
