@@ -42,25 +42,8 @@ const showNavBurger = computed(() => {
       weight="light"
       class="text-muted-800 dark:text-white"
     >
-      <!--      <slot name="title">{{ route.meta.title }}</slot>-->
-      <!--      <slot name="title">Uuniversity Project</slot>-->
-      <NuxtLink :to="localPath('/')" class="text-muted-800 dark:text-white flex items-center">
-        <template>
-          <span class="text-muted-800 dark:text-white hidden md:flex items-center">DASHBOARD</span>
-          <!--    <img-->
-          <!--      :src="'/img/accountract.png'"-->
-          <!--      alt="GPT Logo"-->
-          <!--      class="md:h-8 md:w-8 md:mb-1 sm:h-11 sm:w-12 h-11 w-12 sm:block hidden" &lt;!&ndash; Added classes to control visibility &ndash;&gt;-->
-          <!--    />-->
-        </template>
-        <!--  <template v-else>-->
-        <!--    <img-->
-        <!--      :src="'/img/accountract.png'"-->
-        <!--      alt="GPT Logo"-->
-        <!--      class="md:h-8 md:w-8 md:mb-1 sm:h-11 sm:w-12 h-11 w-12 sm:block hidden ms-3" &lt;!&ndash; Added classes to control visibility &ndash;&gt;-->
-        <!--    />-->
-        <!--    <span class="text-muted-800 dark:text-white hidden md:flex items-center">ccountract</span>-->
-        <!--  </template>-->
+      <NuxtLink to="/dashboard" class="text-muted-800 dark:text-white flex items-center">
+          <span class="text-muted-800 dark:text-white items-center">DASHBOARD</span>
       </NuxtLink>
 
 

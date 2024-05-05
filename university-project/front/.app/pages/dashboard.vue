@@ -577,11 +577,11 @@ function useDemoBarMulti3() {
 
   const series = shallowRef([
     {
-      name: 'AC (non-optimized)',
+      name: 'non-optimized',
       data: [44, 55, 57, 56],
     },
     {
-      name: 'DC (optimized)',
+      name: 'optimized',
       data: [35, 41, 36, 26],
     },
   ])

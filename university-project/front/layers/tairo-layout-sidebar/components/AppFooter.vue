@@ -76,7 +76,7 @@ const {t} = useI18n({useScope: "local"})
         class="text-muted-500 dark:text-muted-400 ltablet:w-1/5 ltablet:mt-0 mt-6 flex w-full items-center justify-center text-sm"
       >
         <span dir="ltr">
-                    © Uuniversity Project {{ year }}
+                    © Interdisciplinary Project - Team i {{ year }}
         </span>
       </div>
     </div>
