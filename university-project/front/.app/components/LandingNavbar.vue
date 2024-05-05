@@ -31,7 +31,7 @@ const config = useRuntimeConfig()
           <!--            class="text-primary-500 group-[&.scrolled]/landing:h-6 group-[&:not(.scrolled)]/landing:h-7 motion-safe:transition-all motion-safe:duration-200"-->
           <!--          />-->
           <template>
-            <span class="text-muted-800 dark:text-white hidden md:flex items-center">DASHBOARD</span>
+            <span class="text-muted-800 dark:text-white items-center">DASHBOARD</span>
 <!--            <img-->
 <!--              :src="'/img/accountract.png'"-->
 <!--              alt="GPT Logo"-->

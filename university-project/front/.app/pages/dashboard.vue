@@ -656,7 +656,7 @@ function useDemoBarMulti3() {
       <!--            >-->
       <!--              <BaseIconBox-->
       <!--                size="md"-->
-      <!--                class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"-->
+      <!--                class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-success-500 dark:border-2"-->
       <!--                rounded="full"-->
       <!--                color="none"-->
       <!--              >-->
@@ -783,11 +783,16 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-success-100 text-success-500 dark:bg-success-500/20 dark:text-success-400 dark:border-success-500 dark:border-2"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
-              <Icon name="ri:battery-saver-fill" class="size-6"/>
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/exchange-line.png"
+                  alt=""
+                >
+<!--              <Icon name="ri:battery-saver-fill" class="size-6"/>-->
             </BaseIconBox>
           </div>
           <div class="mb-2">
@@ -825,11 +830,15 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-yellow-100 text-yellow-500 dark:border-2 dark:border-yellow-500 dark:bg-yellow-500/20 dark:text-yellow-400"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
-              <Icon name="ri:money-dollar-circle-fill" class="size-6"/>
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/battery-saver-line.png"
+                  alt=""
+                >
             </BaseIconBox>
           </div>
           <div class="mb-2">
@@ -867,11 +876,16 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
-              <Icon name="ri:leaf-fill" class="size-6"/>
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/wallet-3-line.png"
+                  alt=""
+                >
+<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -911,11 +925,16 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
-              <Icon name="ri:leaf-fill" class="size-6"/>
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/battery-saver-line.png"
+                  alt=""
+                >
+<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -955,11 +974,16 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
-              <Icon name="ri:leaf-fill" class="size-6"/>
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/supabase-fill.png"
+                  alt=""
+                >
+<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -999,10 +1023,15 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/speed-up-line.svg"
+                  alt=""
+                >
               <Icon name="ri:leaf-fill" class="size-6"/>
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
@@ -1043,11 +1072,16 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
-              <Icon name="ri:leaf-fill" class="size-6"/>
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/flashlight-line.png"
+                  alt=""
+                >
+<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -1086,11 +1120,16 @@ function useDemoBarMulti3() {
             </BaseHeading>
             <BaseIconBox
               size="xs"
-              class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-primary-500 dark:border-2"
+              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
               rounded="full"
               color="none"
             >
-              <Icon name="ri:leaf-fill" class="size-6"/>
+              <img
+                  class="size-10 h-7 w-8"
+                  src="/img/database-line.png"
+                  alt=""
+                >
+<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
