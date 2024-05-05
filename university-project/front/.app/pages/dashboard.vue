@@ -7,7 +7,71 @@ import {storeToRefs} from "pinia";
 import {onMounted} from "vue";
 
 const {t} = useI18n({useScope: "local"})
+const demoAreaMulti = reactive(useDemoAreaMulti())
 
+function useDemoAreaMulti() {
+  const { primary, info, success } = useTailwindColors()
+  const type = 'area'
+  const height = 280
+
+  const options = {
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    colors: [primary.value, info.value, success.value],
+    title: {
+      text: '',
+      align: 'left',
+    },
+    legend: {
+      position: 'top',
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      width: [2, 2, 2],
+      curve: 'smooth',
+    },
+    xaxis: {
+      type: 'datetime',
+      categories: [
+        '2018-09-19T00:00:00.000Z',
+        '2018-09-20T01:30:00.000Z',
+        '2018-09-22T02:30:00.000Z',
+        '2018-09-25T03:30:00.000Z',
+        '2018-10-5T04:30:00.000Z',
+        '2018-10-10T05:30:00.000Z',
+        '2018-10-19T06:30:00.000Z',
+      ],
+    },
+    tooltip: {
+      x: {
+        format: 'dd/MM/yy HH:mm',
+      },
+    },
+  }
+
+  const series = shallowRef([
+    {
+      name: 'iron',
+      data: [31, 40, 28, 51, 42, 109, 100],
+    },
+    {
+      name: 'heater',
+      data: [11, 32, 45, 32, 34, 52, 41],
+    },
+  ])
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  }
+}
 definePageMeta({
   title: 'Activity',
   middleware: ['authenticated'],
@@ -35,9 +99,9 @@ const initializeData = async () => {
   await fetchOrders();
   await fetch24Records();
 };
-onMounted(async () => {
-    await initializeData();
-  });
+onBeforeMount(async () => {
+  await initializeData();
+});
 const VALIDATION_TEXT = {
   EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
   PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
@@ -76,6 +140,11 @@ const {
 const addPowerRecord = handleSubmit(async (values) => {
   await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
 })
+
+
+function deleteDevice(deviceId) {
+  app.deleteDevice(deviceId)
+}
 
 function useAreaCustomers() {
   const {primary, info, success} = useTailwindColors()
@@ -548,7 +617,7 @@ function useDemoBarMulti3() {
     },
     xaxis: {
       categories: [
-        'Spring' , 'Autumn', 'Fall','Winter'
+        'Spring', 'Autumn', 'Fall', 'Winter'
       ],
 
     },
@@ -779,7 +848,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>CONVERSION PERCENT</span>
+              <span>CONVERSION PERCENT (%)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -788,11 +857,11 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/exchange-line.png"
-                  alt=""
-                >
-<!--              <Icon name="ri:battery-saver-fill" class="size-6"/>-->
+                class="size-10 h-7 w-8"
+                src="/img/exchange-line.png"
+                alt=""
+              >
+              <!--              <Icon name="ri:battery-saver-fill" class="size-6"/>-->
             </BaseIconBox>
           </div>
           <div class="mb-2">
@@ -826,7 +895,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>SAVED ENERGY</span>
+              <span>SAVED ENERGY (kwh/day)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -835,10 +904,10 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/battery-saver-line.png"
-                  alt=""
-                >
+                class="size-10 h-7 w-8"
+                src="/img/battery-saver-line.png"
+                alt=""
+              >
             </BaseIconBox>
           </div>
           <div class="mb-2">
@@ -872,7 +941,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>INVESTMENT & SAVING</span>
+              <span>INVESTMENT & SAVING (€)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -881,11 +950,11 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/wallet-3-line.png"
-                  alt=""
-                >
-<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
+                class="size-10 h-7 w-8"
+                src="/img/wallet-3-line.png"
+                alt=""
+              >
+              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -921,7 +990,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>GREENHOUSE EMISSION SAVING</span>
+              <span>GREENHOUSE EMISSION SAVING (CO2/kwh)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -930,11 +999,11 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/battery-saver-line.png"
-                  alt=""
-                >
-<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
+                class="size-10 h-7 w-8"
+                src="/img/battery-saver-line.png"
+                alt=""
+              >
+              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -979,11 +1048,11 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/supabase-fill.png"
-                  alt=""
-                >
-<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
+                class="size-10 h-7 w-8"
+                src="/img/supabase-fill.png"
+                alt=""
+              >
+              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -1019,7 +1088,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>EFFICIENCY</span>
+              <span>EFFICIENCY (%)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1028,10 +1097,10 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/speed-up-line.svg"
-                  alt=""
-                >
+                class="size-10 h-7 w-8"
+                src="/img/speed-up-line.svg"
+                alt=""
+              >
               <Icon name="ri:leaf-fill" class="size-6"/>
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
@@ -1068,7 +1137,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>PV GENERATION</span>
+              <span>PV GENERATION (kwh)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1077,11 +1146,11 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/flashlight-line.png"
-                  alt=""
-                >
-<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
+                class="size-10 h-7 w-8"
+                src="/img/flashlight-line.png"
+                alt=""
+              >
+              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -1116,7 +1185,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>STORAGE CAPACITY</span>
+              <span>STORAGE CAPACITY (kwh)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1125,11 +1194,11 @@ function useDemoBarMulti3() {
               color="none"
             >
               <img
-                  class="size-10 h-7 w-8"
-                  src="/img/database-line.png"
-                  alt=""
-                >
-<!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
+                class="size-10 h-7 w-8"
+                src="/img/database-line.png"
+                alt=""
+              >
+              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
             </BaseIconBox>
@@ -1190,22 +1259,27 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-        <BaseCard class="p-6">
-          <!-- Title -->
-          <div class="mb-6">
-            <BaseHeading
-              as="h3"
-              size="md"
-              weight="semibold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
-            >
-              <span>Monthly Consumption</span>
-            </BaseHeading>
-          </div>
-          <AddonApexcharts v-bind="demoBarMulti"/>
-        </BaseCard>
+      <div class="relative">
+    <BaseCard class="p-6">
+      <!-- Title -->
+      <div class="mb-6">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Monthly Consumption</span>
+        </BaseHeading>
       </div>
+      <AddonApexcharts v-bind="demoAreaMulti" />
+    </BaseCard>
+  </div>
+
+      </div>
+
+
       <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
 
         <DemoChartPie/>
@@ -1292,188 +1366,223 @@ function useDemoBarMulti3() {
       <!--      </div>-->
 
 
-<!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->
-<!--        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>-->
-<!--          <BaseCard rounded="lg" class="p-6">-->
-<!--            <div class="mb-6 flex items-center justify-between">-->
-<!--              <BaseHeading-->
-<!--                as="h3"-->
-<!--                size="md"-->
-<!--                weight="semibold"-->
-<!--                lead="tight"-->
-<!--                class="text-muted-800 dark:text-white"-->
-<!--              >-->
-<!--                <span>Selected Products</span>-->
-<!--              </BaseHeading>-->
-<!--            </div>-->
-<!--            <div class="mb-2 space-y-5">-->
-<!--              <div v-for="device in app.getselectedDevice" :key="device.id"-->
-<!--                   class="flex flex-col md:flex-row items-center md:items-start gap-2">-->
+      <!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->
+      <!--        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>-->
+      <!--          <BaseCard rounded="lg" class="p-6">-->
+      <!--            <div class="mb-6 flex items-center justify-between">-->
+      <!--              <BaseHeading-->
+      <!--                as="h3"-->
+      <!--                size="md"-->
+      <!--                weight="semibold"-->
+      <!--                lead="tight"-->
+      <!--                class="text-muted-800 dark:text-white"-->
+      <!--              >-->
+      <!--                <span>Selected Products</span>-->
+      <!--              </BaseHeading>-->
+      <!--            </div>-->
+      <!--            <div class="mb-2 space-y-5">-->
+      <!--              <div v-for="device in app.getselectedDevice" :key="device.id"-->
+      <!--                   class="flex flex-col md:flex-row items-center md:items-start gap-2">-->
 
-<!--                <div class="flex items-center gap-2 md:w-1/4">-->
-<!--                  <BaseHeading-->
-<!--                    as="h4"-->
-<!--                    size="sm"-->
-<!--                    weight="medium"-->
-<!--                    lead="snug"-->
-<!--                    class="text-muted-800 dark:text-white"-->
-<!--                  >-->
-<!--                    <span>{{ device.name }}</span>-->
-<!--                    <BaseTag-->
-<!--                      color="success"-->
-<!--                      variant="pastel"-->
-<!--                      rounded="full"-->
-<!--                      size="sm"-->
-<!--                      class="font-medium ms-3"-->
-<!--                    >-->
-<!--                      ON-->
-<!--                    </BaseTag>-->
-<!--                  </BaseHeading>-->
-<!--                </div>-->
-<!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
-<!--                       :value="device.name" name="deviceId">-->
-<!--                  <BaseInput-->
-<!--                    :error="errorMessage"-->
-<!--                    @update:model-value="handleChange"-->
-<!--                    @blur="handleBlur"-->
-<!--                    type="hidden"-->
-<!--                    shape="curved"-->
-<!--                  />-->
-<!--                </Field>-->
-<!--                <Field  v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="start">-->
-<!--                  <BaseInput-->
-<!--                    :model-value="field.value"-->
-<!--                    :error="errorMessage"-->
-<!--                    @update:model-value="handleChange"-->
-<!--                    @blur="handleBlur"-->
-<!--                    type="datetime-local"-->
-<!--                    shape="curved"-->
-<!--                    placeholder="Start Date"-->
-<!--                    icon="ri:calendar-fill"-->
-<!--                  />-->
-<!--                </Field>-->
-<!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="end">-->
-<!--                  <BaseInput-->
-<!--                    :model-value="field.value"-->
-<!--                    :error="errorMessage"-->
-<!--                    @update:model-value="handleChange"-->
-<!--                    @blur="handleBlur"-->
-<!--                    type="datetime-local"-->
-<!--                    shape="curved"-->
-<!--                    placeholder="End Date"-->
-<!--                    icon="ri:calendar-fill"-->
-<!--                  />-->
-<!--                </Field>-->
-<!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
-<!--                       name="consumption">-->
-<!--                  <BaseInput-->
-<!--                    :model-value="field.value"-->
-<!--                    :error="errorMessage"-->
-<!--                    @update:model-value="handleChange"-->
-<!--                    @blur="handleBlur"-->
-<!--                    shape="curved"-->
-<!--                    placeholder="Consumption"-->
-<!--                    icon="ri:lightbulb-flash-fill"-->
-<!--                  />-->
-<!--                </Field>-->
-<!--                &lt;!&ndash;          <div class="flex items-center gap-1">&ndash;&gt;-->
+      <!--                <div class="flex items-center gap-2 md:w-1/4">-->
+      <!--                  <BaseHeading-->
+      <!--                    as="h4"-->
+      <!--                    size="sm"-->
+      <!--                    weight="medium"-->
+      <!--                    lead="snug"-->
+      <!--                    class="text-muted-800 dark:text-white"-->
+      <!--                  >-->
+      <!--                    <span>{{ device.name }}</span>-->
+      <!--                    <BaseTag-->
+      <!--                      color="success"-->
+      <!--                      variant="pastel"-->
+      <!--                      rounded="full"-->
+      <!--                      size="sm"-->
+      <!--                      class="font-medium ms-3"-->
+      <!--                    >-->
+      <!--                      ON-->
+      <!--                    </BaseTag>-->
+      <!--                  </BaseHeading>-->
+      <!--                </div>-->
+      <!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
+      <!--                       :value="device.name" name="deviceId">-->
+      <!--                  <BaseInput-->
+      <!--                    :error="errorMessage"-->
+      <!--                    @update:model-value="handleChange"-->
+      <!--                    @blur="handleBlur"-->
+      <!--                    type="hidden"-->
+      <!--                    shape="curved"-->
+      <!--                  />-->
+      <!--                </Field>-->
+      <!--                <Field  v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="start">-->
+      <!--                  <BaseInput-->
+      <!--                    :model-value="field.value"-->
+      <!--                    :error="errorMessage"-->
+      <!--                    @update:model-value="handleChange"-->
+      <!--                    @blur="handleBlur"-->
+      <!--                    type="datetime-local"-->
+      <!--                    shape="curved"-->
+      <!--                    placeholder="Start Date"-->
+      <!--                    icon="ri:calendar-fill"-->
+      <!--                  />-->
+      <!--                </Field>-->
+      <!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="end">-->
+      <!--                  <BaseInput-->
+      <!--                    :model-value="field.value"-->
+      <!--                    :error="errorMessage"-->
+      <!--                    @update:model-value="handleChange"-->
+      <!--                    @blur="handleBlur"-->
+      <!--                    type="datetime-local"-->
+      <!--                    shape="curved"-->
+      <!--                    placeholder="End Date"-->
+      <!--                    icon="ri:calendar-fill"-->
+      <!--                  />-->
+      <!--                </Field>-->
+      <!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
+      <!--                       name="consumption">-->
+      <!--                  <BaseInput-->
+      <!--                    :model-value="field.value"-->
+      <!--                    :error="errorMessage"-->
+      <!--                    @update:model-value="handleChange"-->
+      <!--                    @blur="handleBlur"-->
+      <!--                    shape="curved"-->
+      <!--                    placeholder="Consumption"-->
+      <!--                    icon="ri:lightbulb-flash-fill"-->
+      <!--                  />-->
+      <!--                </Field>-->
+      <!--                &lt;!&ndash;          <div class="flex items-center gap-1">&ndash;&gt;-->
 
-<!--                &lt;!&ndash;          </div>&ndash;&gt;-->
-<!--                <div class="flex items-center gap-1 mt-3">-->
-<!--                  <button type="submit" class="BaseButtonIcon" rounded="full" small>-->
-<!--                    <Icon name="ri:add-circle-fill"/>-->
-<!--                  </button>-->
-<!--                  <BaseButtonIcon rounded="full" small class="ms-3">-->
-<!--                    <Icon name="ri:delete-bin-7-fill"/>-->
-<!--                  </BaseButtonIcon>-->
-<!--                </div>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </BaseCard>-->
-<!--        </form>-->
-<!--      </div>-->
+      <!--                &lt;!&ndash;          </div>&ndash;&gt;-->
+      <!--                <div class="flex items-center gap-1 mt-3">-->
+      <!--                  <button type="submit" class="BaseButtonIcon" rounded="full" small>-->
+      <!--                    <Icon name="ri:add-circle-fill"/>-->
+      <!--                  </button>-->
+      <!--                  <BaseButtonIcon rounded="full" small class="ms-3">-->
+      <!--                    <Icon name="ri:delete-bin-7-fill"/>-->
+      <!--                  </BaseButtonIcon>-->
+      <!--                </div>-->
+      <!--              </div>-->
+      <!--            </div>-->
+      <!--          </BaseCard>-->
+      <!--        </form>-->
+      <!--      </div>-->
 
 
       <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-  <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
-    <BaseCard rounded="lg" class="p-6">
-      <div class="mb-6 flex items-center justify-between">
-        <BaseHeading
-          as="h3"
-          size="md"
-          weight="semibold"
-          lead="tight"
-          class="text-muted-800 dark:text-white"
-        >
-          <span>Selected Products</span>
-        </BaseHeading>
-      </div>
-      <!-- Single input for device selection -->
-      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="deviceId">
-        <BaseSelect
-          :model-value="field.value"
-          :error="errorMessage"
-          @update:model-value="handleChange"
-          @blur="handleBlur"
-          shape="curved"
-          placeholder="Select Device"
-          icon="ri:device-fill"
-        >
-          <!-- Options for device selection -->
-          <option v-for="device in app.getselectedDevice" :key="device.id" :value="device.id">{{ device.name }}</option>
-        </BaseSelect>
-      </Field>
-      <!-- Other input fields -->
-      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="start">
-        <BaseInput
-          :model-value="field.value"
-          :error="errorMessage"
-          @update:model-value="handleChange"
-          @blur="handleBlur"
-          type="datetime-local"
-          shape="curved"
-          placeholder="Start Date"
-          icon="ri:calendar-fill"
-        />
-      </Field>
-      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="end">
-        <BaseInput
-          :model-value="field.value"
-          :error="errorMessage"
-          @update:model-value="handleChange"
-          @blur="handleBlur"
-          type="datetime-local"
-          shape="curved"
-          placeholder="End Date"
-          icon="ri:calendar-fill"
-        />
-      </Field>
-      <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">
-        <BaseInput
-          :model-value="field.value"
-          :error="errorMessage"
-          @update:model-value="handleChange"
-          @blur="handleBlur"
-          shape="curved"
-          placeholder="Consumption"
-          icon="ri:lightbulb-flash-fill"
-        />
-      </Field>
-      <div class="flex items-center gap-1 mt-5">
-        <button type="submit" class="BaseButtonIcon" rounded="full" small>
-          <BaseButtonIcon rounded="full" small>
-          <Icon name="ri:add-circle-fill"/>
+        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
+          <BaseCard rounded="lg" class="p-6">
+            <div class="mb-6 flex items-center justify-between">
+              <BaseHeading
+                as="h3"
+                size="md"
+                weight="semibold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>Add Product Record</span>
+              </BaseHeading>
+            </div>
+            <!-- Single input for device selection -->
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="deviceId">
+              <BaseSelect
+                :model-value="field.value"
+                :error="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+                shape="curved"
+                placeholder="Select Device"
+                icon="ri:device-fill"
+              >
+                <!-- Options for device selection -->
+                <option v-for="device in app.getselectedDevice" :key="device.id" :value="device.id">{{
+                    device.name
+                  }}
+                </option>
+              </BaseSelect>
+            </Field>
+            <!-- Other input fields -->
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="start">
+              <BaseInput
+                :model-value="field.value"
+                :error="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+                type="datetime-local"
+                shape="curved"
+                placeholder="Start Date"
+                icon="ri:calendar-fill"
+              />
+            </Field>
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="end">
+              <BaseInput
+                :model-value="field.value"
+                :error="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+                type="datetime-local"
+                shape="curved"
+                placeholder="End Date"
+                icon="ri:calendar-fill"
+              />
+            </Field>
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">
+              <BaseInput
+                :model-value="field.value"
+                :error="errorMessage"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+                shape="curved"
+                placeholder="Consumption"
+                icon="ri:lightbulb-flash-fill"
+              />
+            </Field>
+            <div class="flex items-center gap-1 mt-5">
+              <button type="submit" class="BaseButtonIcon" rounded="full" small>
+                <BaseButtonIcon rounded="full" small>
+                  <Icon name="ri:add-circle-fill"/>
 
-        </BaseButtonIcon>
-        </button>
-        <BaseButtonIcon rounded="full" small class="ms-2">
-          <Icon name="ri:delete-bin-7-fill"/>
-        </BaseButtonIcon>
-      </div>
-    </BaseCard>
-  </form>
-</div>
+                </BaseButtonIcon>
 
+              </button>
+              <button @click="deleteDevice" class="BaseButtonIcon" rounded="full" small>
+                <Icon name="ri:delete-bin-fill"/>
+
+              </button>
+            </div>
+          </BaseCard>
+        </form>
+      </div>
+
+      <!-- Create a section to loop through devices -->
+      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+        <div class="mb-6 flex items-center justify-between">
+          <BaseHeading
+            as="h3"
+            size="md"
+            weight="semibold"
+            lead="tight"
+            class="text-muted-800 dark:text-white"
+          >
+            <span>Selected Products</span>
+          </BaseHeading>
+        </div>
+        <!-- Loop through devices -->
+        <div v-for="device in app.getselectedDevice" :key="device.id">
+      <div class="ltablet:col-span-4 col-span-4 md:col-span-4 lg:col-span-4">
+
+          <BaseCard rounded="lg" class="p-6 mt-3">
+
+            <span > {{ device.name }}</span>
+ <button @click="deleteDevice(device.id)" class="BaseButtonIcon ms-5" rounded="full" small >
+              <Icon name="ri:delete-bin-fill"/>
+            </button>
+
+            <!-- Button to delete device -->
+
+          </BaseCard>
+        </div>
+        </div>
+      </div>
 
       <!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->
       <!--        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>-->

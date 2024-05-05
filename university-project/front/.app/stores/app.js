@@ -241,8 +241,11 @@ export const useAppStore = defineStore('app', {
             }
           }
         );
-        this.categories24 = response.data['categories'];
+        if (response.data){
+          this.categories24 = response.data['categories'];
         this.values24 = response.data['values'];
+        }
+
       } catch (error) {
         console.error('Error fetching products:', error);
         const {t} = useI18n({useScope: 'local'});
@@ -251,6 +254,25 @@ export const useAppStore = defineStore('app', {
       }
     },
 
+    async deleteDevice(deviceId) {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.delete(`${apiUrl}/device/${deviceId}/delete`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
+        if (response.status === 200) {
+          window.location.reload();
+
+          this.showSuccessToast('Delete');
+
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
 
     async fetchRecords() {
       const accessToken = useCookie('access_token').value;
