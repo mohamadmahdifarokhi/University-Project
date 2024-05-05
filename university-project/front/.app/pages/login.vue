@@ -4,18 +4,14 @@ import {Field, useForm} from 'vee-validate'
 import {z} from 'zod'
 import {useAuthStore} from "@/stores/auth"
 
-const localPath = useLocalePath();
 
 import {useAppStore} from "~/stores/app";
-import {storeToRefs} from "pinia";
+const {t} = useI18n({useScope: "local"})
 
+const apiUrl = `${import.meta.env.VITE_FRONTEND_SERVER_URL}`;
 
 const app = useAppStore();
-const {language} = storeToRefs(app);
-const {locale, locales} = useI18n()
 
-const loadTextDirection = app.loadTextDirection;
-const {t} = useI18n({useScope: "local"})
 
 const loginWithGoogle = async () => {
   const route = useRoute();
@@ -99,7 +95,7 @@ const onSubmit = handleSubmit(async (values) => {
     <!-- Add additional <source> elements for other video formats -->
     Your browser does not support the video tag.
   </video>
-  <div class="h-screen md:flex dark:bg-muted-900" :dir="locale === 'en' ? 'ltr' : 'rtl'">
+  <div class="h-screen md:flex dark:bg-muted-900">
 
 
     <div class="relative hidden w-1/2 items-center justify-around overflow-hidden bg-gradient-to-tr md:flex">
@@ -122,13 +118,13 @@ const onSubmit = handleSubmit(async (values) => {
         <BaseHeading as="h2" size="3xl" weight="medium" class="relative text-white mb-3">
           {{ t('Dont') }}
         </BaseHeading>
-        <BaseButton :to="localPath('/signup')" shape="curved">{{ t('Signup') }}</BaseButton>
+        <BaseButton  :to="`${apiUrl}/signup`" shape="curved">{{ t('Signup') }}</BaseButton>
       </div>
     </div>
 
     <div class="dark:bg-muted-900 flex flex-col items-center justify-between bg-white py-10 md:w-1/2">
       <div class="mx-auto flex w-full max-w-xs items-center justify-between">
-        <NuxtLink :to="localPath('/')"
+        <NuxtLink to="/"
                   class="text-muted-400 hover:text-primary-500 dark:text-muted-700 dark:hover:text-primary-500 transition-colors duration-300">
           <AccountractLogo class="h-10 w-10"/>
         </NuxtLink>
@@ -140,7 +136,7 @@ const onSubmit = handleSubmit(async (values) => {
       <form method="POST" action="" @submit.prevent="onSubmit" class="mx-auto w-full max-w-xs" novalidate>
         <BaseHeading as="h2" size="3xl" weight="medium">
           <NuxtLink
-            :to="localPath('/')"
+            to="/"
             aria-label="Go to homepage"
           >
             <span class="text-muted-800 dark:text-white items-center">DC Micro-grid Planner</span>
@@ -184,21 +180,21 @@ const onSubmit = handleSubmit(async (values) => {
         </BaseButton>
 
         <!-- Button for Google provider -->
-        <BaseButton @click="loginWithGoogle" shape="curved" color="primary" class="!h-11 w-full mt-4">
-          <span class="flex items-center justify-center">
-          <Icon name="ri:google-fill" class="size-5"/>
+<!--        <BaseButton @click="loginWithGoogle" shape="curved" color="primary" class="!h-11 w-full mt-4">-->
+<!--          <span class="flex items-center justify-center">-->
+<!--          <Icon name="ri:google-fill" class="size-5"/>-->
 
-            <!--            <img class="w-7 h-5" src="/img/google.png"/>-->
-            <!--            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">-->
-            <!--              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 13h-4v4h-2v-4H8v-2h4V9h2v4h4v2z"/>-->
-            <!--            </svg>-->
-            <!--            {{ t('Login with Google') }}-->
-          </span>
-        </BaseButton>
+<!--            &lt;!&ndash;            <img class="w-7 h-5" src="/img/google.png"/>&ndash;&gt;-->
+<!--            &lt;!&ndash;            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">&ndash;&gt;-->
+<!--            &lt;!&ndash;              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 13h-4v4h-2v-4H8v-2h4V9h2v4h4v2z"/>&ndash;&gt;-->
+<!--            &lt;!&ndash;            </svg>&ndash;&gt;-->
+<!--            &lt;!&ndash;            {{ t('Login with Google') }}&ndash;&gt;-->
+<!--          </span>-->
+<!--        </BaseButton>-->
 
         <p class="text-muted-400 mt-4 flex justify-between font-sans text-sm leading-5">
           <span>{{ t('Dont') }}</span>
-          <NuxtLink :to="localPath('/signup')"
+          <NuxtLink :to="`${apiUrl}/signup`"
                     class="text-primary-600 hover:text-primary-500 font-medium underline-offset-4 transition duration-150 ease-in-out hover:underline focus:underline focus:outline-none">
             {{ t('Signup') }}
           </NuxtLink>

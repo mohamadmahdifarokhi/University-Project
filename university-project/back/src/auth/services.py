@@ -201,6 +201,8 @@ class OTPService:
             inserted_id = str(result.inserted_id)
             print("awdww")
             print(otp_data)
+            EmailSender().send_otp_email(req['email'], otp_code)
+
             logger.info(f"Generated OTP for email: {req['email']}, OTP Code: {otp_code}")
             return OtpRes(email=req['email'], otp_code=otp_code, id=inserted_id).__dict__
 
