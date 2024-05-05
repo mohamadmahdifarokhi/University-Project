@@ -36,7 +36,9 @@ def device_add(
 
 @router.delete("/{device_id}/delete", summary="deletes a device")
 def device_delete(
-    device_id: str
+    device_id: str,
+    user: User = Depends(get_current_user)
+
 ):
     return service_delete_device(
         device_id
