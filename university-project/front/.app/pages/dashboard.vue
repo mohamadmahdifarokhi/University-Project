@@ -4,10 +4,31 @@ import {toTypedSchema} from "@vee-validate/zod";
 import {Field, useForm} from 'vee-validate'
 import {z} from 'zod'
 import {storeToRefs} from "pinia";
-import {onMounted} from "vue";
 
+
+definePageMeta({
+  title: 'Activity',
+  middleware: ['authenticated'],
+  preview: {
+    title: 'Personal dashboard v1',
+    description: 'For personal usage and reports',
+    categories: ['dashboards'],
+    src: '/img/screens/dashboards-personal-1.png',
+    srcDark: '/img/screens/dashboards-personal-1-dark.png',
+    order: 1,
+  },
+})
+
+const app = useAppStore();
+const {orders, categories24, values24} = storeToRefs(app);
 const {t} = useI18n({useScope: "local"})
 const demoAreaMulti = reactive(useDemoAreaMulti())
+const router = useRouter()
+onMounted(() => {
+    router.push('/dashboard')
+
+  }
+)
 
 function useDemoAreaMulti() {
   const { primary, info, success } = useTailwindColors()
@@ -72,36 +93,24 @@ function useDemoAreaMulti() {
     series,
   }
 }
-definePageMeta({
-  title: 'Activity',
-  middleware: ['authenticated'],
-  preview: {
-    title: 'Personal dashboard v1',
-    description: 'For personal usage and reports',
-    categories: ['dashboards'],
-    src: '/img/screens/dashboards-personal-1.png',
-    srcDark: '/img/screens/dashboards-personal-1-dark.png',
-    order: 1,
-  },
-})
-const app = useAppStore();
-const {orders, categories24, values24} = storeToRefs(app);
+
+
 
 const areaCustomers = reactive(useAreaCustomers())
 const radialBarTeam = reactive(useRadialBarTeam())
 const barProfit = reactive(useBarProfit())
 const fetchselectedDevice = app.fetchselectedDevice;
 const fetchOrders = app.fetchOrders;
-const fetch24Records = app.fetch24Records;
+// const fetch24Records = app.fetch24Records;
 
 const initializeData = async () => {
+  // await fetch24Records();
   await fetchselectedDevice();
   await fetchOrders();
-  await fetch24Records();
 };
-onBeforeMount(async () => {
-  await initializeData();
-});
+// onMounted(async () => {
+initializeData();
+// });
 const VALIDATION_TEXT = {
   EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
   PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
@@ -510,6 +519,8 @@ function useDemoTimeline() {
 
 const demoBarMulti = reactive(useDemoBarMulti())
 const demoBarMulti3 = reactive(useDemoBarMulti3())
+
+
 
 function useDemoBarMulti() {
   const {primary, info, success, warning} = useTailwindColors()
@@ -1494,7 +1505,7 @@ function useDemoBarMulti3() {
                 icon="ri:device-fill"
               >
                 <!-- Options for device selection -->
-                <option v-for="device in app.getselectedDevice" :key="device.id" :value="device.id">{{
+                <option v-for="device in app.getselectedDevice" :key="device.name" :value="device.name">{{
                     device.name
                   }}
                 </option>
@@ -1544,10 +1555,10 @@ function useDemoBarMulti3() {
                 </BaseButtonIcon>
 
               </button>
-              <button @click="deleteDevice" class="BaseButtonIcon" rounded="full" small>
+              <!-- <button @click="deleteDevice" class="BaseButtonIcon" rounded="full" small>
                 <Icon name="ri:delete-bin-fill"/>
 
-              </button>
+              </button> -->
             </div>
           </BaseCard>
         </form>
@@ -1567,7 +1578,7 @@ function useDemoBarMulti3() {
           </BaseHeading>
         </div>
         <!-- Loop through devices -->
-        <div v-for="device in app.getselectedDevice" :key="device.id">
+        <div v-for="device in app.getselectedDevice" :key="device.name">
       <div class="ltablet:col-span-4 col-span-4 md:col-span-4 lg:col-span-4">
 
           <BaseCard rounded="lg" class="p-6 mt-3">

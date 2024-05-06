@@ -13,6 +13,7 @@
   const initializeData = async () => {
     await loadTextDirection();
     await checkAccessToken();
+    
   };
 
   onMounted(() => {

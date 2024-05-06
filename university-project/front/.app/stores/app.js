@@ -14,8 +14,8 @@ export const useAppStore = defineStore('app', {
     product: ref(),
     devices: [],
     records: [],
-    categories24: [],
-    values24: [],
+    categories24: ref([]),
+    values24: ref([]),
     battery: ref(''),
     batteries: [],
     cart: [],
@@ -45,6 +45,14 @@ export const useAppStore = defineStore('app', {
     },
     getRecords: (state) => {
       return state.records;
+    },
+    getCategories24: (state) => {
+
+      return state.categories24;
+    },
+    getValues24: (state) => {
+
+      return state.values24;
     },
     getBuyOrders: (state) => {
 
