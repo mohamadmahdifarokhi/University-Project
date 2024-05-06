@@ -35,7 +35,6 @@ export default defineNuxtConfig({
     '@shuriken-ui/nuxt'
   ],
 
-
   modules: [
     /**
      * Swiper is a nuxt module that allows us to use swiper in nuxt
