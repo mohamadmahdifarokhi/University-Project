@@ -8,11 +8,11 @@ import {storeToRefs} from "pinia";
 const {t} = useI18n({useScope: "local"})
 const demoAreaMulti = reactive(useDemoAreaMulti())
 const router = useRouter()
-onBeforeUnmount(() => {
-    router.push('/dashboard')
-
-  }
-)
+// onBeforeUnmount(() => {
+//     router.push('/dashboard')
+//
+//   }
+// )
 
 
 function useDemoAreaMulti() {
