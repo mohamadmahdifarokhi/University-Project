@@ -18,7 +18,7 @@ def service_list_apartment_blocks(
     apartment_id: str
 ):
     blocks = db["blocks"].find({"apartment_id": ObjectId(apartment_id)})
-    
+
     if blocks is None:
         raise HTTPException(status_code=404, detail="apartment not found")
     results = []
@@ -60,6 +60,7 @@ def service_add_block(
     block_check = db["blocks"].find_one({"unit": block.unit, "apartment_id": block.apartment_id})
     if block_check is not None:
         raise HTTPException(status_code=404, detail="this block is not available")
+
 
     base_block = BlockSchemaCreate(
         user_id=str(user_id),
