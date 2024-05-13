@@ -13,7 +13,7 @@ def service_add_apartment(
     apartment: ApartmentSchemacreate,
 ):  
     apartment_no = db["apartments"].count_documents({})
-    apartment = ApartmentSchemacreate(
+    apartment = ApartmentSchemaGet(
         apartment_no=apartment_no + 1,
         admin_id=apartment.admin_id,
         block_no=apartment.block_no,
@@ -41,12 +41,12 @@ def service_delete_apartment(
 def service_apartment_get(
     apartment_id:str,    
 ):
-    apartment = db["apartment"].find_one({"_id": ObjectId(apartment_id)})
+    apartment = db["apartments"].find_one({"_id": ObjectId(apartment_id)})
     return apartment
 
 def service_list_apartment_all(
 ):
-    apartments = db["apartment"].find()
+    apartments = db["apartments"].find()
 
     results = []
     for apartment in apartments:
