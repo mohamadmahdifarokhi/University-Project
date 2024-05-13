@@ -35,7 +35,6 @@ export default defineNuxtConfig({
     '@shuriken-ui/nuxt'
   ],
 
-
   modules: [
     /**
      * Swiper is a nuxt module that allows us to use swiper in nuxt
@@ -81,17 +80,17 @@ export default defineNuxtConfig({
 
   experimental: {
     // Write early hints when using node server.
-    writeEarlyHints: true,
-    // Render JSON payloads with support for revivifying complex types.
-    renderJsonPayloads: true,
-    // Render tags in of the head in a more performant way
-    headNext: true,
-    defaults: {
-      useAsyncData: {
-        // Use shallowRef in asyncData/fetch data
-        deep: false,
-      },
-    },
+    writeEarlyHints: false
+    // // Render JSON payloads with support for revivifying complex types.
+    // renderJsonPayloads: true,
+    // // Render tags in of the head in a more performant way
+    // headNext: true,
+    // defaults: {
+    //   useAsyncData: {
+    //     // Use shallowRef in asyncData/fetch data
+    //     deep: false,
+    //   },
+    // },
   },
 
   typescript: {

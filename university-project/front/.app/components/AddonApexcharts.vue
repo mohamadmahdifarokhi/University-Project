@@ -32,7 +32,7 @@ const { stop } = useIntersectionObserver(target, ([{ isIntersecting }]) => {
       class="m-4 w-[calc(100%-32px)]"
       :style="{ height: `${height - 32}px` }"
     />
-    <ClientOnly>
+    <!-- <ClientOnly> -->
       <LazyApexCharts
         v-if="targetIsVisible"
         v-show="isLoaded"
@@ -43,6 +43,6 @@ const { stop } = useIntersectionObserver(target, ([{ isIntersecting }]) => {
         class="m-4 w-[calc(100%-32px)]"
         :style="{ height: `${height - 32}px` }"
       />
-    </ClientOnly>
+    <!-- </ClientOnly> -->
   </div>
 </template>

@@ -5,33 +5,18 @@ import {Field, useForm} from 'vee-validate'
 import {z} from 'zod'
 import {storeToRefs} from "pinia";
 
-
-definePageMeta({
-  title: 'Activity',
-  middleware: ['authenticated'],
-  preview: {
-    title: 'Personal dashboard v1',
-    description: 'For personal usage and reports',
-    categories: ['dashboards'],
-    src: '/img/screens/dashboards-personal-1.png',
-    srcDark: '/img/screens/dashboards-personal-1-dark.png',
-    order: 1,
-  },
-})
-
-const app = useAppStore();
-const {orders, categories24, values24} = storeToRefs(app);
 const {t} = useI18n({useScope: "local"})
 const demoAreaMulti = reactive(useDemoAreaMulti())
 const router = useRouter()
-onMounted(() => {
-    router.push('/dashboard')
+// onBeforeUnmount(() => {
+//     router.push('/dashboard')
+//
+//   }
+// )
 
-  }
-)
 
 function useDemoAreaMulti() {
-  const { primary, info, success } = useTailwindColors()
+  const {primary, info, success} = useTailwindColors()
   const type = 'area'
   const height = 280
 
@@ -94,23 +79,39 @@ function useDemoAreaMulti() {
   }
 }
 
-
+definePageMeta({
+  title: 'Activity',
+  middleware: ['authenticated'],
+  preview: {
+    title: 'Personal dashboard v1',
+    description: 'For personal usage and reports',
+    categories: ['dashboards'],
+    src: '/img/screens/dashboards-personal-1.png',
+    srcDark: '/img/screens/dashboards-personal-1-dark.png',
+    order: 1,
+  },
+})
+const app = useAppStore();
+const {orders, categories24, values24} = storeToRefs(app);
+const cate = ref(categories24)
 
 const areaCustomers = reactive(useAreaCustomers())
 const radialBarTeam = reactive(useRadialBarTeam())
 const barProfit = reactive(useBarProfit())
 const fetchselectedDevice = app.fetchselectedDevice;
 const fetchOrders = app.fetchOrders;
-// const fetch24Records = app.fetch24Records;
+const fetch24Records = app.fetch24Records;
 
 const initializeData = async () => {
-  // await fetch24Records();
+  await fetch24Records();
   await fetchselectedDevice();
   await fetchOrders();
 };
-// onMounted(async () => {
-initializeData();
-// });
+
+onMounted(async () => {
+    await initializeData();
+  });
+
 const VALIDATION_TEXT = {
   EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
   PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
@@ -521,7 +522,6 @@ const demoBarMulti = reactive(useDemoBarMulti())
 const demoBarMulti3 = reactive(useDemoBarMulti3())
 
 
-
 function useDemoBarMulti() {
   const {primary, info, success, warning} = useTailwindColors()
   const type = 'bar'
@@ -550,7 +550,8 @@ function useDemoBarMulti() {
       colors: ['transparent'],
     },
     xaxis: {
-      categories: categories24,
+      categories: cate,
+      // categories: ['iron', 'heater'],
 
     },
     yaxis: {
@@ -584,6 +585,7 @@ function useDemoBarMulti() {
     {
       name: 'DC',
       data: values24,
+      // data: [35, 41],
     },
     // {
     //   name: 'Free Cash Flow',
@@ -673,6 +675,15 @@ function useDemoBarMulti3() {
     series,
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 </script>
@@ -1270,23 +1281,23 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-      <div class="relative">
-    <BaseCard class="p-6">
-      <!-- Title -->
-      <div class="mb-6">
-        <BaseHeading
-          as="h3"
-          size="md"
-          weight="semibold"
-          lead="tight"
-          class="text-muted-800 dark:text-white"
-        >
-          <span>Monthly Consumption</span>
-        </BaseHeading>
-      </div>
-      <AddonApexcharts v-bind="demoAreaMulti" />
-    </BaseCard>
-  </div>
+        <div class="relative">
+          <BaseCard class="p-6">
+            <!-- Title -->
+            <div class="mb-6">
+              <BaseHeading
+                as="h3"
+                size="md"
+                weight="semibold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>Monthly Consumption</span>
+              </BaseHeading>
+            </div>
+            <AddonApexcharts v-bind="demoAreaMulti"/>
+          </BaseCard>
+        </div>
 
       </div>
 
@@ -1579,19 +1590,19 @@ function useDemoBarMulti3() {
         </div>
         <!-- Loop through devices -->
         <div v-for="device in app.getselectedDevice" :key="device.name">
-      <div class="ltablet:col-span-4 col-span-4 md:col-span-4 lg:col-span-4">
+          <div class="ltablet:col-span-4 col-span-4 md:col-span-4 lg:col-span-4">
 
-          <BaseCard rounded="lg" class="p-6 mt-3">
+            <BaseCard rounded="lg" class="p-6 mt-3">
 
-            <span > {{ device.name }}</span>
- <button @click="deleteDevice(device.id)" class="BaseButtonIcon ms-5" rounded="full" small >
-              <Icon name="ri:delete-bin-fill"/>
-            </button>
+              <span> {{ device.name }}</span>
+              <button @click="deleteDevice(device.id)" class="BaseButtonIcon ms-5" rounded="full" small>
+                <Icon name="ri:delete-bin-fill"/>
+              </button>
 
-            <!-- Button to delete device -->
+              <!-- Button to delete device -->
 
-          </BaseCard>
-        </div>
+            </BaseCard>
+          </div>
         </div>
       </div>
 
