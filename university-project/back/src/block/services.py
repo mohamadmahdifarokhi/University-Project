@@ -48,10 +48,20 @@ def service_add_block(
     block: BlockSchemaCreate,
     user_id
 ):
-    print(block.__dict__)
+
     apartment_id = db["apartments"].find_one({"apartment_no": (block.apartment_no)})["_id"]
     if apartment_id is None:
         raise HTTPException(status_code=404, detail="apartment not found")
+    
+    apartment_block_number = db["apartments"].find_one({"_id": apartment_id})
+    if block.unit > apartment_block_number:
+        raise HTTPException(status_code=404, detail="unit number is not acceptable")
+    
+    block_check = db["blocks"].find_one({"unit": block.unit, "apartment_id": block.apartment_id})
+    if block_check is not None:
+        raise HTTPException(status_code=404, detail="this block is not available")
+
+
     base_block = BlockSchemaCreate(
         user_id=str(user_id),
         apartment_id=str(apartment_id),
