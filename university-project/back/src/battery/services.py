@@ -19,8 +19,13 @@ def service_add_battery(
     if user_battery is not None:
         raise HTTPException(status_code=403, detail="This user has a battery") 
     battery = BatterySchema(
+<<<<<<< Updated upstream
         user_id=str(user_id),
         solar_panel_id=str(solar_panel_id),
+=======
+        user_id=user_id,
+        solar_panel_id=battery.solar_panel_id,
+>>>>>>> Stashed changes
         saved_energy=battery.saved_energy,
         sold_energy=battery.sold_energy
         ).model_dump()
