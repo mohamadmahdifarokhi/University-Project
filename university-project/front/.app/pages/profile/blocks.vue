@@ -100,10 +100,10 @@ const radialBarTeam = reactive(useRadialBarTeam())
 const barProfit = reactive(useBarProfit())
 const fetchselectedDevice = app.fetchselectedDevice;
 const fetchOrders = app.fetchOrders;
-const fetch24Records = app.fetch24Records;
+const fetchApartment = app.fetchApartment;
 
 const initializeData = async () => {
-  await fetch24Records();
+  await fetchApartment();
   await fetchselectedDevice();
   await fetchOrders();
 };
@@ -117,20 +117,18 @@ const VALIDATION_TEXT = {
   PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
 }
 const zodSchema = z.object({
-  start: z.string(),
-  end: z.string(),
-  consumption: z.string(),
-  deviceId: z.string(),
+  apartment: z.number(),
+  area: z.string(),
+  unit: z.string(),
 })
 
 type FormInput = z.infer<typeof zodSchema>;
 
 const validationSchema = toTypedSchema(zodSchema)
 const initialValues = computed<FormInput>(() => ({
-  start: '',
-  end: '',
-  consumption: '',
-  deviceId: '',
+  apartment: '',
+  area: '',
+  unit: '',
 }))
 const {
   handleSubmit,
@@ -148,7 +146,7 @@ const {
 })
 
 const addPowerRecord = handleSubmit(async (values) => {
-  await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
+  await app.addBlock(values.apartment, values.area, values.unit);
 })
 
 
@@ -705,7 +703,7 @@ function useDemoBarMulti3() {
               </BaseHeading>
             </div>
             <!-- Single input for device selection -->
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="deviceId">
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="apartment">
               <BaseSelect
                 :model-value="field.value"
                 :error="errorMessage"
@@ -716,13 +714,13 @@ function useDemoBarMulti3() {
                 icon="ri:community-fill"
               >
                 <!-- Options for device selection -->
-                <option v-for="device in app.getselectedDevice" :key="device.name" :value="device.name">{{
-                    device.name
+                <option v-for="device in app.getApartment" :key="device.apartment_no" :value="device.apartment_no">{{
+                    device.apartment_no
                   }}
                 </option>
               </BaseSelect>
             </Field>
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="deviceId">
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="area">
               <BaseSelect
                 :model-value="field.value"
                 :error="errorMessage"
@@ -733,13 +731,13 @@ function useDemoBarMulti3() {
                 icon="ri:home-line"
               >
                 <!-- Options for device selection -->
-                <option v-for="device in app.getselectedDevice" :key="device.name" :value="device.name">{{
-                    device.name
+                <option v-for="device in ['Small (<80)','Medium (80-120)', 'Big (>120)']" :key="device" :value="device">{{
+                    device
                   }}
                 </option>
               </BaseSelect>
             </Field>
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="unit">
               <BaseInput
                 :model-value="field.value"
                 :error="errorMessage"
@@ -753,17 +751,17 @@ function useDemoBarMulti3() {
             <!-- Other input fields -->
                        <div class="flex items-center gap-1 mt-5">
               <button type="submit" class="BaseButtonIcon" rounded="full" small>
-<!--                <BaseButtonIcon rounded="full" small>-->
-<!--                  <Icon name="ri:save-fill"/>-->
-<!--&lt;!&ndash;                    Save&ndash;&gt;-->
-<!--                </BaseButtonIcon>-->
- <BaseButton
-            type="submit"
-            color="primary"
-            class="w-24"
-          >
-            {{ t("Save") }}
-          </BaseButton>
+                <BaseButtonIcon rounded="full" small>
+                  <Icon name="ri:save-fill"/>
+<!--                    Save-->
+                </BaseButtonIcon>
+<!-- <BaseButton-->
+<!--            type="submit"-->
+<!--            color="primary"-->
+<!--            class="w-24"-->
+<!--          >-->
+<!--            {{ t("Save") }}-->
+<!--          </BaseButton>-->
               </button>
               <!-- <button @click="deleteDevice" class="BaseButtonIcon" rounded="full" small>
                 <Icon name="ri:delete-bin-fill"/>

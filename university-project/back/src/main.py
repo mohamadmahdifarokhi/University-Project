@@ -9,6 +9,8 @@ from src.battery.api import router as battery_router
 from src.profile.routers import router as profile_router
 from src.auth.routers import router as auth_router
 from src.device.api import router as device_router
+from src.block.api import router as block_router
+from src.apartment.api import router as apartment_router
 from src.power_record.api import router as power_record_router
 from src.pricing.api import router as pricing_router
 from src.solar_panel.routers import router as solar_panel_router
@@ -47,6 +49,8 @@ app.include_router(profile_router, prefix="/users/profiles")
 app.include_router(order_router, prefix="/users/orders")
 
 
+app.include_router(apartment_router)
+app.include_router(block_router)
 app.include_router(battery_router)
 app.include_router(device_router)
 app.include_router(power_record_router)

@@ -11,11 +11,18 @@ class BlockSchemaGet(BaseModel):
     user_id: str
     apartment_id: str
     unit: int
-    area: int
+    area: str
+
+class BlockSchemaCreate1(BaseModel):
+    id: Optional[str] = None
+    # user_id: str
+    apartment_no: int
+    unit: int
+    area: str
 
 class BlockSchemaCreate(BaseModel):
     id: Optional[str] = None
     user_id: str
-    apartment_no: int
+    apartment_id: str
     unit: int
-    area: int
+    area: str
