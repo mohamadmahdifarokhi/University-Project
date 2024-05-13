@@ -41,12 +41,12 @@ def service_delete_apartment(
 def service_apartment_get(
     apartment_id:str,    
 ):
-    apartment = db["apartment"].find_one({"_id": ObjectId(apartment_id)})
+    apartment = db["apartments"].find_one({"_id": ObjectId(apartment_id)})
     return apartment
 
 def service_list_apartment_all(
 ):
-    apartments = db["apartment"].find()
+    apartments = db["apartments"].find()
 
     results = []
     for apartment in apartments:
