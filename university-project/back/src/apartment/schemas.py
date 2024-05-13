@@ -11,6 +11,7 @@ class ApartmentSchemaGet(BaseModel):
 
 class ApartmentSchemacreate(BaseModel):
     id: Optional[str] = None
+    apartment_no: int
     admin_id: str
     block_no: int
 
