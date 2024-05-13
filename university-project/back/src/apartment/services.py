@@ -13,7 +13,7 @@ def service_add_apartment(
     apartment: ApartmentSchemacreate,
 ):  
     apartment_no = db["apartments"].count_documents({})
-    apartment = ApartmentSchemacreate(
+    apartment = ApartmentSchemaGet(
         apartment_no=apartment_no + 1,
         admin_id=apartment.admin_id,
         block_no=apartment.block_no,
