@@ -20,7 +20,7 @@ def blocks_list_all(
 
 @router.post("/blocks", summary="adds a block to a user")
 def block_add(
-    block: BlockSchemaCreate,
+    block: BlockSchemaCreate1,
     user: User = Depends(get_current_user)
 ):
     return service_add_block(

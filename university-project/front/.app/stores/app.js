@@ -24,6 +24,7 @@ export const useAppStore = defineStore('app', {
     solarPanels: [],
     buyOrders: [],
     selectedDevice: [],
+    apartments:[],
     email: '',
     photo: ref(''),
     flag: ref(''),
@@ -63,6 +64,9 @@ export const useAppStore = defineStore('app', {
     },
     getselectedDevice: (state) => {
       return state.selectedDevice;
+    },
+    getApartment: (state) => {
+      return state.apartments;
     },
     filteredProducts: (state) => {
       if (state.activeGenre === 1) {
@@ -508,6 +512,29 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
+    async addBlock(apartment_no, area, unit) {
+      try {
+        const recordData = {
+          apartment_no: apartment_no,
+          unit: unit,
+          area: area,
+        };
+        console.log(recordData, 'kok')
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.post(`${apiUrl}/blocks/blocks`, recordData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        if (response.status === 200) {
+          this.showSuccessToast('Add');
+
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
 
     async addRecord(device_name, start, end, consumption) {
       try {
@@ -568,6 +595,22 @@ export const useAppStore = defineStore('app', {
         });
         if (response.status === 200) {
           this.selectedDevice = response.data;
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+    async fetchApartment() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/apartment/all`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          }
+        });
+        if (response.status === 200) {
+          this.apartments = response.data;
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
