@@ -5,8 +5,10 @@ from pydantic import UUID4, BaseModel, EmailStr, constr, conint
 
 class PricingSchema(BaseModel):
     id: Optional[str] = None
-    device_id: str
+    season_name: str
     start_time: datetime
     end_time: datetime
-    price: int
+    peak_start_time: datetime
+    peak_end_time: datetime
+    general_price: int
     peak_price: int

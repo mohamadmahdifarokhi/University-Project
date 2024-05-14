@@ -9,10 +9,12 @@ def service_add_pricing(
     pricing: PricingSchema,
 ):
     pricing = PricingSchema(
-        device_id=pricing.device_id,
+        season_name=pricing.season_name,
         start_time=pricing.start_time,
         end_time=pricing.end_time,
-        price=pricing.price,
+        peak_start_time=pricing.peak_start_time,
+        peak_end_time=pricing.peak_end_time,
+        general_price=pricing.general_price,
         peak_price=pricing.peak_price
         ).model_dump()
 
@@ -44,3 +46,12 @@ def service_delete_pricing(
         {"_id": ObjectId(pricing_id)},
     )
     return {"detail": "pricing deleted."}
+
+
+def service_calculate_pricing(
+        
+):
+    pass
+
+
+
