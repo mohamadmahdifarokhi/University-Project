@@ -70,20 +70,20 @@ def service_add_power_records(
 
 
     # if start time is before peak time and duration does not exeed the peak start time
-    if power_record.start_time.time() < pricing_unit["peak_start_time"] and\
-          (power_record.end_time - power_record.start_time) < (pricing_unit["peak_start_time"] - power_record.start_time.time()):
-        total_consumption_fee = (power_record.end_time.time() - power_record.start_time.time()) * pricing_unit["general_price"]
+    # if power_record.start_time.time() < pricing_unit["peak_start_time"] and\
+    #       (power_record.end_time - power_record.start_time) < (pricing_unit["peak_start_time"] - power_record.start_time.time()):
+    #     total_consumption_fee = (power_record.end_time.time() - power_record.start_time.time()) * pricing_unit["general_price"]
 
-    # 
-    elif power_record.start_time.time() > pricing_unit["peak_start_time"] and power_record.start_time.time() < pricing_unit["peak_end_time"]:
-        peak_period = (pricing_unit["peak_end_time"] - power_record.start_time.time()).total_seconds() / 3600
+    # # 
+    # elif power_record.start_time.time() > pricing_unit["peak_start_time"] and power_record.start_time.time() < pricing_unit["peak_end_time"]:
+    #     peak_period = (pricing_unit["peak_end_time"] - power_record.start_time.time()).total_seconds() / 3600
     base_power_record = PowerRecordSchema(
         user_id=str(user_id),
         device_name=power_record.device_name,
         start_time=power_record.start_time,
         end_time=power_record.end_time,
         consumption=consumption,
-        fee=total_consumption_fee
+        fee=100
     ).model_dump() # check if it works, dict() is depricated
 
     update_result = db.power_records.insert_one(base_power_record)
