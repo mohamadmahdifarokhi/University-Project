@@ -47,11 +47,3 @@ def service_delete_pricing(
     )
     return {"detail": "pricing deleted."}
 
-
-def service_calculate_pricing(
-        
-):
-    pass
-
-
-

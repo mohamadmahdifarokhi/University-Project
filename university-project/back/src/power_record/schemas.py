@@ -12,7 +12,6 @@ class PowerRecordSchema(BaseModel):
     start_time: datetime
     end_time: datetime
     consumption: int
-    fee: int
 
 class PowerRecordAddSchema(BaseModel):
     device_name: str
