@@ -57,17 +57,19 @@ def service_add_power_records(
     power_record: PowerRecordAddSchema,
     user_id
 ):
-    #calculate consumption due to power of the device
-    device = db["device"].find_one({"device_name": power_record.device_name})
-    if device and 'ac_power' in device:
-        ac_power = device['ac_power']
-    time_difference = (power_record['end_time'] - power_record['start_time']).total_seconds() / 3600
+    # #calculate consumption due to power of the device
+    device = db["device"].find_one({"name": power_record.device_name})
+    ac_power = 0
+    print(device, "koko")
+    if device and 'AC_power_consumption' in device:
+        ac_power = device['AC_power_consumption']
+    time_difference = (power_record.end_time - power_record.start_time).total_seconds() / 3600
     consumption = ac_power * time_difference
-
-    #calculate fee due to the season and time
-    record_season = get_season(power_record.start_time)
-    pricing_unit = db["pricing"].find_one({"season_name": record_season})
-
+    #
+    # #calculate fee due to the season and time
+    # record_season = get_season(power_record.start_time)
+    # pricing_unit = db["pricing"].find_one({"season_name": record_season})
+    #
 
     # if start time is before peak time and duration does not exeed the peak start time
     # if power_record.start_time.time() < pricing_unit["peak_start_time"] and\
@@ -180,23 +182,29 @@ def service_show_records_on_chart(user_id, date=None):
     return res
 
 
-def service_show_records_on_chart_monthly(user_id, year, month):
+from datetime import datetime
+from bson import ObjectId
 
+
+def service_show_records_on_chart_monthly(user_id, year, month):
+    year = int(year)
+    month = int(month)
     start_date = datetime(year, month, 1)
     end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
 
     pipeline = [
         {
             '$match': {
-                'user_id': user_id,
-                'timestamp': {'$gte': start_date, '$lt': end_date}
+                'user_id': ObjectId(str(user_id)),
+                'start_time': {'$gte': start_date},
+                'end_time': {'$lt': end_date}
             }
         },
         {
             '$group': {
                 '_id': {
                     'device_name': '$device_name',
-                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$timestamp'}}
+                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$start_time'}}
                 },
                 'total_consumption': {'$sum': '$consumption'}
             }
@@ -217,9 +225,10 @@ def service_show_records_on_chart_monthly(user_id, year, month):
         }
     ]
 
-    results = db["power_records"].aggregate(pipeline)
+    results = list(db["power_records"].aggregate(pipeline))
     categories = sorted({record['date'] for record in results})
     device_data = {}
+
     for record in results:
         device_name = record['device_name']
         if device_name not in device_data:

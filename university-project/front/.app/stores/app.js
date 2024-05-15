@@ -16,6 +16,8 @@ export const useAppStore = defineStore('app', {
     records: [],
     categories24: ref([]),
     values24: ref([]),
+    categoriesMonth: ref([]),
+    valuesMonth: ref([]),
     battery: ref(''),
     batteries: [],
     cart: [],
@@ -54,6 +56,14 @@ export const useAppStore = defineStore('app', {
     getValues24: (state) => {
 
       return state.values24;
+    },
+    getCategoriesMonth: (state) => {
+
+      return state.categoriesMonth;
+    },
+    getValuesMonth: (state) => {
+
+      return state.valuesMonth;
     },
     getBuyOrders: (state) => {
 
@@ -256,6 +266,32 @@ export const useAppStore = defineStore('app', {
         if (response.data){
           this.categories24 = response.data['categories'];
         this.values24 = response.data['values'];
+        }
+
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
+    async fetchMonthRecords() {
+      const accessToken = useCookie('access_token').value;
+
+      try {
+        const response = await axios.get(`${apiUrl}/power-records/month-chart?year=2024&month=5`,
+
+
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+        );
+        if (response.data){
+          this.valuesMonth = response.data[0];
+          this.categoriesMonth = response.data[1];
         }
 
       } catch (error) {

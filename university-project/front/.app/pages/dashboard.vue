@@ -6,7 +6,6 @@ import {z} from 'zod'
 import {storeToRefs} from "pinia";
 
 const {t} = useI18n({useScope: "local"})
-const demoAreaMulti = reactive(useDemoAreaMulti())
 const router = useRouter()
 // onBeforeUnmount(() => {
 //     router.push('/dashboard')
@@ -14,70 +13,30 @@ const router = useRouter()
 //   }
 // )
 
+const app = useAppStore();
+const {orders, categories24, values24, categoriesMonth, valuesMonth} = storeToRefs(app);
+const cate = ref(categories24)
 
-function useDemoAreaMulti() {
-  const {primary, info, success} = useTailwindColors()
-  const type = 'area'
-  const height = 280
+const areaCustomers = reactive(useAreaCustomers())
+const radialBarTeam = reactive(useRadialBarTeam())
+const barProfit = reactive(useBarProfit())
+const fetchselectedDevice = app.fetchselectedDevice;
+const fetchOrders = app.fetchOrders;
+const fetch24Records = app.fetch24Records;
+const fetchMonthRecords = app.fetchMonthRecords;
 
-  const options = {
-    chart: {
-      toolbar: {
-        show: false,
-      },
-    },
-    colors: [primary.value, info.value, success.value],
-    title: {
-      text: '',
-      align: 'left',
-    },
-    legend: {
-      position: 'top',
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      width: [2, 2, 2],
-      curve: 'smooth',
-    },
-    xaxis: {
-      type: 'datetime',
-      categories: [
-        '2018-09-19T00:00:00.000Z',
-        '2018-09-20T01:30:00.000Z',
-        '2018-09-22T02:30:00.000Z',
-        '2018-09-25T03:30:00.000Z',
-        '2018-10-5T04:30:00.000Z',
-        '2018-10-10T05:30:00.000Z',
-        '2018-10-19T06:30:00.000Z',
-      ],
-    },
-    tooltip: {
-      x: {
-        format: 'dd/MM/yy HH:mm',
-      },
-    },
-  }
+const initializeData = async () => {
+  await fetch24Records();
+  await fetchMonthRecords();
+  await fetchselectedDevice();
+  await fetchOrders();
+};
 
-  const series = shallowRef([
-    {
-      name: 'iron',
-      data: [31, 40, 28, 51, 42, 109, 100],
-    },
-    {
-      name: 'heater',
-      data: [11, 32, 45, 32, 34, 52, 41],
-    },
-  ])
+onMounted(async () => {
+  await initializeData();
+});
 
-  return {
-    type,
-    height,
-    options,
-    series,
-  }
-}
+
 
 definePageMeta({
   title: 'Activity',
@@ -91,26 +50,7 @@ definePageMeta({
     order: 1,
   },
 })
-const app = useAppStore();
-const {orders, categories24, values24} = storeToRefs(app);
-const cate = ref(categories24)
 
-const areaCustomers = reactive(useAreaCustomers())
-const radialBarTeam = reactive(useRadialBarTeam())
-const barProfit = reactive(useBarProfit())
-const fetchselectedDevice = app.fetchselectedDevice;
-const fetchOrders = app.fetchOrders;
-const fetch24Records = app.fetch24Records;
-
-const initializeData = async () => {
-  await fetch24Records();
-  await fetchselectedDevice();
-  await fetchOrders();
-};
-
-onMounted(async () => {
-    await initializeData();
-  });
 
 const VALIDATION_TEXT = {
   EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
@@ -600,6 +540,54 @@ function useDemoBarMulti() {
     series,
   }
 }
+const demoAreaMulti = reactive(useDemoAreaMulti())
+
+function useDemoAreaMulti() {
+  const {primary, info, success} = useTailwindColors()
+  const type = 'area'
+  const height = 280
+
+  const options = {
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    colors: [primary.value, info.value, success.value],
+    title: {
+      text: '',
+      align: 'left',
+    },
+    legend: {
+      position: 'top',
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      width: [2, 2, 2],
+      curve: 'smooth',
+    },
+    xaxis: {
+      type: 'datetime',
+      categories: categoriesMonth,
+    },
+    tooltip: {
+      x: {
+        format: 'dd/MM/yy HH:mm',
+      },
+    },
+  }
+
+  const series = shallowRef(valuesMonth)
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  }
+}
 
 function useDemoBarMulti3() {
   const {primary, info, success, warning} = useTailwindColors()
@@ -675,15 +663,6 @@ function useDemoBarMulti3() {
     series,
   }
 }
-
-
-
-
-
-
-
-
-
 
 
 </script>
@@ -1280,26 +1259,80 @@ function useDemoBarMulti3() {
           <AddonApexcharts v-bind="demoBarMulti"/>
         </BaseCard>
       </div>
-      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-        <div class="relative">
-          <BaseCard class="p-6">
-            <!-- Title -->
-            <div class="mb-6">
-              <BaseHeading
-                as="h3"
-                size="md"
-                weight="semibold"
-                lead="tight"
-                class="text-muted-800 dark:text-white"
-              >
-                <span>Monthly Consumption</span>
-              </BaseHeading>
-            </div>
-            <AddonApexcharts v-bind="demoAreaMulti"/>
-          </BaseCard>
-        </div>
 
+
+<div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+  <div class="relative">
+    <BaseCard class="p-6">
+      <!-- Title -->
+      <div class="mb-6">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Monthly Consumption</span>
+        </BaseHeading>
       </div>
+
+      <AddonApexcharts v-bind="demoAreaMulti" />
+
+      <div class="flex justify-center mt-6">
+        <form method="POST" class="items-center" style="max-width: 300px" action="" @submit.prevent="addPowerRecord" novalidate>
+          <!-- Apartment selection -->
+          <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-4" name="apartment">
+            <BaseSelect
+              :model-value="field.value"
+              :error="errorMessage"
+              @update:model-value="handleChange"
+              @blur="handleBlur"
+              shape="curved"
+              placeholder="Select Apartment"
+              icon="ri:community-fill"
+              class="text-sm py-1 px-2"
+            >
+              <!-- Options for apartment selection -->
+              <option v-for="year in [2020, 2021, 2022, 2023, 2024]" :key="year" :value="year">{{ year }}</option>
+            </BaseSelect>
+          </Field>
+
+          <!-- Area selection -->
+          <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-4" name="area">
+            <BaseSelect
+              :model-value="field.value"
+              :error="errorMessage"
+              @update:model-value="handleChange"
+              @blur="handleBlur"
+              shape="curved"
+              placeholder="Select Area"
+              icon="ri:home-line"
+              class="text-sm py-1 px-2"
+            >
+              <!-- Options for area selection -->
+              <option v-for="area in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="area" :value="area">{{ area }}</option>
+            </BaseSelect>
+          </Field>
+
+          <div class="ms-10 flex items-center gap-1 mt-5">
+            <button type="submit" class="BaseButtonIcon" rounded="full" small>
+<!--              <BaseButtonIcon rounded="full" small>-->
+<!--                Show-->
+<!--              </BaseButtonIcon>-->
+              <BaseButton
+            color="primary"
+            class="w-24"
+          >
+            {{ t("Save") }}
+          </BaseButton>
+            </button>
+          </div>
+        </form>
+      </div>
+    </BaseCard>
+  </div>
+</div>
 
 
       <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">

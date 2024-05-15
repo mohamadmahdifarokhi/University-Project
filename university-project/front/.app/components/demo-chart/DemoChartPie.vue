@@ -37,7 +37,7 @@ function useDemoPie() {
     },
   }
 
-  const series = shallowRef([44, 55, 13, 43])
+  const series = shallowRef([50, 20, 10, 20])
 
   return {
     type,
