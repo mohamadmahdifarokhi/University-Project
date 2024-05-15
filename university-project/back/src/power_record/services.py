@@ -41,16 +41,49 @@ def service_delete_power_records(
     )
     return {"detail": "power record deleted."}
 
+def get_season(date):
+    month = date.month
+    if 3 <= month <= 5:
+        return "spring"
+    elif 6 <= month <= 8:
+        return "summer"
+    elif 9 <= month <= 11:
+        return "autumn"
+    else:
+        return "winter"
+
+
 def service_add_power_records(
     power_record: PowerRecordAddSchema,
     user_id
 ):
+    #calculate consumption due to power of the device
+    device = db["device"].find_one({"device_name": power_record.device_name})
+    if device and 'ac_power' in device:
+        ac_power = device['ac_power']
+    time_difference = (power_record['end_time'] - power_record['start_time']).total_seconds() / 3600
+    consumption = ac_power * time_difference
+
+    #calculate fee due to the season and time
+    record_season = get_season(power_record.start_time)
+    pricing_unit = db["pricing"].find_one({"season_name": record_season})
+
+
+    # if start time is before peak time and duration does not exeed the peak start time
+    # if power_record.start_time.time() < pricing_unit["peak_start_time"] and\
+    #       (power_record.end_time - power_record.start_time) < (pricing_unit["peak_start_time"] - power_record.start_time.time()):
+    #     total_consumption_fee = (power_record.end_time.time() - power_record.start_time.time()) * pricing_unit["general_price"]
+
+    # # 
+    # elif power_record.start_time.time() > pricing_unit["peak_start_time"] and power_record.start_time.time() < pricing_unit["peak_end_time"]:
+    #     peak_period = (pricing_unit["peak_end_time"] - power_record.start_time.time()).total_seconds() / 3600
     base_power_record = PowerRecordSchema(
         user_id=str(user_id),
         device_name=power_record.device_name,
         start_time=power_record.start_time,
         end_time=power_record.end_time,
-        consumption=power_record.consumption
+        consumption=consumption,
+        fee=100
     ).model_dump() # check if it works, dict() is depricated
 
     update_result = db.power_records.insert_one(base_power_record)
