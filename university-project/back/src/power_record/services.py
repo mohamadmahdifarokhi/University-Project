@@ -180,3 +180,62 @@ def service_show_records_on_chart(user_id, date=None):
     return res
 
 
+def service_show_records_on_chart_monthly(user_id, year, month):
+
+    start_date = datetime(year, month, 1)
+    end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+
+    pipeline = [
+        {
+            '$match': {
+                'user_id': user_id,
+                'timestamp': {'$gte': start_date, '$lt': end_date}
+            }
+        },
+        {
+            '$group': {
+                '_id': {
+                    'device_name': '$device_name',
+                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$timestamp'}}
+                },
+                'total_consumption': {'$sum': '$consumption'}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'device_name': '$_id.device_name',
+                'date': '$_id.day',
+                'total_consumption': 1
+            }
+        },
+        {
+            '$sort': {
+                'device_name': 1,
+                'date': 1
+            }
+        }
+    ]
+
+    results = db["power_records"].aggregate(pipeline)
+    categories = sorted({record['date'] for record in results})
+    device_data = {}
+    for record in results:
+        device_name = record['device_name']
+        if device_name not in device_data:
+            device_data[device_name] = {date: 0 for date in categories}
+        device_data[device_name][record['date']] = record['total_consumption']
+
+    formatted_output = [
+        {
+            'name': device_name,
+            'data': [device_data[device_name][date] for date in categories]
+        }
+        for device_name in sorted(device_data)
+    ]
+
+    return formatted_output, categories
+
+
+
+
