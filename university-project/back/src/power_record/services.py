@@ -83,7 +83,6 @@ def service_add_power_records(
         start_time=power_record.start_time,
         end_time=power_record.end_time,
         consumption=consumption,
-        fee=100
     ).model_dump() # check if it works, dict() is depricated
 
     update_result = db.power_records.insert_one(base_power_record)
@@ -179,3 +178,5 @@ def service_show_records_on_chart(user_id, date=None):
     }
 
     return res
+
+
