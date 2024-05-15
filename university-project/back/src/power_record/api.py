@@ -46,3 +46,16 @@ def power_record_24(
     return service_show_records_on_chart(
         user_id=user["_id"]
     )
+
+
+@router.get("/month-chart", summary="shows all consumptions of devices in requested month")
+def power_record_monthly(
+    year,
+    month,
+    user: User = Depends(get_current_user),
+):
+    return service_show_records_on_chart_monthly(
+        year=year,
+        month=month,
+        user_id=user["_id"]
+    )
