@@ -1,42 +1,53 @@
 <script setup lang="ts">
-import {useAppStore} from "~/stores/app";
-import {toTypedSchema} from "@vee-validate/zod";
-import {Field, useForm} from 'vee-validate'
-import {z} from 'zod'
-import {storeToRefs} from "pinia";
+import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { useAppStore } from "~/stores/app";
+import { toTypedSchema } from "@vee-validate/zod";
+import { Field, useForm } from 'vee-validate'
+import { z } from 'zod'
+import { storeToRefs } from "pinia";
+import { useI18n } from 'vue-i18n';
 
-const {t} = useI18n({useScope: "local"})
-const router = useRouter()
-// onBeforeUnmount(() => {
-//     router.push('/dashboard')
-//
-//   }
-// )
+const { t } = useI18n({ useScope: "local" });
+const router = useRouter();
 
 const app = useAppStore();
-const {orders, categories24, values24, categoriesMonth, valuesMonth} = storeToRefs(app);
-const cate = ref(categories24)
+const { orders, categories24, values24, categoriesMonth, valuesMonth } = storeToRefs(app);
+const cate = ref(categories24.value);
 
-const areaCustomers = reactive(useAreaCustomers())
-const radialBarTeam = reactive(useRadialBarTeam())
-const barProfit = reactive(useBarProfit())
+const areaCustomers = reactive(useAreaCustomers());
+const radialBarTeam = reactive(useRadialBarTeam());
+const barProfit = reactive(useBarProfit());
+const demoBarMulti = reactive(useDemoBarMulti());
+const demoAreaMulti = reactive(useDemoAreaMulti());
+const demoBarMulti3 = reactive(useDemoBarMulti3());
+
 const fetchselectedDevice = app.fetchselectedDevice;
 const fetchOrders = app.fetchOrders;
 const fetch24Records = app.fetch24Records;
 const fetchMonthRecords = app.fetchMonthRecords;
 
-const initializeData = async () => {
+async function initializeData() {
   await fetch24Records();
   await fetchMonthRecords();
   await fetchselectedDevice();
   await fetchOrders();
-};
+}
 
-onMounted(() => {
-   initializeData();
+// Initialize data on component mount
+onMounted(async () => {
+  await initializeData();
 });
 
-
+// Watchers for reactive updates
+watch([categories24, values24, categoriesMonth, valuesMonth], () => {
+  // Update your charts here
+  demoBarMulti.options.xaxis.categories = categories24.value;
+  demoBarMulti.series[0].data = values24.value;
+  demoAreaMulti.options.xaxis.categories = categoriesMonth.value;
+  demoAreaMulti.series = valuesMonth.value;
+}, {
+  deep: true,
+});
 
 definePageMeta({
   title: 'Activity',
@@ -49,13 +60,13 @@ definePageMeta({
     srcDark: '/img/screens/dashboards-personal-1-dark.png',
     order: 1,
   },
-})
-
+});
 
 const VALIDATION_TEXT = {
-  EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
-  PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
+  EMAIL_REQUIRED: t('emailRequired'),
+  PASSWORD_REQUIRED: t('passwordRequired')
 }
+
 const zodSchema = z.object({
   start: z.string(),
   end: z.string(),
@@ -71,7 +82,8 @@ const initialValues = computed<FormInput>(() => ({
   end: '',
   consumption: '',
   deviceId: '',
-}))
+}));
+
 const {
   handleSubmit,
   isSubmitting,
@@ -85,19 +97,18 @@ const {
 } = useForm({
   validationSchema,
   initialValues,
-})
+});
 
 const addPowerRecord = handleSubmit(async (values) => {
   await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
-})
-
+});
 
 function deleteDevice(deviceId) {
-  app.deleteDevice(deviceId)
+  app.deleteDevice(deviceId);
 }
 
 function useAreaCustomers() {
-  const {primary, info, success} = useTailwindColors()
+  const { primary, info, success } = useTailwindColors()
   const type = 'area'
   const height = 258
 
@@ -134,12 +145,6 @@ function useAreaCustomers() {
         '2020-09-19T12:00:00.000Z',
         '2020-09-19T18:00:00.000Z',
         '2020-09-20T00:00:00.000Z',
-        // '2020-09-25T01:30:00.000Z',
-        // '2020-09-29T02:30:00.000Z',
-        // '2020-10-07T03:30:00.000Z',
-        // '2020-10-12T04:30:00.000Z',
-        // '2020-10-24T05:30:00.000Z',
-        // '2020-10-25T06:30:00.000Z',
       ],
     },
     tooltip: {
@@ -173,7 +178,7 @@ function useAreaCustomers() {
 }
 
 function useRadialBarTeam() {
-  const {primary} = useTailwindColors()
+  const { primary } = useTailwindColors()
   const type = 'radialBar'
   const height = 455
 
@@ -197,7 +202,7 @@ function useRadialBarTeam() {
         track: {
           background: '#e7e7e7',
           strokeWidth: '97%',
-          margin: 5, // margin is in pixels
+          margin: 5,
           dropShadow: {
             enabled: false,
             top: 2,
@@ -252,7 +257,7 @@ function useRadialBarTeam() {
 }
 
 function useBarProfit() {
-  const {primary} = useTailwindColors()
+  const { primary } = useTailwindColors()
   const type = 'bar'
   const height = 255
 
@@ -265,7 +270,7 @@ function useBarProfit() {
     plotOptions: {
       bar: {
         dataLabels: {
-          position: 'top', // top, center, bottom
+          position: 'top',
         },
       },
     },
@@ -341,10 +346,8 @@ function useBarProfit() {
   }
 }
 
-const demoTimeline = reactive(useDemoTimeline())
-
 function useDemoTimeline() {
-  const {primary, info, success, warning, danger} = useTailwindColors()
+  const { primary, info, success, warning, danger } = useTailwindColors()
   const type = 'rangeBar'
   const height = 280
 
@@ -456,11 +459,6 @@ function useDemoTimeline() {
     series,
   }
 }
-
-
-const demoBarMulti = reactive(useDemoBarMulti())
-const demoBarMulti3 = reactive(useDemoBarMulti3())
-
 function useDemoBarMulti() {
   const { primary, info, success, warning } = useTailwindColors();
   const type = 'bar';
@@ -534,10 +532,9 @@ function useDemoBarMulti() {
     series,
   };
 }
-const demoAreaMulti = reactive(useDemoAreaMulti())
 
 function useDemoAreaMulti() {
-  const {primary, info, success} = useTailwindColors()
+  const { primary, info, success } = useTailwindColors()
   const type = 'area'
   const height = 280
 
@@ -564,7 +561,7 @@ function useDemoAreaMulti() {
     },
     xaxis: {
       type: 'datetime',
-      categories: categoriesMonth,
+      categories: categoriesMonth.value,
     },
     tooltip: {
       x: {
@@ -573,7 +570,7 @@ function useDemoAreaMulti() {
     },
   }
 
-  const series = shallowRef(valuesMonth)
+  const series = shallowRef(valuesMonth.value)
 
   return {
     type,
@@ -584,7 +581,7 @@ function useDemoAreaMulti() {
 }
 
 function useDemoBarMulti3() {
-  const {primary, info, success, warning} = useTailwindColors()
+  const { primary, info, success, warning } = useTailwindColors()
   const type = 'bar'
   const height = 280
 
@@ -614,7 +611,6 @@ function useDemoBarMulti3() {
       categories: [
         'Spring', 'Autumn', 'Fall', 'Winter'
       ],
-
     },
     yaxis: {
       title: {
@@ -632,11 +628,6 @@ function useDemoBarMulti3() {
       text: '',
       align: 'left',
     },
-    // tooltip: {
-    //   y: {
-    //     formatter: asKDollar,
-    //   },
-    // },
   }
 
   const series = shallowRef([
@@ -657,8 +648,6 @@ function useDemoBarMulti3() {
     series,
   }
 }
-
-
 </script>
 
 <template>
@@ -1359,7 +1348,6 @@ function useDemoBarMulti3() {
         </BaseCard>
 
       </div>
-
 
 
 
