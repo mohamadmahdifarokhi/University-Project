@@ -32,8 +32,8 @@ const initializeData = async () => {
   await fetchOrders();
 };
 
-onMounted(async () => {
-  await initializeData();
+onMounted(() => {
+   initializeData();
 });
 
 
