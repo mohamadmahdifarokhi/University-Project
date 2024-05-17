@@ -1329,12 +1329,12 @@ function useDemoBarMulti3() {
 </div>
 
 
-      <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
+      <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
 
         <DemoChartPie/>
 
       </div>
-      <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
+      <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
 
         <BaseCard class="p-14 py-30" rounded="lg">
           <!-- Title -->
@@ -1359,6 +1359,12 @@ function useDemoBarMulti3() {
         </BaseCard>
 
       </div>
+
+
+
+
+
+
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
         <BaseCard class="p-6">
           <!-- Title -->
