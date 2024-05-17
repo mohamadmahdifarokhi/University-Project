@@ -32,8 +32,8 @@ const initializeData = async () => {
   await fetchOrders();
 };
 
-onMounted(async () => {
-  await initializeData();
+onMounted( () => {
+   initializeData();
 });
 
 
@@ -463,14 +463,25 @@ const demoBarMulti3 = reactive(useDemoBarMulti3())
 
 
 function useDemoBarMulti() {
-  const {primary, info, success, warning} = useTailwindColors()
-  const type = 'bar'
-  const height = 280
+  const { primary, info, success, warning } = useTailwindColors();
+  const type = 'bar';
+  const height = 280;
 
   const options = {
     chart: {
       toolbar: {
         show: false,
+      },
+      events: {
+        mounted: function (chartContext, config) {
+          window.addEventListener('resize', () => {
+            chartContext.updateOptions({
+              chart: {
+                width: '100%',
+              },
+            });
+          });
+        },
       },
     },
     plotOptions: {
@@ -490,9 +501,7 @@ function useDemoBarMulti() {
       colors: ['transparent'],
     },
     xaxis: {
-      categories: cate,
-      // categories: ['iron', 'heater'],
-
+      categories: categories24.value,
     },
     yaxis: {
       title: {
@@ -510,37 +519,22 @@ function useDemoBarMulti() {
       text: '',
       align: 'left',
     },
-    // tooltip: {
-    //   y: {
-    //     formatter: asKDollar,
-    //   },
-    // },
-  }
+  };
 
   const series = shallowRef([
-    // {
-    //   name: 'AC',
-    //   data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
-    // },
     {
       name: 'DC',
-      data: values24,
-      // data: [35, 41],
+      data: values24.value,
     },
-    // {
-    //   name: 'Free Cash Flow',
-    //   data: [35, 41, 36, 26, 45, 48, 52, 53, 41],
-    // },
-  ])
+  ]);
 
   return {
     type,
     height,
     options,
     series,
-  }
-}
-const demoAreaMulti = reactive(useDemoAreaMulti())
+  };
+}const demoAreaMulti = reactive(useDemoAreaMulti())
 
 function useDemoAreaMulti() {
   const {primary, info, success} = useTailwindColors()
