@@ -12,6 +12,7 @@ class BatterySchema(BaseModel):
     status: str
     email: str
     fee: Optional[int] = 50
+    created_at: Optional[datetime]
 
 class BatteryAddSchema(BaseModel):
     id: Optional[str] = None

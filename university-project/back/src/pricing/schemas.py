@@ -12,3 +12,4 @@ class PricingSchema(BaseModel):
     peak_end_time: datetime
     general_price: int
     peak_price: int
+    day_light: int
