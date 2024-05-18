@@ -28,7 +28,7 @@ def service_add_battery(
         created_at=datetime.now()
         ).model_dump()
 
-    update_result = db["battery"].insert_one(battery)
+    update_result = db["battery"].insert_one(**battery)
 
     return {"detail": "battery added"}
 
