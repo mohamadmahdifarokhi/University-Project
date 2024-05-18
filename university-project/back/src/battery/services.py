@@ -18,17 +18,18 @@ def service_add_battery(
     solar_panel_id = db["solar_panels"].find_one({"user_id": str(user_id)})["_id"]
 
     if user_battery is not None:
-        raise HTTPException(status_code=403, detail="This user has a battery") 
+        raise HTTPException(status_code=403, detail="This user has a battery")
+
     battery = BatterySchema(
         user_id=str(user_id),
         solar_panel_id=str(solar_panel_id),
         saved_energy=battery.saved_energy,
         sold_energy=battery.sold_energy,
         email=email,
-        created_at=datetime.now()
+        created_at=datetime.now(),
         ).model_dump()
 
-    update_result = db["battery"].insert_one(**battery)
+    update_result = db["battery"].insert_one(battery)
 
     return {"detail": "battery added"}
 
@@ -113,19 +114,21 @@ def service_battery_by_user_id(
     daylights = {}
     for season in get_all_season:
         daylights[season["season_name"]] = season["day_light"]
-
     current_date = datetime.now()
     created_at = battery["created_at"]
     periods = divide_into_periods(created_at, current_date)
 
     total_daylight_saving = 0
     for period in periods:
+        print(period)
         season = period['season']
         start = period['start']
         end = period['end']
         num_days = (end - start).days + 1
         daylight = daylights.get(season, 0)  # Default to 0 if the season is not found
+        print(num_days, daylight)
         total_daylight_saving += (num_days * daylight) * 50
+
     update_result = db["battery"].update_one(
         {
             "user_id": str(user_id),
@@ -137,20 +140,20 @@ def service_battery_by_user_id(
         },
         upsert=False,
     )
-    if update_result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="battery not found")
-        
-    
+    # if update_result.modified_count == 0:
+        # raise HTTPException(status_code=404, detail="battery not found")
+
+
     return BatterySchema(**battery)
 
 
 def get_season(date):
     year = date.year
     seasons = {
-        'Winter': (datetime(year, 12, 21), datetime(year + 1, 3, 20)),
-        'Spring': (datetime(year, 3, 21), datetime(year, 6, 20)),
-        'Summer': (datetime(year, 6, 21), datetime(year, 9, 22)),
-        'Fall': (datetime(year, 9, 23), datetime(year, 12, 20)),
+        'winter': (datetime(year, 12, 21), datetime(year + 1, 3, 20)),
+        'spring': (datetime(year, 3, 21), datetime(year, 6, 20)),
+        'summer': (datetime(year, 6, 21), datetime(year, 9, 22)),
+        'autumn': (datetime(year, 9, 23), datetime(year, 12, 20)),
     }
 
     for season, (start, end) in seasons.items():

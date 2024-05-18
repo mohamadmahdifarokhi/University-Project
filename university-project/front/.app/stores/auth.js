@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (response.status === 200) {
           console.log('qwdqwdqwd')
 
-          document.cookie = `access_token=${response.data.access_token}; domain=188.34.155.23; path=/`;
+          document.cookie = `access_token=${response.data.access_token}; domain=localhost; path=/`;
           this.setAuthenticated(true);
             console.log(response.data.scopes)
             console.log("asawdeqwewqd")
@@ -82,9 +82,9 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('access_token', response.data.access_token);
         localStorage.setItem('email', response.data.email);
         // Set cookies
-        document.cookie = `refresh_token=${response.data.refresh_token}; domain=188.34.155.23; path=/`;
-        document.cookie = `access_token=${response.data.access_token}; domain=188.34.155.23; path=/`;
-        document.cookie = `email=${response.data.email}; domain=188.34.155.23; path=/`;
+        document.cookie = `refresh_token=${response.data.refresh_token}; domain=localhost; path=/`;
+        document.cookie = `access_token=${response.data.access_token}; domain=localhost; path=/`;
+        document.cookie = `email=${response.data.email}; domain=localhost; path=/`;
 
         this.addToOrderFromSession(response.data.access_token)
 
@@ -370,7 +370,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function deleteCookie(name) {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=188.34.155.23; path=/`;
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=localhost; path=/`;
   }
 
   function $reset() {
