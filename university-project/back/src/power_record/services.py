@@ -59,8 +59,8 @@ def service_add_power_records(
 ):
     #calculate consumption due to power of the device
     device = db["device"].find_one({"device_name": power_record.device_name})
-    if device and 'ac_power' in device:
-        ac_power = device['ac_power']
+    if device and 'dc_power' in device:
+        ac_power = device['dc_power']
     time_difference = (power_record['end_time'] - power_record['start_time']).total_seconds() / 3600
     consumption = ac_power * time_difference
 
