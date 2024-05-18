@@ -15,7 +15,8 @@ def service_add_pricing(
         peak_start_time=pricing.peak_start_time,
         peak_end_time=pricing.peak_end_time,
         general_price=pricing.general_price,
-        peak_price=pricing.peak_price
+        peak_price=pricing.peak_price,
+        day_light=pricing.day_light
         ).model_dump()
 
     update_result = db["pricing"].insert_one(pricing)
