@@ -1,83 +1,53 @@
 <script setup lang="ts">
-import {useAppStore} from "~/stores/app";
-import {toTypedSchema} from "@vee-validate/zod";
-import {Field, useForm} from 'vee-validate'
-import {z} from 'zod'
-import {storeToRefs} from "pinia";
+import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { useAppStore } from "~/stores/app";
+import { toTypedSchema } from "@vee-validate/zod";
+import { Field, useForm } from 'vee-validate'
+import { z } from 'zod'
+import { storeToRefs } from "pinia";
+import { useI18n } from 'vue-i18n';
 
-const {t} = useI18n({useScope: "local"})
-const demoAreaMulti = reactive(useDemoAreaMulti())
-const router = useRouter()
-// onBeforeUnmount(() => {
-//     router.push('/dashboard')
-//
-//   }
-// )
+const { t } = useI18n({ useScope: "local" });
+const router = useRouter();
 
+const app = useAppStore();
+const { orders, categories24, values24, categoriesMonth, valuesMonth } = storeToRefs(app);
+const cate = ref(categories24.value);
 
-function useDemoAreaMulti() {
-  const {primary, info, success} = useTailwindColors()
-  const type = 'area'
-  const height = 280
+const areaCustomers = reactive(useAreaCustomers());
+const radialBarTeam = reactive(useRadialBarTeam());
+const barProfit = reactive(useBarProfit());
+const demoBarMulti = reactive(useDemoBarMulti());
+const demoAreaMulti = reactive(useDemoAreaMulti());
+const demoBarMulti3 = reactive(useDemoBarMulti3());
 
-  const options = {
-    chart: {
-      toolbar: {
-        show: false,
-      },
-    },
-    colors: [primary.value, info.value, success.value],
-    title: {
-      text: '',
-      align: 'left',
-    },
-    legend: {
-      position: 'top',
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      width: [2, 2, 2],
-      curve: 'smooth',
-    },
-    xaxis: {
-      type: 'datetime',
-      categories: [
-        '2018-09-19T00:00:00.000Z',
-        '2018-09-20T01:30:00.000Z',
-        '2018-09-22T02:30:00.000Z',
-        '2018-09-25T03:30:00.000Z',
-        '2018-10-5T04:30:00.000Z',
-        '2018-10-10T05:30:00.000Z',
-        '2018-10-19T06:30:00.000Z',
-      ],
-    },
-    tooltip: {
-      x: {
-        format: 'dd/MM/yy HH:mm',
-      },
-    },
-  }
+const fetchselectedDevice = app.fetchselectedDevice;
+const fetchOrders = app.fetchOrders;
+const fetch24Records = app.fetch24Records;
+const fetchMonthRecords = app.fetchMonthRecords;
 
-  const series = shallowRef([
-    {
-      name: 'iron',
-      data: [31, 40, 28, 51, 42, 109, 100],
-    },
-    {
-      name: 'heater',
-      data: [11, 32, 45, 32, 34, 52, 41],
-    },
-  ])
-
-  return {
-    type,
-    height,
-    options,
-    series,
-  }
+async function initializeData() {
+  await fetch24Records();
+  await fetchMonthRecords();
+  await fetchselectedDevice();
+  await fetchOrders();
 }
+
+// Initialize data on component mount
+onMounted(async () => {
+  await initializeData();
+});
+
+// Watchers for reactive updates
+watch([categories24, values24, categoriesMonth, valuesMonth], () => {
+  // Update your charts here
+  demoBarMulti.options.xaxis.categories = categories24.value;
+  demoBarMulti.series[0].data = values24.value;
+  demoAreaMulti.options.xaxis.categories = categoriesMonth.value;
+  demoAreaMulti.series = valuesMonth.value;
+}, {
+  deep: true,
+});
 
 definePageMeta({
   title: 'Activity',
@@ -90,32 +60,13 @@ definePageMeta({
     srcDark: '/img/screens/dashboards-personal-1-dark.png',
     order: 1,
   },
-})
-const app = useAppStore();
-const {orders, categories24, values24} = storeToRefs(app);
-const cate = ref(categories24)
-
-const areaCustomers = reactive(useAreaCustomers())
-const radialBarTeam = reactive(useRadialBarTeam())
-const barProfit = reactive(useBarProfit())
-const fetchselectedDevice = app.fetchselectedDevice;
-const fetchOrders = app.fetchOrders;
-const fetch24Records = app.fetch24Records;
-
-const initializeData = async () => {
-  await fetch24Records();
-  await fetchselectedDevice();
-  await fetchOrders();
-};
-
-onMounted(async () => {
-    await initializeData();
-  });
+});
 
 const VALIDATION_TEXT = {
-  EMAIL_REQUIRED: t('emailRequired'), // Translate email required text
-  PASSWORD_REQUIRED: t('passwordRequired'), // Translate password required text
+  EMAIL_REQUIRED: t('emailRequired'),
+  PASSWORD_REQUIRED: t('passwordRequired')
 }
+
 const zodSchema = z.object({
   start: z.string(),
   end: z.string(),
@@ -131,7 +82,8 @@ const initialValues = computed<FormInput>(() => ({
   end: '',
   consumption: '',
   deviceId: '',
-}))
+}));
+
 const {
   handleSubmit,
   isSubmitting,
@@ -145,19 +97,18 @@ const {
 } = useForm({
   validationSchema,
   initialValues,
-})
+});
 
 const addPowerRecord = handleSubmit(async (values) => {
   await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
-})
-
+});
 
 function deleteDevice(deviceId) {
-  app.deleteDevice(deviceId)
+  app.deleteDevice(deviceId);
 }
 
 function useAreaCustomers() {
-  const {primary, info, success} = useTailwindColors()
+  const { primary, info, success } = useTailwindColors()
   const type = 'area'
   const height = 258
 
@@ -194,12 +145,6 @@ function useAreaCustomers() {
         '2020-09-19T12:00:00.000Z',
         '2020-09-19T18:00:00.000Z',
         '2020-09-20T00:00:00.000Z',
-        // '2020-09-25T01:30:00.000Z',
-        // '2020-09-29T02:30:00.000Z',
-        // '2020-10-07T03:30:00.000Z',
-        // '2020-10-12T04:30:00.000Z',
-        // '2020-10-24T05:30:00.000Z',
-        // '2020-10-25T06:30:00.000Z',
       ],
     },
     tooltip: {
@@ -233,7 +178,7 @@ function useAreaCustomers() {
 }
 
 function useRadialBarTeam() {
-  const {primary} = useTailwindColors()
+  const { primary } = useTailwindColors()
   const type = 'radialBar'
   const height = 455
 
@@ -257,7 +202,7 @@ function useRadialBarTeam() {
         track: {
           background: '#e7e7e7',
           strokeWidth: '97%',
-          margin: 5, // margin is in pixels
+          margin: 5,
           dropShadow: {
             enabled: false,
             top: 2,
@@ -312,7 +257,7 @@ function useRadialBarTeam() {
 }
 
 function useBarProfit() {
-  const {primary} = useTailwindColors()
+  const { primary } = useTailwindColors()
   const type = 'bar'
   const height = 255
 
@@ -325,7 +270,7 @@ function useBarProfit() {
     plotOptions: {
       bar: {
         dataLabels: {
-          position: 'top', // top, center, bottom
+          position: 'top',
         },
       },
     },
@@ -401,10 +346,8 @@ function useBarProfit() {
   }
 }
 
-const demoTimeline = reactive(useDemoTimeline())
-
 function useDemoTimeline() {
-  const {primary, info, success, warning, danger} = useTailwindColors()
+  const { primary, info, success, warning, danger } = useTailwindColors()
   const type = 'rangeBar'
   const height = 280
 
@@ -516,21 +459,26 @@ function useDemoTimeline() {
     series,
   }
 }
-
-
-const demoBarMulti = reactive(useDemoBarMulti())
-const demoBarMulti3 = reactive(useDemoBarMulti3())
-
-
 function useDemoBarMulti() {
-  const {primary, info, success, warning} = useTailwindColors()
-  const type = 'bar'
-  const height = 280
+  const { primary, info, success, warning } = useTailwindColors();
+  const type = 'bar';
+  const height = 280;
 
   const options = {
     chart: {
       toolbar: {
         show: false,
+      },
+      events: {
+        mounted: function (chartContext, config) {
+          window.addEventListener('resize', () => {
+            chartContext.updateOptions({
+              chart: {
+                width: '100%',
+              },
+            });
+          });
+        },
       },
     },
     plotOptions: {
@@ -550,9 +498,7 @@ function useDemoBarMulti() {
       colors: ['transparent'],
     },
     xaxis: {
-      categories: cate,
-      // categories: ['iron', 'heater'],
-
+      categories: categories24.value,
     },
     yaxis: {
       title: {
@@ -570,28 +516,61 @@ function useDemoBarMulti() {
       text: '',
       align: 'left',
     },
-    // tooltip: {
-    //   y: {
-    //     formatter: asKDollar,
-    //   },
-    // },
-  }
+  };
 
   const series = shallowRef([
-    // {
-    //   name: 'AC',
-    //   data: [44, 55, 57, 56, 61, 58, 63, 60, 66],
-    // },
     {
       name: 'DC',
-      data: values24,
-      // data: [35, 41],
+      data: values24.value,
     },
-    // {
-    //   name: 'Free Cash Flow',
-    //   data: [35, 41, 36, 26, 45, 48, 52, 53, 41],
-    // },
-  ])
+  ]);
+
+  return {
+    type,
+    height,
+    options,
+    series,
+  };
+}
+
+function useDemoAreaMulti() {
+  const { primary, info, success } = useTailwindColors()
+  const type = 'area'
+  const height = 280
+
+  const options = {
+    chart: {
+      toolbar: {
+        show: false,
+      },
+    },
+    colors: [primary.value, info.value, success.value],
+    title: {
+      text: '',
+      align: 'left',
+    },
+    legend: {
+      position: 'top',
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      width: [2, 2, 2],
+      curve: 'smooth',
+    },
+    xaxis: {
+      type: 'datetime',
+      categories: categoriesMonth.value,
+    },
+    tooltip: {
+      x: {
+        format: 'dd/MM/yy HH:mm',
+      },
+    },
+  }
+
+  const series = shallowRef(valuesMonth.value)
 
   return {
     type,
@@ -602,7 +581,7 @@ function useDemoBarMulti() {
 }
 
 function useDemoBarMulti3() {
-  const {primary, info, success, warning} = useTailwindColors()
+  const { primary, info, success, warning } = useTailwindColors()
   const type = 'bar'
   const height = 280
 
@@ -632,7 +611,6 @@ function useDemoBarMulti3() {
       categories: [
         'Spring', 'Autumn', 'Fall', 'Winter'
       ],
-
     },
     yaxis: {
       title: {
@@ -650,11 +628,6 @@ function useDemoBarMulti3() {
       text: '',
       align: 'left',
     },
-    // tooltip: {
-    //   y: {
-    //     formatter: asKDollar,
-    //   },
-    // },
   }
 
   const series = shallowRef([
@@ -675,17 +648,6 @@ function useDemoBarMulti3() {
     series,
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 </script>
 
 <template>
@@ -1280,34 +1242,88 @@ function useDemoBarMulti3() {
           <AddonApexcharts v-bind="demoBarMulti"/>
         </BaseCard>
       </div>
-      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-        <div class="relative">
-          <BaseCard class="p-6">
-            <!-- Title -->
-            <div class="mb-6">
-              <BaseHeading
-                as="h3"
-                size="md"
-                weight="semibold"
-                lead="tight"
-                class="text-muted-800 dark:text-white"
-              >
-                <span>Monthly Consumption</span>
-              </BaseHeading>
-            </div>
-            <AddonApexcharts v-bind="demoAreaMulti"/>
-          </BaseCard>
-        </div>
 
+
+<div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+  <div class="relative">
+    <BaseCard class="p-6">
+      <!-- Title -->
+      <div class="mb-6">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>Monthly Consumption</span>
+        </BaseHeading>
       </div>
 
+      <AddonApexcharts v-bind="demoAreaMulti" />
 
-      <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
+      <div class="flex justify-center mt-6">
+        <form method="POST" class="items-center" style="max-width: 300px" action="" @submit.prevent="addPowerRecord" novalidate>
+          <!-- Apartment selection -->
+          <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-4" name="apartment">
+            <BaseSelect
+              :model-value="field.value"
+              :error="errorMessage"
+              @update:model-value="handleChange"
+              @blur="handleBlur"
+              shape="curved"
+              placeholder="Select Apartment"
+              icon="ri:community-fill"
+              class="text-sm py-1 px-2"
+            >
+              <!-- Options for apartment selection -->
+              <option v-for="year in [2020, 2021, 2022, 2023, 2024]" :key="year" :value="year">{{ year }}</option>
+            </BaseSelect>
+          </Field>
+
+          <!-- Area selection -->
+          <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-4" name="area">
+            <BaseSelect
+              :model-value="field.value"
+              :error="errorMessage"
+              @update:model-value="handleChange"
+              @blur="handleBlur"
+              shape="curved"
+              placeholder="Select Area"
+              icon="ri:home-line"
+              class="text-sm py-1 px-2"
+            >
+              <!-- Options for area selection -->
+              <option v-for="area in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="area" :value="area">{{ area }}</option>
+            </BaseSelect>
+          </Field>
+
+          <div class="ms-10 flex items-center gap-1 mt-5">
+            <button type="submit" class="BaseButtonIcon" rounded="full" small>
+<!--              <BaseButtonIcon rounded="full" small>-->
+<!--                Show-->
+<!--              </BaseButtonIcon>-->
+              <BaseButton
+            color="primary"
+            class="w-24"
+          >
+            {{ t("Save") }}
+          </BaseButton>
+            </button>
+          </div>
+        </form>
+      </div>
+    </BaseCard>
+  </div>
+</div>
+
+
+      <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
 
         <DemoChartPie/>
 
       </div>
-      <div class="ltablet:col-span-6 col-span-6 lg:col-span-6">
+      <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
 
         <BaseCard class="p-14 py-30" rounded="lg">
           <!-- Title -->
@@ -1332,6 +1348,11 @@ function useDemoBarMulti3() {
         </BaseCard>
 
       </div>
+
+
+
+
+
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
         <BaseCard class="p-6">
           <!-- Title -->
