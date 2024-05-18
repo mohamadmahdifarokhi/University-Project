@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException
 import pymongo
 from datetime import datetime, timedelta
 from bson import ObjectId
-from .schemas import *
+from .schemas import BatterySchema, BatteryAddSchema
 from fastapi.responses import JSONResponse
 from src.auth.models import User
 from src.auth.secures import get_current_user
@@ -13,6 +13,7 @@ def service_add_battery(
     battery: BatterySchema,
     user_id: str
 ):  
+    email = db["users"].find_one({"_id": ObjectId(user_id)})["email"]
     user_battery = db["battery"].find_one({"user_id": user_id})
     solar_panel_id = db["solar_panels"].find_one({"user_id": str(user_id)})["_id"]
 
@@ -23,6 +24,7 @@ def service_add_battery(
         solar_panel_id=str(solar_panel_id),
         saved_energy=battery.saved_energy,
         sold_energy=battery.sold_energy,
+        email=email,
         created_at=datetime.now()
         ).model_dump()
 
