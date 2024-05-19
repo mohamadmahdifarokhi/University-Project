@@ -100,9 +100,13 @@ const {
 });
 
 const addPowerRecord = handleSubmit(async (values) => {
+  console.log('lllll')
   await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
 });
-
+const addBattery = handleSubmit(async (values) => {
+  console.log(values)
+  await app.addBattery();
+});
 function deleteDevice(deviceId) {
   app.deleteDevice(deviceId);
 }
@@ -1263,7 +1267,7 @@ function useDemoBarMulti3() {
       <AddonApexcharts v-bind="demoAreaMulti" />
 
       <div class="flex justify-center mt-6">
-        <form method="POST" class="items-center" style="max-width: 300px" action="" @submit.prevent="addPowerRecord" novalidate>
+        <form method="POST" class="items-center" style="max-width: 300px" action="" @submit.prevent="addBattery" novalidate>
           <!-- Apartment selection -->
           <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-4" name="apartment">
             <BaseSelect

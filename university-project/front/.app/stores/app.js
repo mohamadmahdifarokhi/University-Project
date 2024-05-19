@@ -275,11 +275,11 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecords() {
+    async fetchMonthRecords(year=2024, month=5) {
       const accessToken = useCookie('access_token').value;
 
       try {
-        const response = await axios.get(`${apiUrl}/power-records/month-chart?year=2024&month=5`,
+        const response = await axios.get(`${apiUrl}/power-records/month-chart?year=${year}&month=${month}`,
 
 
           {

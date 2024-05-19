@@ -73,7 +73,7 @@ onBeforeMount(async () => {
 function createBattery() {
   // Logic to create a battery, e.g., calling an API or updating the store
 
-  app.addBattery(0,0)
+  app.addBattery()
   window.location.reload();
 
 }
