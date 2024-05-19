@@ -57,12 +57,13 @@ def service_add_power_records(
     power_record: PowerRecordAddSchema,
     user_id
 ):
-
+    print(power_record, "kokokoo")
     #calculate consumption due to power of the device
-    device = db["device"].find_one({"device_name": power_record.device_name})
-    if device and 'dc_power' in device:
-        ac_power = device['dc_power']
-    time_difference = (power_record['end_time'] - power_record['start_time']).total_seconds() / 3600
+    device = db["device"].find_one({"name": power_record.device_name})
+    print(device)
+    if device and 'AC_power_consumption' in device:
+        ac_power = device['AC_power_consumption']
+    time_difference = (power_record.end_time - power_record.start_time).total_seconds() / 3600
     consumption = ac_power * time_difference
     #
     # #calculate fee due to the season and time

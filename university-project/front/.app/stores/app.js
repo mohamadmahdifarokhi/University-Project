@@ -620,6 +620,29 @@ export const useAppStore = defineStore('app', {
         console.error('Error adding order:', error);
       }
     },
+    async addBattery(savedEnergy, soldEnergy) {
+  try {
+    const batteryData = {
+      saved_energy: savedEnergy,
+      sold_energy: soldEnergy
+    };
+
+    const accessToken = useCookie('access_token').value;
+    const response = await axios.post(`${apiUrl}/battery/`, batteryData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'accept': 'application/json'
+      }
+    });
+
+    if (response.status === 200) {
+      this.showSuccessToast('Battery added successfully');
+    }
+  } catch (error) {
+    console.error('Error adding battery:', error);
+  }
+},
     async fetchselectedDevice() {
       try {
         const accessToken = useCookie('access_token').value;

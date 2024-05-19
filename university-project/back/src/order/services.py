@@ -109,7 +109,9 @@ def service_last_orders(
 ):
     orders = db["orders"].find().sort({"created_at": -1}).limit(5)
     results = []
+    print(orders)
     for order in orders:
+        print(order)
         order["id"] = str(order["_id"])
         del order["_id"]
         results.append(OrderCreateSchema(**order))
