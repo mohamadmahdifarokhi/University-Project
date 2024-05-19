@@ -238,4 +238,49 @@ def service_show_records_on_chart_monthly(user_id, year, month):
 
 
 
+def get_season_dates(season, year):
+    if season == "Winter":
+        start_date = datetime(year, 12, 21)
+        end_date = datetime(year + 1, 3, 20)
+    elif season == "Spring":
+        start_date = datetime(year, 3, 21)
+        end_date = datetime(year, 6, 20)
+    elif season == "Summer":
+        start_date = datetime(year, 6, 21)
+        end_date = datetime(year, 9, 22)
+    elif season == "Fall":
+        start_date = datetime(year, 9, 23)
+        end_date = datetime(year, 12, 20)
+    else:
+        raise ValueError("Invalid season name")
+    return start_date, end_date
+
+
+def service_show_seasonal_records_on_chart(user_id, season, year):
+    start_date, end_date = get_season_dates(season, year)
+    
+    
+    pipeline = [
+        {
+            '$match': {
+                'user_id': user_id,
+                'start_date': {
+                    '$gte': start_date,
+                    '$lt': end_date
+                }
+            }
+        },
+        {
+            '$group': {
+                '_id': '$device_name',
+                'total_usage': {'$sum': '$consumption'}
+            }
+        }
+    ]
+    
+    result = list(db["power_records"].aggregate(pipeline))
+    
+    return result
+
+
 
