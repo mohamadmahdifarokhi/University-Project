@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import {storeToRefs} from "pinia";
-import {useAppStore} from "~/stores/app";
-import {onMounted} from "vue";
+import { storeToRefs } from "pinia";
+import { useAppStore } from "~/stores/app";
+import { onMounted } from "vue";
+import axios from 'axios';
+const app = useAppStore();
 
 const localPath = useLocalePath();
-const {locale, locales} = useI18n()
+const { locale, locales } = useI18n();
 
 definePageMeta({
   title: 'Accountract',
@@ -19,13 +21,39 @@ definePageMeta({
   },
 });
 
-const app = useAppStore();
+const { email, photo } = storeToRefs(app);
+const { t } = useI18n({ useScope: "local" });
 
-const {email, photo} = storeToRefs(app);
+const handleFileUpload = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (file) {
+    await app.importExcel(file);
+  window.location.reload();
 
-const {t} = useI18n({useScope: "local"})
+  }
+};
 
-
+// const importExcel = async (file: File) => {
+//   try {
+//     const accessToken = useCookie('access_token').value;
+//     const formData = new FormData();
+//     formData.append('file', file);
+//
+//     const response = await axios.post('http://127.0.0.1:8002/power-records/upload-excel-file', formData, {
+//       headers: {
+//         Authorization: `Bearer ${accessToken}`,
+//         'Content-Type': 'multipart/form-data',
+//       },
+//     });
+//
+//     if (response.status === 200) {
+//       app.showSuccessToast('File uploaded successfully');
+//     }
+//   } catch (error) {
+//     console.error('Error uploading file:', error);
+//   }
+// };
 </script>
 
 <template>
@@ -49,24 +77,9 @@ const {t} = useI18n({useScope: "local"})
         <div class="mt-8 max-w-[240px]">
           <ul class="space-y-1 font-sans text-sm">
             <BaseCard class="p-6 mb-10">
-          <DemoNotificationsCompact />
-        </BaseCard>
-<!--            <li>-->
-<!--              <BaseHeading class="ms-1 mb-5" tag="h2" size="md" weight="medium" lead="none">-->
-<!--                AC Consumption : 100-->
-<!--              </BaseHeading>-->
-<!--            </li>-->
-<!--            <li>-->
-<!--              <BaseHeading class="ms-1 mb-5" tag="h2" size="md" weight="medium" lead="none">-->
-<!--                DC Consumption : 150-->
-<!--              </BaseHeading>-->
-<!--            </li>-->
-<!--            <li>-->
-<!--              <BaseHeading class="ms-1 mb-10" tag="h2" size="md" weight="medium" lead="none">-->
-<!--                ...-->
-<!--              </BaseHeading>-->
-<!--            </li>-->
-             <li>
+              <DemoNotificationsCompact />
+            </BaseCard>
+            <li>
               <NuxtLink
                 :to="localPath('/profile/blocks')"
                 exact-active-class="!text-primary-500 !bg-primary-500/10"
@@ -115,6 +128,16 @@ const {t} = useI18n({useScope: "local"})
                 <Icon name="ri:product-hunt-fill" class="size-5"/>
                 <span>Available Products</span>
               </NuxtLink>
+            </li>
+            <li>
+              <div
+                exact-active-class="!text-primary-500 !bg-primary-500/10"
+                class="text-muted-400 hover:text-muted-600 dark:hover:text-muted-200 hover:bg-muted-50 dark:hover:bg-muted-700/50 flex items-center gap-2 rounded-lg p-3 transition-colors duration-300"
+              >
+                <Icon name="ri:product-hunt-fill" class="size-5"/>
+                <span>Upload Excel</span>
+                <input type="file" @change="handleFileUpload" class="ml-2"/>
+              </div>
             </li>
           </ul>
         </div>

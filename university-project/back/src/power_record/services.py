@@ -100,7 +100,7 @@ def upload_excel_file(file: UploadFile = File(...),
     content = file.read()  
     df = pd.read_excel(BytesIO(content))
     
-    expected_columns = ["start_time", "end_time", "AC_or_DC", "consumption"]
+    expected_columns = ["start_time", "end_time", "device_name"]
     if not all(col in df.columns for col in expected_columns):
         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
     
@@ -267,13 +267,13 @@ def get_season_dates(season, year):
 
 def service_show_seasonal_records_on_chart(user_id, season, year):
     start_date, end_date = get_season_dates(season, year)
-    
-    
+
+
     pipeline = [
         {
             '$match': {
-                'user_id': user_id,
-                'start_date': {
+                'user_id': ObjectId(user_id),
+                'start_time': {  # Assuming your field is `start_time`
                     '$gte': start_date,
                     '$lt': end_date
                 }
@@ -286,10 +286,14 @@ def service_show_seasonal_records_on_chart(user_id, season, year):
             }
         }
     ]
-    
-    result = list(db["power_records"].aggregate(pipeline))
-    
-    return result
+
+    try:
+        result = list(db["power_records"].aggregate(pipeline))
+        return result
+    except Exception as e:
+        print("An error occurred:", e)
+        return []
+
 
 
 

@@ -48,7 +48,8 @@ watch([categories24, values24, categoriesMonth, valuesMonth], () => {
 }, {
   deep: true,
 });
-
+const selectedYear = ref<number | null>(null);
+const selectedMonth = ref<number | null>(null);
 definePageMeta({
   title: 'Activity',
   middleware: ['authenticated'],
@@ -103,9 +104,13 @@ const addPowerRecord = handleSubmit(async (values) => {
   console.log('lllll')
   await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
 });
-const addBattery = handleSubmit(async (values) => {
-  console.log(values)
-  await app.addBattery();
+const fetchMonthly = handleSubmit(async (values) => {
+  const selectedValues = {
+    year: selectedYear.value,
+    month: selectedMonth.value,
+  };
+  console.log(selectedValues);
+  await app.fetchMonthRecords(selectedYear.value, selectedMonth.value);
 });
 function deleteDevice(deviceId) {
   app.deleteDevice(deviceId);
@@ -656,176 +661,9 @@ function useDemoBarMulti3() {
 
 <template>
   <div>
-    <!-- Header -->
-    <!--    <div class="mb-8 flex flex-col justify-between md:flex-row md:items-center">-->
-    <!--      <div-->
-    <!--        class="ltablet:max-w-full flex max-w-[425px] flex-col items-center gap-4 text-center md:flex-row md:text-left lg:max-w-full"-->
-    <!--      >-->
-    <!--        <BaseAvatar src="/img/avatars/2.svg" size="lg" />-->
-    <!--        <div>-->
-    <!--          <BaseHeading-->
-    <!--            as="h2"-->
-    <!--            size="xl"-->
-    <!--            weight="light"-->
-    <!--            lead="tight"-->
-    <!--            class="text-muted-800 dark:text-white"-->
-    <!--          >-->
-    <!--            <span>Welcome back, Maya</span>-->
-    <!--          </BaseHeading>-->
-    <!--          <BaseParagraph>-->
-    <!--            <span class="text-muted-500">-->
-    <!--              Happy to see you again on your dashboard.-->
-    <!--            </span>-->
-    <!--          </BaseParagraph>-->
-    <!--        </div>-->
-    <!--      </div>-->
-    <!--      <div-->
-    <!--        class="mt-4 flex items-center justify-center gap-2 md:mt-0 md:justify-start"-->
-    <!--      >-->
-    <!--        <BaseButton>-->
-    <!--          <span>View Reports</span>-->
-    <!--        </BaseButton>-->
-    <!--        <BaseButton color="primary">-->
-    <!--          <span>Manage Store</span>-->
-    <!--        </BaseButton>-->
-    <!--      </div>-->
-    <!--    </div>-->
-    <!-- Grid -->
+
     <div class="grid grid-cols-12 gap-6">
-      <!-- Quick stats -->
-      <!--      <div class="ltablet:col-span-6 col-span-12 lg:col-span-6">-->
-      <!--        <BaseCard class="p-6">-->
-      <!--          <div class="mb-6">-->
-      <!--            <BaseHeading-->
-      <!--              as="h3"-->
-      <!--              size="md"-->
-      <!--              weight="semibold"-->
-      <!--              lead="tight"-->
-      <!--              class="text-muted-800 dark:text-white"-->
-      <!--            >-->
-      <!--              <span>Your Quick Stats</span>-->
-      <!--            </BaseHeading>-->
-      <!--          </div>-->
-      <!--          <div class="grid gap-4 md:grid-cols-2">-->
-      <!--            &lt;!&ndash; Grid item &ndash;&gt;-->
-      <!--            <div-->
-      <!--              class="bg-muted-100/80 dark:bg-muted-700 flex items-center gap-2 rounded-md px-5 py-10"-->
-      <!--            >-->
-      <!--              <BaseIconBox-->
-      <!--                size="md"-->
-      <!--                class="bg-primary-100 text-primary-500 dark:bg-primary-500/20 dark:text-primary-400 dark:border-success-500 dark:border-2"-->
-      <!--                rounded="full"-->
-      <!--                color="none"-->
-      <!--              >-->
-      <!--                <Icon name="ph:nut-duotone" class="size-5" />-->
-      <!--              </BaseIconBox>-->
-      <!--              <div>-->
-      <!--                <BaseHeading-->
-      <!--                  as="h2"-->
-      <!--                  size="md"-->
-      <!--                  weight="semibold"-->
-      <!--                  lead="tight"-->
-      <!--                  class="text-muted-800 dark:text-white"-->
-      <!--                >-->
-      <!--                  <span>2,870</span>-->
-      <!--                </BaseHeading>-->
-      <!--                <BaseParagraph size="sm">-->
-      <!--                  <span class="text-muted-500 dark:text-muted-400">-->
-      <!--                    Sales this month-->
-      <!--                  </span>-->
-      <!--                </BaseParagraph>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--            &lt;!&ndash; Grid item &ndash;&gt;-->
-      <!--            <div-->
-      <!--              class="bg-muted-100/80 dark:bg-muted-700 flex items-center gap-2 rounded-md px-5 py-10"-->
-      <!--            >-->
-      <!--              <BaseIconBox-->
-      <!--                size="md"-->
-      <!--                class="bg-amber-100 text-amber-500 dark:border-2 dark:border-amber-500 dark:bg-amber-500/20 dark:text-amber-400"-->
-      <!--                rounded="full"-->
-      <!--                color="none"-->
-      <!--              >-->
-      <!--                <Icon name="ph:handshake-duotone" class="size-5" />-->
-      <!--              </BaseIconBox>-->
-      <!--              <div>-->
-      <!--                <BaseHeading-->
-      <!--                  as="h2"-->
-      <!--                  size="md"-->
-      <!--                  weight="semibold"-->
-      <!--                  lead="tight"-->
-      <!--                  class="text-muted-800 dark:text-white"-->
-      <!--                >-->
-      <!--                  <span>159</span>-->
-      <!--                </BaseHeading>-->
-      <!--                <BaseParagraph size="sm">-->
-      <!--                  <span class="text-muted-500 dark:text-muted-400">-->
-      <!--                    New users-->
-      <!--                  </span>-->
-      <!--                </BaseParagraph>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--            &lt;!&ndash; Grid item &ndash;&gt;-->
-      <!--            <div-->
-      <!--              class="bg-muted-100/80 dark:bg-muted-700 flex items-center gap-2 rounded-md px-5 py-10"-->
-      <!--            >-->
-      <!--              <BaseIconBox-->
-      <!--                size="md"-->
-      <!--                class="bg-green-100 text-green-500 dark:border-2 dark:border-green-500 dark:bg-green-500/20 dark:text-green-400"-->
-      <!--                rounded="full"-->
-      <!--                color="none"-->
-      <!--              >-->
-      <!--                <Icon name="ph:sketch-logo-duotone" class="size-5" />-->
-      <!--              </BaseIconBox>-->
-      <!--              <div>-->
-      <!--                <BaseHeading-->
-      <!--                  as="h2"-->
-      <!--                  size="md"-->
-      <!--                  weight="semibold"-->
-      <!--                  lead="tight"-->
-      <!--                  class="text-muted-800 dark:text-white"-->
-      <!--                >-->
-      <!--                  <span>$429.18</span>-->
-      <!--                </BaseHeading>-->
-      <!--                <BaseParagraph size="sm">-->
-      <!--                  <span class="text-muted-500 dark:text-muted-400">-->
-      <!--                    Earned today-->
-      <!--                  </span>-->
-      <!--                </BaseParagraph>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--            &lt;!&ndash; Grid item &ndash;&gt;-->
-      <!--            <div-->
-      <!--              class="bg-muted-100/80 dark:bg-muted-700 flex items-center gap-2 rounded-md px-5 py-10"-->
-      <!--            >-->
-      <!--              <BaseIconBox-->
-      <!--                size="md"-->
-      <!--                class="bg-indigo-100 text-indigo-500 dark:border-2 dark:border-indigo-500 dark:bg-indigo-500/20 dark:text-indigo-400"-->
-      <!--                rounded="full"-->
-      <!--                color="none"-->
-      <!--              >-->
-      <!--                <Icon name="ph:bank-duotone" class="size-5" />-->
-      <!--              </BaseIconBox>-->
-      <!--              <div>-->
-      <!--                <BaseHeading-->
-      <!--                  as="h2"-->
-      <!--                  size="md"-->
-      <!--                  weight="semibold"-->
-      <!--                  lead="tight"-->
-      <!--                  class="text-muted-800 dark:text-white"-->
-      <!--                >-->
-      <!--                  <span>$6816.32</span>-->
-      <!--                </BaseHeading>-->
-      <!--                <BaseParagraph size="sm">-->
-      <!--                  <span class="text-muted-500 dark:text-muted-400">-->
-      <!--                    Total balance-->
-      <!--                  </span>-->
-      <!--                </BaseParagraph>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--          </div>-->
-      <!--        </BaseCard>-->
-      <!--      </div>-->
+
       <div class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
@@ -1212,23 +1050,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
 
-      <!--  <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">-->
-      <!--    <BaseCard class="p-6">-->
-      <!--      &lt;!&ndash; Title &ndash;&gt;-->
-      <!--      <div class="mb-6">-->
-      <!--        <BaseHeading-->
-      <!--          as="h3"-->
-      <!--          size="md"-->
-      <!--          weight="semibold"-->
-      <!--          lead="tight"-->
-      <!--          class="text-muted-800 dark:text-white"-->
-      <!--        >-->
-      <!--          <span>Timeline Chart</span>-->
-      <!--        </BaseHeading>-->
-      <!--      </div>-->
-      <!--      <AddonApexcharts v-bind="demoTimeline" />-->
-      <!--    </BaseCard>-->
-      <!--  </div>-->
+
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
         <BaseCard class="p-6">
           <!-- Title -->
@@ -1266,57 +1088,53 @@ function useDemoBarMulti3() {
 
       <AddonApexcharts v-bind="demoAreaMulti" />
 
-      <div class="flex justify-center mt-6">
-        <form method="POST" class="items-center" style="max-width: 300px" action="" @submit.prevent="addBattery" novalidate>
-          <!-- Apartment selection -->
-          <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-4" name="apartment">
-            <BaseSelect
-              :model-value="field.value"
-              :error="errorMessage"
-              @update:model-value="handleChange"
-              @blur="handleBlur"
-              shape="curved"
-              placeholder="Select Apartment"
-              icon="ri:community-fill"
-              class="text-sm py-1 px-2"
-            >
-              <!-- Options for apartment selection -->
-              <option v-for="year in [2020, 2021, 2022, 2023, 2024]" :key="year" :value="year">{{ year }}</option>
-            </BaseSelect>
-          </Field>
+ <div class="flex justify-center mt-6">
+              <form
+                method="POST"
+                class="items-center"
+                style="max-width: 300px"
+                @submit.prevent="fetchMonthly"
+                novalidate
+              >
+                <!-- Year selection -->
+                <div class="mb-4">
+                  <BaseSelect
+                    v-model="selectedYear"
+                    shape="curved"
+                    placeholder="Select Year"
+                    icon="ri:community-fill"
+                    class="text-sm py-1 px-2"
+                  >
+                    <!-- Options for year selection -->
+                    <option v-for="year in [2020, 2021, 2022, 2023, 2024]" :key="year" :value="year">{{ year }}</option>
+                  </BaseSelect>
+                </div>
 
-          <!-- Area selection -->
-          <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-4" name="area">
-            <BaseSelect
-              :model-value="field.value"
-              :error="errorMessage"
-              @update:model-value="handleChange"
-              @blur="handleBlur"
-              shape="curved"
-              placeholder="Select Area"
-              icon="ri:home-line"
-              class="text-sm py-1 px-2"
-            >
-              <!-- Options for area selection -->
-              <option v-for="area in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="area" :value="area">{{ area }}</option>
-            </BaseSelect>
-          </Field>
+                <!-- Month selection -->
+                <div class="mb-4">
+                  <BaseSelect
+                    v-model="selectedMonth"
+                    shape="curved"
+                    placeholder="Select Month"
+                    icon="ri:home-line"
+                    class="text-sm py-1 px-2"
+                  >
+                    <!-- Options for month selection -->
+                    <option v-for="month in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="month" :value="month">{{ month }}</option>
+                  </BaseSelect>
+                </div>
 
-          <div class="ms-10 flex items-center gap-1 mt-5">
-            <button type="submit" class="BaseButtonIcon" rounded="full" small>
-<!--              <BaseButtonIcon rounded="full" small>-->
-<!--                Show-->
-<!--              </BaseButtonIcon>-->
-              <BaseButton
-            color="primary"
-            class="w-24"
-          >
-            {{ t("Save") }}
-          </BaseButton>
-            </button>
-          </div>
-        </form>
-      </div>
+                <div class="ms-10 flex items-center gap-1 mt-5">
+                  <BaseButton
+                    type="submit"
+                    color="primary"
+                    class="w-24"
+                  >
+                    {{ t("Save") }}
+                  </BaseButton>
+                </div>
+              </form>
+            </div>
     </BaseCard>
   </div>
 </div>
@@ -1376,143 +1194,6 @@ function useDemoBarMulti3() {
       </div>
 
 
-      <!--       Area Chart card-->
-      <!--      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">-->
-      <!--        <BaseCard class="p-6">-->
-      <!--          &lt;!&ndash; Title &ndash;&gt;-->
-      <!--          <div class="mb-6">-->
-      <!--            <BaseHeading-->
-      <!--              as="h3"-->
-      <!--              size="md"-->
-      <!--              weight="semibold"-->
-      <!--              lead="tight"-->
-      <!--              class="text-muted-800 dark:text-white"-->
-      <!--            >-->
-      <!--              <span>List Of Appliance</span>-->
-      <!--            </BaseHeading>-->
-      <!--          </div>-->
-      <!--          <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>-->
-      <!--        </BaseCard>-->
-      <!--      </div>-->
-      <!--      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">-->
-      <!--        <BaseCard class="p-6">-->
-      <!--          &lt;!&ndash; Title &ndash;&gt;-->
-      <!--          <div class="mb-6">-->
-      <!--            <BaseHeading-->
-      <!--              as="h3"-->
-      <!--              size="md"-->
-      <!--              weight="semibold"-->
-      <!--              lead="tight"-->
-      <!--              class="text-muted-800 dark:text-white"-->
-      <!--            >-->
-      <!--              <span>AC To DC</span>-->
-      <!--            </BaseHeading>-->
-      <!--          </div>-->
-      <!--          <AddonApexcharts v-bind="areaCustomers" class="-ms-4"/>-->
-      <!--        </BaseCard>-->
-      <!--      </div>-->
-
-
-      <!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->
-      <!--        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>-->
-      <!--          <BaseCard rounded="lg" class="p-6">-->
-      <!--            <div class="mb-6 flex items-center justify-between">-->
-      <!--              <BaseHeading-->
-      <!--                as="h3"-->
-      <!--                size="md"-->
-      <!--                weight="semibold"-->
-      <!--                lead="tight"-->
-      <!--                class="text-muted-800 dark:text-white"-->
-      <!--              >-->
-      <!--                <span>Selected Products</span>-->
-      <!--              </BaseHeading>-->
-      <!--            </div>-->
-      <!--            <div class="mb-2 space-y-5">-->
-      <!--              <div v-for="device in app.getselectedDevice" :key="device.id"-->
-      <!--                   class="flex flex-col md:flex-row items-center md:items-start gap-2">-->
-
-      <!--                <div class="flex items-center gap-2 md:w-1/4">-->
-      <!--                  <BaseHeading-->
-      <!--                    as="h4"-->
-      <!--                    size="sm"-->
-      <!--                    weight="medium"-->
-      <!--                    lead="snug"-->
-      <!--                    class="text-muted-800 dark:text-white"-->
-      <!--                  >-->
-      <!--                    <span>{{ device.name }}</span>-->
-      <!--                    <BaseTag-->
-      <!--                      color="success"-->
-      <!--                      variant="pastel"-->
-      <!--                      rounded="full"-->
-      <!--                      size="sm"-->
-      <!--                      class="font-medium ms-3"-->
-      <!--                    >-->
-      <!--                      ON-->
-      <!--                    </BaseTag>-->
-      <!--                  </BaseHeading>-->
-      <!--                </div>-->
-      <!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
-      <!--                       :value="device.name" name="deviceId">-->
-      <!--                  <BaseInput-->
-      <!--                    :error="errorMessage"-->
-      <!--                    @update:model-value="handleChange"-->
-      <!--                    @blur="handleBlur"-->
-      <!--                    type="hidden"-->
-      <!--                    shape="curved"-->
-      <!--                  />-->
-      <!--                </Field>-->
-      <!--                <Field  v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="start">-->
-      <!--                  <BaseInput-->
-      <!--                    :model-value="field.value"-->
-      <!--                    :error="errorMessage"-->
-      <!--                    @update:model-value="handleChange"-->
-      <!--                    @blur="handleBlur"-->
-      <!--                    type="datetime-local"-->
-      <!--                    shape="curved"-->
-      <!--                    placeholder="Start Date"-->
-      <!--                    icon="ri:calendar-fill"-->
-      <!--                  />-->
-      <!--                </Field>-->
-      <!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4" name="end">-->
-      <!--                  <BaseInput-->
-      <!--                    :model-value="field.value"-->
-      <!--                    :error="errorMessage"-->
-      <!--                    @update:model-value="handleChange"-->
-      <!--                    @blur="handleBlur"-->
-      <!--                    type="datetime-local"-->
-      <!--                    shape="curved"-->
-      <!--                    placeholder="End Date"-->
-      <!--                    icon="ri:calendar-fill"-->
-      <!--                  />-->
-      <!--                </Field>-->
-      <!--                <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="flex-1 md:w-1/4"-->
-      <!--                       name="consumption">-->
-      <!--                  <BaseInput-->
-      <!--                    :model-value="field.value"-->
-      <!--                    :error="errorMessage"-->
-      <!--                    @update:model-value="handleChange"-->
-      <!--                    @blur="handleBlur"-->
-      <!--                    shape="curved"-->
-      <!--                    placeholder="Consumption"-->
-      <!--                    icon="ri:lightbulb-flash-fill"-->
-      <!--                  />-->
-      <!--                </Field>-->
-      <!--                &lt;!&ndash;          <div class="flex items-center gap-1">&ndash;&gt;-->
-
-      <!--                &lt;!&ndash;          </div>&ndash;&gt;-->
-      <!--                <div class="flex items-center gap-1 mt-3">-->
-      <!--                  <button type="submit" class="BaseButtonIcon" rounded="full" small>-->
-      <!--                    <Icon name="ri:add-circle-fill"/>-->
-      <!--                  </button>-->
-      <!--                  <BaseButtonIcon rounded="full" small class="ms-3">-->
-      <!--                    <Icon name="ri:delete-bin-7-fill"/>-->
-      <!--                  </BaseButtonIcon>-->
-      <!--                </div>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--          </BaseCard>-->
-      <!--        </form>-->
-      <!--      </div>-->
 
 
       <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
@@ -1631,110 +1312,6 @@ function useDemoBarMulti3() {
         </div>
       </div>
 
-      <!--      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">-->
-      <!--        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>-->
-      <!--          <BaseCard rounded="lg" class="p-6">-->
-      <!--            <div class="mb-6 flex items-center justify-between">-->
-      <!--              <BaseHeading-->
-      <!--                as="h3"-->
-      <!--                size="md"-->
-      <!--                weight="semibold"-->
-      <!--                lead="tight"-->
-      <!--                class="text-muted-800 dark:text-white"-->
-      <!--              >-->
-      <!--                <span>Selected Products</span>-->
-      <!--              </BaseHeading>-->
-      <!--            </div>-->
-      <!--            <div class="mb-2 space-y-5">-->
-      <!--              <div v-for="device in app.getselectedDevice" class="flex items-center gap-2">-->
-      <!--                <div class="flex items-center gap-2 justify-between">-->
-      <!--                  <div>-->
-      <!--                    <BaseHeading-->
-      <!--                      as="h4"-->
-      <!--                      size="sm"-->
-      <!--                      weight="medium"-->
-      <!--                      lead="snug"-->
-      <!--                      class="text-muted-800 dark:text-white"-->
-      <!--                    >-->
-      <!--                      <span>{{ device.name  }}</span>-->
-      <!--                      <BaseTag-->
-      <!--                    color="success"-->
-      <!--                    variant="pastel"-->
-      <!--                    rounded="full"-->
-      <!--                    size="sm"-->
-      <!--                    class="font-medium ms-3"-->
-      <!--                  >-->
-      <!--                    ON-->
-      <!--                  </BaseTag>-->
-      <!--                    </BaseHeading>-->
-
-      <!--                  </div>-->
-      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
-      <!--                         class="ms-auto flex items-center gap-1" :value="device.name" name="deviceId">-->
-      <!--                    <BaseInput-->
-      <!--                      :error="errorMessage"-->
-      <!--                      @update:model-value="handleChange"-->
-      <!--                      @blur="handleBlur"-->
-      <!--                     type="hidden"-->
-      <!--                      shape="curved"-->
-      <!--                    />-->
-      <!--                  </Field>-->
-
-      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
-      <!--                         class="ms-auto flex items-center gap-1" name="start">-->
-      <!--                    <BaseInput-->
-      <!--                      :model-value="field.value"-->
-      <!--                      :error="errorMessage"-->
-      <!--                      @update:model-value="handleChange"-->
-      <!--                      @blur="handleBlur"-->
-      <!--                      type="datetime-local"-->
-      <!--                      shape="curved"-->
-      <!--                      placeholder="Start Date"-->
-      <!--                      icon="ri:calendar-fill"-->
-      <!--                    />-->
-      <!--                  </Field>-->
-      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
-      <!--                         class="ms-auto flex items-center gap-1" name="end">-->
-      <!--                    <BaseInput-->
-      <!--                      :model-value="field.value"-->
-      <!--                      :error="errorMessage"-->
-      <!--                      @update:model-value="handleChange"-->
-      <!--                      @blur="handleBlur"-->
-      <!--                      type="datetime-local"-->
-      <!--                      shape="curved"-->
-      <!--                      placeholder="End Date"-->
-      <!--                      icon="ri:calendar-fill"-->
-      <!--                    />-->
-      <!--                  </Field>-->
-      <!--                  <Field v-slot="{ field, errorMessage, handleChange, handleBlur }"-->
-      <!--                         class="ms-auto flex items-center gap-1" name="consumption">-->
-      <!--                    <BaseInput-->
-      <!--                      :model-value="field.value"-->
-      <!--                      :error="errorMessage"-->
-      <!--                      @update:model-value="handleChange"-->
-      <!--                      @blur="handleBlur"-->
-      <!--                      shape="curved"-->
-      <!--                      placeholder="Consumption"-->
-      <!--                      icon="ri:lightbulb-flash-fill"-->
-
-      <!--                    />-->
-      <!--                  </Field>-->
-      <!--                  <div class="ms-auto flex items-center gap-1">-->
-      <!--                    <button type="submit" class="BaseButtonIcon" rounded="full" small>-->
-      <!--                      <Icon name="ri:add-circle-fill"/>-->
-      <!--                    </button>-->
-      <!--                  </div>-->
-      <!--                  <div class="ms-auto flex items-center gap-1">-->
-      <!--                    <BaseButtonIcon rounded="full" small>-->
-      <!--                      <Icon name="ri:delete-bin-7-fill"/>-->
-      <!--                    </BaseButtonIcon>-->
-      <!--                  </div>-->
-      <!--                </div>-->
-      <!--              </div>-->
-      <!--            </div>-->
-      <!--          </BaseCard>-->
-      <!--        </form>-->
-      <!--      </div>-->
 
 
     </div>
@@ -1821,14 +1398,7 @@ function useDemoBarMulti3() {
           </DemoFlexTableRow>
         </TransitionGroup>
 
-        <!--          <div v-if="!pending && data?.data.length !== 0" class="pt-6">-->
-        <!--            <BasePagination-->
-        <!--              :total-items="data?.total ?? 0"-->
-        <!--              :item-per-page="perPage"-->
-        <!--              :current-page="page"-->
-        <!--              rounded="full"-->
-        <!--            />-->
-        <!--          </div>-->
+
       </div>
 
     </div>

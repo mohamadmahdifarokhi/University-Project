@@ -21,12 +21,14 @@ export const useAppStore = defineStore('app', {
     battery: ref(''),
     batteries: [],
     cart: [],
+    seasonDatas: [],
+    seasonLabels: [],
     orders: [],
     sellOrders: [],
     solarPanels: [],
     buyOrders: [],
     selectedDevice: [],
-    apartments:[],
+    apartments: [],
     email: '',
     photo: ref(''),
     flag: ref(''),
@@ -263,9 +265,9 @@ export const useAppStore = defineStore('app', {
             }
           }
         );
-        if (response.data){
+        if (response.data) {
           this.categories24 = response.data['categories'];
-        this.values24 = response.data['values'];
+          this.values24 = response.data['values'];
         }
 
       } catch (error) {
@@ -275,7 +277,7 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecords(year=2024, month=5) {
+    async fetchMonthRecords(year = 2024, month = 5) {
       const accessToken = useCookie('access_token').value;
 
       try {
@@ -289,7 +291,7 @@ export const useAppStore = defineStore('app', {
             }
           }
         );
-        if (response.data){
+        if (response.data) {
           this.valuesMonth = response.data[0];
           this.categoriesMonth = response.data[1];
         }
@@ -364,7 +366,7 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-     async fetchAllBattery() {
+    async fetchAllBattery() {
       const accessToken = useCookie('access_token').value;
 
       try {
@@ -528,7 +530,26 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
+    async importExcel(file) {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const formData = new FormData();
+        formData.append('file', file);
 
+        const response = await axios.post(`${apiUrl}/power-records/upload-excel-file`, formData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        if (response.status === 200) {
+          this.showSuccessToast('File uploaded successfully');
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
+    },
     async deleteRecord(recordId) {
       try {
         const accessToken = useCookie('access_token').value;
@@ -621,28 +642,28 @@ export const useAppStore = defineStore('app', {
       }
     },
     async addBattery(savedEnergy, soldEnergy) {
-  try {
-    const batteryData = {
-      saved_energy: savedEnergy,
-      sold_energy: soldEnergy
-    };
+      try {
+        const batteryData = {
+          saved_energy: savedEnergy,
+          sold_energy: soldEnergy
+        };
 
-    const accessToken = useCookie('access_token').value;
-    const response = await axios.post(`${apiUrl}/battery/`, batteryData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'accept': 'application/json'
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.post(`${apiUrl}/battery/`, batteryData, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'accept': 'application/json'
+          }
+        });
+
+        if (response.status === 200) {
+          this.showSuccessToast('Battery added successfully');
+        }
+      } catch (error) {
+        console.error('Error adding battery:', error);
       }
-    });
-
-    if (response.status === 200) {
-      this.showSuccessToast('Battery added successfully');
-    }
-  } catch (error) {
-    console.error('Error adding battery:', error);
-  }
-},
+    },
     async fetchselectedDevice() {
       try {
         const accessToken = useCookie('access_token').value;
@@ -659,6 +680,33 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
+
+    async fetchSeasonChart(year = 2023, season = 'Spring') {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/power-records/season-chart?year=${year}&season=${season}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.status === 200) {
+          const data = response.data;
+          const datas = data.map(item => item.total_usage);
+          const labels = data.map(item => item._id);
+          this.seasonDatas = datas
+          this.seasonLabels = labels
+          console.log(datas); // list of total_usage
+          console.log(labels); // list of _id
+          // You can also return these values or set them in the state if using a framework like Vue or React
+          return {datas, labels};
+        }
+      } catch (error) {
+        console.error('Error fetching season chart data:', error);
+      }
+    },
+
     async fetchApartment() {
       try {
         const accessToken = useCookie('access_token').value;

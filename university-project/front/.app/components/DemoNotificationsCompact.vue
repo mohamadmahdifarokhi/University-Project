@@ -73,7 +73,7 @@ onBeforeMount(async () => {
 function createBattery() {
   // Logic to create a battery, e.g., calling an API or updating the store
 
-  app.addBattery()
+  app.addBattery(0,0)
   window.location.reload();
 
 }
@@ -83,6 +83,7 @@ function createBattery() {
   <div>
     <div class="mb-4 flex items-center justify-between">
       <BaseHeading
+        v-if="battery"
         as="h3"
         size="sm"
         weight="semibold"
