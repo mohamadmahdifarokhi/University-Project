@@ -67,7 +67,7 @@ def service_list_device_user(
     print(devices, "loplop")
     for device_id in devices:
         device = db["device"].find_one({"_id": ObjectId(device_id)})
-        device["id"] = str(device["_id"])
+        device["id"] = str(device_id)
         del device["_id"]
         results.append(DeviceSchema(**device))
 
