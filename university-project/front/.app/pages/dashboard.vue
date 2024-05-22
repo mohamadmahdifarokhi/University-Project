@@ -816,7 +816,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>GREENHOUSE EMISSION SAVING (CO2/kwh)</span>
+              <span>GREENHOUSE EMISSION SAVING (CO2/kwh per day)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"

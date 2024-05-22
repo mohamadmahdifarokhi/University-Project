@@ -33,6 +33,16 @@ def power_record_add(
     )
 
 
+@router.get("/cal8")
+def cal8(
+    user: User = Depends(get_current_user)
+):
+    return service_add_power_records(
+        power_record=power_record,
+        user_id=user["_id"]
+    )
+
+
 @router.post("/upload-excel-file", summary="Uploads an Excel file containing power records")
 async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(get_current_user)):
     if not file.filename.endswith('.xlsx'):

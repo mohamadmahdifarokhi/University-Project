@@ -14,8 +14,9 @@ from src.auth.secures import get_current_user
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 
+
 def service_list_power_records(
-    user_id: str
+        user_id: str
 ):
     power_records = db["power_records"].find({"user_id": user_id})
 
@@ -24,14 +25,15 @@ def service_list_power_records(
     results = []
     for record in power_records:
         base_power_record = PowerRecordGetSchema(
-        power_record_id=str(record["_id"]),
-        device_name=record["device_name"],
-        start_time=record["start_time"],
-        end_time=record["end_time"],
-        consumption=record["consumption"],
-    ).model_dump()
+            power_record_id=str(record["_id"]),
+            device_name=record["device_name"],
+            start_time=record["start_time"],
+            end_time=record["end_time"],
+            consumption=record["consumption"],
+        ).model_dump()
         results.append(base_power_record)
     return results
+
 
 def service_delete_power_records(
         power_record_id
@@ -40,6 +42,7 @@ def service_delete_power_records(
         {"_id": ObjectId(power_record_id)},
     )
     return {"detail": "power record deleted."}
+
 
 def get_season(date):
     month = date.month
@@ -54,11 +57,11 @@ def get_season(date):
 
 
 def service_add_power_records(
-    power_record: PowerRecordAddSchema,
-    user_id
+        power_record: PowerRecordAddSchema,
+        user_id
 ):
     print(power_record, "kokokoo")
-    #calculate consumption due to power of the device
+    # calculate consumption due to power of the device
     device = db["device"].find_one({"name": power_record.device_name})
     print(device)
     if device and 'AC_power_consumption' in device:
@@ -85,42 +88,61 @@ def service_add_power_records(
         start_time=power_record.start_time,
         end_time=power_record.end_time,
         consumption=consumption,
-    ).model_dump() # check if it works, dict() is depricated
+    ).model_dump()  # check if it works, dict() is depricated
 
     update_result = db.power_records.insert_one(base_power_record)
 
     return {"detail": "power record added"}
 
+
+def get_8_cal(
+        user_id
+):
+    # pv generation
+    pv_gen = (('area' * 0.75) / 1.65) * 'DC coefficient'
+    st_ca = pv_gen * 1.15  # daily
+    gr_em_sa = 4.17 * 10 ** -4 * pv_gen
+    efficiency = 88  # random 80 95 first time
+    # investment =
+    # power_divided = '' / pv_gen
+    conversion_per = 90  # around 90 first time (88-92)
+    # saved_energy =
+    # peak hour 7 -11 PM
+    # Peak Power
+    return pv_gen, st_ca, gr_em_sa, efficiency
+
+
 def upload_excel_file(file: UploadFile = File(...),
                       user: User = Depends(get_current_user)):
     if not file.filename.endswith('.xlsx'):
         return JSONResponse(status_code=400, content={"message": "Invalid file format. Please upload a .xlsx file."})
-    
+
     # Read the file into a DataFrame
-    content = file.read()  
+    content = file.read()
     df = pd.read_excel(BytesIO(content))
-    
+
     expected_columns = ["start_time", "end_time", "device_name"]
     if not all(col in df.columns for col in expected_columns):
         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
-    
+
     records = df.to_dict('records')
     for record in records:
         record["user_id"] = user.id
     result = db["power_records"].insert_many(records)
-    
+
     return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
+
 
 # def service_show_records_on_chart(
 #     user_id
 # ):
 #     time_24_hours_ago = datetime.now() - timedelta(days=1)
-    
+
 #     query = {
 #         "user_id": ObjectId(user_id),
 #         "start_time": {"$gte": time_24_hours_ago}
 #     }
-    
+
 #     user_device_record = db["power_records"].find(query)
 
 #     result = {}
@@ -133,11 +155,10 @@ def upload_excel_file(file: UploadFile = File(...),
 #         duration_seconds = (record['end_time'] - record['start_time']).total_seconds()
 #         time_key = record['start_time'] + timedelta(seconds=duration_seconds)
 #         time_key_str = time_key.strftime("%Y-%m-%d %H:%M:%S")
-        
-#         result[device_name][time_key_str] = record['consumption']
-    
-#     return result
 
+#         result[device_name][time_key_str] = record['consumption']
+
+#     return result
 
 
 def service_show_records_on_chart(user_id, date=None):
@@ -246,7 +267,6 @@ def service_show_records_on_chart_monthly(user_id, year, month):
     return formatted_output, categories
 
 
-
 def get_season_dates(season, year):
     if season == "Winter":
         start_date = datetime(year, 12, 21)
@@ -267,7 +287,6 @@ def get_season_dates(season, year):
 
 def service_show_seasonal_records_on_chart(user_id, season, year):
     start_date, end_date = get_season_dates(season, year)
-
 
     pipeline = [
         {
@@ -293,7 +312,3 @@ def service_show_seasonal_records_on_chart(user_id, season, year):
     except Exception as e:
         print("An error occurred:", e)
         return []
-
-
-
-

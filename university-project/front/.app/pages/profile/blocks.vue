@@ -731,7 +731,7 @@ function useDemoBarMulti3() {
                 icon="ri:home-line"
               >
                 <!-- Options for device selection -->
-                <option v-for="device in ['Small (<80)','Medium (80-120)', 'Big (>120)']" :key="device" :value="device">{{
+                <option v-for="device in ['Small (80)','Medium (100)', 'Big (120)']" :key="device" :value="device">{{
                     device
                   }}
                 </option>
