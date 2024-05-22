@@ -11,7 +11,7 @@ const { t } = useI18n({ useScope: "local" });
 const router = useRouter();
 
 const app = useAppStore();
-const { orders, categories24, values24, categoriesMonth, valuesMonth } = storeToRefs(app);
+const { orders, categories24, values24, categoriesMonth, valuesMonth, cal8 } = storeToRefs(app);
 const cate = ref(categories24.value);
 
 const areaCustomers = reactive(useAreaCustomers());
@@ -25,12 +25,14 @@ const fetchselectedDevice = app.fetchselectedDevice;
 const fetchOrders = app.fetchOrders;
 const fetch24Records = app.fetch24Records;
 const fetchMonthRecords = app.fetchMonthRecords;
+const fetch8 = app.fetch8;
 
 async function initializeData() {
   await fetch24Records();
   await fetchMonthRecords();
   await fetchselectedDevice();
   await fetchOrders();
+  await fetch8();
 }
 
 // Initialize data on component mount
@@ -842,7 +844,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>862</span>
+              <span>{{ cal8['gr_em_sa'] }}</span>
             </BaseHeading>
           </div>
           <div
@@ -940,7 +942,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>832</span>
+              <span>{{cal8['efficiency']}}</span>
             </BaseHeading>
           </div>
           <div
@@ -989,7 +991,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>262</span>
+              <span>{{ cal8['pv_gen'] }}</span>
             </BaseHeading>
           </div>
           <div
@@ -1037,7 +1039,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>762</span>
+              <span>{{ cal8['st_ca'] }}</span>
             </BaseHeading>
           </div>
           <div

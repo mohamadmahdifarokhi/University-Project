@@ -14,6 +14,7 @@ export const useAppStore = defineStore('app', {
     product: ref(),
     devices: [],
     records: [],
+    cal8: {},
     categories24: ref([]),
     values24: ref([]),
     categoriesMonth: ref([]),
@@ -513,6 +514,24 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
+    async fetch8() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/power-records/cal8`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
+        this.cal8 = response.data;
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+
+
+
+
     async addDevice(deviceId) {
       try {
         const accessToken = useCookie('access_token').value;

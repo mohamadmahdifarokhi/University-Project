@@ -1,4 +1,6 @@
 import json
+import random
+
 from ..db.db import db
 from fastapi import Depends, HTTPException
 import pymongo
@@ -95,21 +97,72 @@ def service_add_power_records(
     return {"detail": "power record added"}
 
 
+def get_current_season():
+    now = datetime.now()
+    month = now.month
+    day = now.day
+
+    if (month == 3 and day >= 20) or month in [4, 5] or (month == 6 and day < 21):
+        return "spring"
+    elif (month == 6 and day >= 21) or month in [7, 8] or (month == 9 and day < 23):
+        return "summer"
+    elif (month == 9 and day >= 23) or month in [10, 11] or (month == 12 and day < 21):
+        return "fall"
+    else:
+        return "winter"
+
+
 def get_8_cal(
         user_id
 ):
     # pv generation
-    pv_gen = (('area' * 0.75) / 1.65) * 'DC coefficient'
+    dc_coefficient = {
+        "spring": {
+            80: 126.6,
+            100: 134.2,
+            120: 135
+        },
+        "summer": {
+            80: 133,
+            100: 141,
+            120: 142.5
+        },
+        "fall": {
+            80: 97,
+            100: 102,
+            120: 103.4
+        },
+        "winter": {
+            80: 78,
+            100: 82,
+            120: 83.2
+        }
+    }
+    block = db["blocks"].find_one({"user_id": str(user_id)})
+    season = get_current_season()
+
+    # Check if efficiency is already saved in block
+    if 'efficiency' in block:
+        efficiency = block['efficiency']
+    else:
+        efficiency = random.randint(80, 95)
+        block['efficiency'] = efficiency  # Save efficiency in block
+        db["blocks"].update_one({"user_id": str(user_id)}, {"$set": {"efficiency": efficiency}})
+
+    pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[season][int(block['area'])]
     st_ca = pv_gen * 1.15  # daily
     gr_em_sa = 4.17 * 10 ** -4 * pv_gen
-    efficiency = 88  # random 80 95 first time
+
+    # Update block document with efficiency
+
     # investment =
     # power_divided = '' / pv_gen
     conversion_per = 90  # around 90 first time (88-92)
     # saved_energy =
+
     # peak hour 7 -11 PM
     # Peak Power
-    return pv_gen, st_ca, gr_em_sa, efficiency
+    return {'pv_gen': int(pv_gen), 'st_ca': int(st_ca), 'gr_em_sa': int(gr_em_sa), 'efficiency': int(efficiency)}
 
 
 def upload_excel_file(file: UploadFile = File(...),

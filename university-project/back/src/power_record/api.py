@@ -37,8 +37,7 @@ def power_record_add(
 def cal8(
     user: User = Depends(get_current_user)
 ):
-    return service_add_power_records(
-        power_record=power_record,
+    return get_8_cal(
         user_id=user["_id"]
     )
 
