@@ -11,7 +11,7 @@ class PowerRecordSchema(BaseModel):
     device_name: str
     start_time: datetime
     end_time: datetime
-    consumption: int
+    consumption: float
 
 class PowerRecordAddSchema(BaseModel):
     device_name: str
@@ -23,4 +23,4 @@ class PowerRecordGetSchema(BaseModel):
     device_name: str
     start_time: datetime
     end_time: datetime
-    consumption: int
+    consumption: float
