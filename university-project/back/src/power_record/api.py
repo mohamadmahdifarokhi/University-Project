@@ -70,6 +70,8 @@ async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(g
             raise HTTPException(404,"Device not found")
         time_difference = (record["end_time"] - record["start_time"]).total_seconds() / 3600
         consumption = ac_power * time_difference
+        if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+            consumption = consumption * 6
         record["consumption"] = consumption
 
         # Calculate fee (if necessary)

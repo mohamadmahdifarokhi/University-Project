@@ -70,6 +70,8 @@ def service_add_power_records(
         ac_power = device['AC_power_consumption']
     time_difference = (power_record.end_time - power_record.start_time).total_seconds() / 3600
     consumption = ac_power * time_difference
+    if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+        consumption = consumption * 6
     #
     # #calculate fee due to the season and time
     # record_season = get_season(power_record.start_time)
@@ -162,28 +164,104 @@ def get_8_cal(
 
     # peak hour 7 -11 PM
     # Peak Power
-    return {'pv_gen': int(pv_gen), 'st_ca': int(st_ca), 'gr_em_sa': int(gr_em_sa), 'efficiency': int(efficiency)}
+    pipeline = [
+        {
+            "$match": {
+                "consumption": {"$exists": True},
+                "device_name": {"$exists": True}
+            }
+        },
+        {
+            "$match": {
+                "device_name": {
+                    "$in": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
+                                                                                             "heater (large)",
+                             "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "totalConsumption": {"$sum": "$consumption"}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "totalConsumption": 1
+            }
+        }
+    ]
+    peak_hour = list(db["power_records"].aggregate(pipeline))
 
 
-def upload_excel_file(file: UploadFile = File(...),
-                      user: User = Depends(get_current_user)):
-    if not file.filename.endswith('.xlsx'):
-        return JSONResponse(status_code=400, content={"message": "Invalid file format. Please upload a .xlsx file."})
+    pipeline = [
+        {
+            "$match": {
+                "consumption": {"$exists": True},
+                "device_name": {"$exists": True}
+            }
+        },
+        {
+            "$match": {
+                "device_name": {"$nin": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
+                                                                                                         "heater (large)",
+                                         "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "totalConsumption": {"$sum": "$consumption"}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "totalConsumption": 1
+            }
+        }
+    ]
+    peak_power = list(db["power_records"].aggregate(pipeline))
 
-    # Read the file into a DataFrame
-    content = file.read()
-    df = pd.read_excel(BytesIO(content))
+    # Fetch the records
+    return {'pv_gen': int(pv_gen),
+            'st_ca': int(st_ca),
+            'gr_em_sa': int(gr_em_sa),
+            'efficiency': int(efficiency),
+            'peak_hour': peak_hour,
+            'peak_power': peak_power
+            }
 
-    expected_columns = ["start_time", "end_time", "device_name"]
-    if not all(col in df.columns for col in expected_columns):
-        return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
 
-    records = df.to_dict('records')
-    for record in records:
-        record["user_id"] = user.id
-    result = db["power_records"].insert_many(records)
-
-    return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
+# def upload_excel_file(file: UploadFile = File(...),
+#                       user: User = Depends(get_current_user)):
+#     if not file.filename.endswith('.xlsx'):
+#         return JSONResponse(status_code=400, content={"message": "Invalid file format. Please upload a .xlsx file."})
+#
+#     # Read the file into a DataFrame
+#     content = file.read()
+#     df = pd.read_excel(BytesIO(content))
+#
+#     expected_columns = ["start_time", "end_time", "device_name"]
+#     if not all(col in df.columns for col in expected_columns):
+#         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
+#
+#     records = df.to_dict('records')
+#     for record in records:
+#         record["user_id"] = user.id
+#         device = db["device"].find_one({"name": record["device_name"]})
+#         if device and 'DC_power_consumption' in device:
+#             dc_power = device['DC_power_consumption']
+#         time_difference = (record['end_time'] - record['start_time']).total_seconds() / 3600
+#         record['consumption'] = dc_power * time_difference
+#         print(device['name'])
+#         if record['device_name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+#             print("adsqwdwqdwqdwqd")
+#             record['consumption'] = record['consumption'] * 6
+#     result = db["power_records"].insert_many(records)
+#
+#     return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
 
 
 # def service_show_records_on_chart(
