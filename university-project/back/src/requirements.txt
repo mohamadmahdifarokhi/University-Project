@@ -99,3 +99,4 @@ websockets==11.0.3
 wsproto==1.2.0
 WTForms==3.0.1
 yarl==1.9.2
+openpyxl==3.0.10
