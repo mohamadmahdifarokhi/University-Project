@@ -58,6 +58,244 @@ def get_season(date):
         return "winter"
 
 
+def service_cal_graph4(
+        user_id
+
+):
+    pipeline = [
+        {
+            "$addFields": {
+                "season": {
+                    "$switch": {
+                        "branches": [
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 1]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 31]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 2]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "winter"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 4]},
+                                        {"$eq": [{"$month": "$start_time"}, 5]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "spring"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 7]},
+                                        {"$eq": [{"$month": "$start_time"}, 8]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "summer"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 10]},
+                                        {"$eq": [{"$month": "$start_time"}, 11]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "fall"
+                            }
+                        ],
+                        "default": "Unknown"
+                    }
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$season",
+                "totalConsumption": {
+                    "$sum": "$consumption"
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "season": "$_id",
+                "totalConsumption": 1
+            }
+        }
+    ]
+    block = db["blocks"].find_one({"user_id": str(user_id)})
+    dc_coefficient = {
+        "spring": {
+            80: 126.6,
+            100: 134.2,
+            120: 135
+        },
+        "summer": {
+            80: 133,
+            100: 141,
+            120: 142.5
+        },
+        "fall": {
+            80: 97,
+            100: 102,
+            120: 103.4
+        },
+        "winter": {
+            80: 78,
+            100: 82,
+            120: 83.2
+        }
+    }
+    season = get_current_season()
+    unoptimized_seasons = list(db["power_records"].aggregate(pipeline))
+    seasons_pv_gen = []
+    unoptimized_seasonss = []
+    for optimized_season in unoptimized_seasons:
+        pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
+            int(block['area'])] * 90
+        seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
+        unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.95 / 1000)
+        unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
+
+    pipeline = [
+        {
+            "$addFields": {
+                "season": {
+                    "$switch": {
+                        "branches": [
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 1]},
+                                        {"$eq": [{"$month": "$start_time"}, 2]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "winter"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 4]},
+                                        {"$eq": [{"$month": "$start_time"}, 5]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "spring"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 7]},
+                                        {"$eq": [{"$month": "$start_time"}, 8]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "summer"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 10]},
+                                        {"$eq": [{"$month": "$start_time"}, 11]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "fall"
+                            }
+                        ],
+                        "default": "Unknown"
+                    }
+                }
+            }
+        },
+        {
+            "$addFields": {
+                "adjustedConsumption": {
+                    "$cond": {
+                        "if": {
+                            "$or": [
+                                {"$eq": ["$device", "air conditioner(small)"]},
+                                {"$eq": ["$device", "air conditioner(medium)"]},
+                                {"$eq": ["$device", "air conditioner(large)"]},
+                                {"$eq": ["$device", "heater (small)"]},
+                                {"$eq": ["$device", "heater (medium)"]},
+                                {"$eq": ["$device", "heater (large)"]},
+                            ]
+                        },
+                        "then": {"$multiply": ["$consumption", 0.33]},
+                        "else": "$consumption"
+                    }
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$season",
+                "totalConsumption": {
+                    "$sum": "$adjustedConsumption"
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "season": "$_id",
+                "totalConsumption": 1
+            }
+        }
+    ]
+
+    optimized_seasons = list(db["power_records"].aggregate(pipeline))
+    season = get_current_season()
+    seasons_pv_gen = []
+    optimized_seasonss = []
+    for optimized_season in optimized_seasons:
+        pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
+            int(block['area'])] * 90
+        seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
+        optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.55 / 1000)
+        optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
+    seasons_order = ["spring", "summer", "fall", "winter"]
+    unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
+    optimized_seasonss = sorted(optimized_seasonss, key=lambda x: seasons_order.index(x['season']))
+    un = [int(uno['unoptimized']) for uno in unoptimized_seasonss ]
+    op = [int(uno['optimized']) for uno in optimized_seasonss ]
+    return un, op
+
+
 def service_add_power_records(
         power_record: PowerRecordAddSchema,
         user_id
@@ -175,8 +413,8 @@ def get_8_cal(
             "$match": {
                 "device_name": {
                     "$in": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
-                                                                                             "heater (large)",
-                             "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+                                                                                            "heater (large)",
+                            "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
             }
         },
         {
@@ -194,7 +432,6 @@ def get_8_cal(
     ]
     peak_hour = list(db["power_records"].aggregate(pipeline))
 
-
     pipeline = [
         {
             "$match": {
@@ -204,9 +441,10 @@ def get_8_cal(
         },
         {
             "$match": {
-                "device_name": {"$nin": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
-                                                                                                         "heater (large)",
-                                         "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+                "device_name": {
+                    "$nin": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
+                                                                                             "heater (large)",
+                             "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
             }
         },
         {

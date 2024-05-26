@@ -29,6 +29,8 @@ export const useAppStore = defineStore('app', {
     solarPanels: [],
     buyOrders: [],
     selectedDevice: [],
+    graph4op: [],
+    graph4Unop: [],
     apartments: [],
     email: '',
     photo: ref(''),
@@ -490,6 +492,29 @@ export const useAppStore = defineStore('app', {
         // console.log(response.data,'buybuy')
 
         this.buyOrders = response.data;
+        // console.log(this.buyOrders,'buybuyz')
+
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+     async fetchGraph4() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          // params: {
+          //   page: page,
+          //   page_size: perPage,
+          // },
+        });
+        // console.log(response.data,'buybuy')
+
+        this.graph4Unop = response.data[0];
+        this.graph4op = response.data[1];
         // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {

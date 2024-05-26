@@ -118,6 +118,15 @@ def power_record_monthly(
     )
 
 
+@router.get("/cal_graph4", summary="shows all consumptions of devices in requested month")
+def cal_unoptimized(
+    user: User = Depends(get_current_user),
+):
+    return service_cal_graph4(
+        user_id=user["_id"]
+    )
+
+
 @router.get("/season-chart", summary="shows all consumptions of devices in requested season")
 def power_record_seasonal(
     year:int,

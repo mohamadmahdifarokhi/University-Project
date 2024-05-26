@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue';
-import { useAppStore } from "~/stores/app";
-import { toTypedSchema } from "@vee-validate/zod";
-import { Field, useForm } from 'vee-validate'
-import { z } from 'zod'
-import { storeToRefs } from "pinia";
-import { useI18n } from 'vue-i18n';
+import {ref, reactive, computed, watch, onMounted} from 'vue';
+import {useAppStore} from "~/stores/app";
+import {toTypedSchema} from "@vee-validate/zod";
+import {Field, useForm} from 'vee-validate'
+import {z} from 'zod'
+import {storeToRefs} from "pinia";
+import {useI18n} from 'vue-i18n';
 
-const { t } = useI18n({ useScope: "local" });
+const {t} = useI18n({useScope: "local"});
 const router = useRouter();
 
 const app = useAppStore();
-const { orders, categories24, values24, categoriesMonth, valuesMonth, cal8 } = storeToRefs(app);
+const {orders, categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop} = storeToRefs(app);
 const cate = ref(categories24.value);
 
 const areaCustomers = reactive(useAreaCustomers());
@@ -26,6 +26,7 @@ const fetchOrders = app.fetchOrders;
 const fetch24Records = app.fetch24Records;
 const fetchMonthRecords = app.fetchMonthRecords;
 const fetch8 = app.fetch8;
+const fetchGraph4 = app.fetchGraph4;
 
 async function initializeData() {
   await fetch24Records();
@@ -33,6 +34,7 @@ async function initializeData() {
   await fetchselectedDevice();
   await fetchOrders();
   await fetch8();
+  await fetchGraph4();
 }
 
 // Initialize data on component mount
@@ -41,12 +43,16 @@ onMounted(async () => {
 });
 
 // Watchers for reactive updates
-watch([categories24, values24, categoriesMonth, valuesMonth], () => {
+watch([categories24, values24, categoriesMonth, valuesMonth, graph4op, graph4Unop], () => {
   // Update your charts here
   demoBarMulti.options.xaxis.categories = categories24.value;
   demoBarMulti.series[0].data = values24.value;
   demoAreaMulti.options.xaxis.categories = categoriesMonth.value;
   demoAreaMulti.series = valuesMonth.value;
+
+  demoBarMulti3.series[0].data = graph4Unop.value;
+  demoBarMulti3.series[1].data = graph4op.value;
+
 }, {
   deep: true,
 });
@@ -114,12 +120,13 @@ const fetchMonthly = handleSubmit(async (values) => {
   console.log(selectedValues);
   await app.fetchMonthRecords(selectedYear.value, selectedMonth.value);
 });
+
 function deleteDevice(deviceId) {
   app.deleteDevice(deviceId);
 }
 
 function useAreaCustomers() {
-  const { primary, info, success } = useTailwindColors()
+  const {primary, info, success} = useTailwindColors()
   const type = 'area'
   const height = 258
 
@@ -189,7 +196,7 @@ function useAreaCustomers() {
 }
 
 function useRadialBarTeam() {
-  const { primary } = useTailwindColors()
+  const {primary} = useTailwindColors()
   const type = 'radialBar'
   const height = 455
 
@@ -268,7 +275,7 @@ function useRadialBarTeam() {
 }
 
 function useBarProfit() {
-  const { primary } = useTailwindColors()
+  const {primary} = useTailwindColors()
   const type = 'bar'
   const height = 255
 
@@ -358,7 +365,7 @@ function useBarProfit() {
 }
 
 function useDemoTimeline() {
-  const { primary, info, success, warning, danger } = useTailwindColors()
+  const {primary, info, success, warning, danger} = useTailwindColors()
   const type = 'rangeBar'
   const height = 280
 
@@ -470,8 +477,9 @@ function useDemoTimeline() {
     series,
   }
 }
+
 function useDemoBarMulti() {
-  const { primary, info, success, warning } = useTailwindColors();
+  const {primary, info, success, warning} = useTailwindColors();
   const type = 'bar';
   const height = 280;
 
@@ -545,7 +553,7 @@ function useDemoBarMulti() {
 }
 
 function useDemoAreaMulti() {
-  const { primary, info, success } = useTailwindColors()
+  const {primary, info, success} = useTailwindColors()
   const type = 'area'
   const height = 280
 
@@ -592,7 +600,7 @@ function useDemoAreaMulti() {
 }
 
 function useDemoBarMulti3() {
-  const { primary, info, success, warning } = useTailwindColors()
+  const {primary, info, success, warning} = useTailwindColors()
   const type = 'bar'
   const height = 280
 
@@ -600,6 +608,17 @@ function useDemoBarMulti3() {
     chart: {
       toolbar: {
         show: false,
+      },
+      events: {
+        mounted: function (chartContext, config) {
+          window.addEventListener('resize', () => {
+            chartContext.updateOptions({
+              chart: {
+                width: '100%',
+              },
+            });
+          });
+        },
       },
     },
     plotOptions: {
@@ -644,11 +663,11 @@ function useDemoBarMulti3() {
   const series = shallowRef([
     {
       name: 'non-optimized',
-      data: [44, 55, 57, 56],
+      data: graph4Unop,
     },
     {
       name: 'optimized',
-      data: [35, 41, 36, 26],
+      data: graph4op,
     },
   ])
 
@@ -942,7 +961,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>{{cal8['efficiency']}}</span>
+              <span>{{ cal8['efficiency'] }}</span>
             </BaseHeading>
           </div>
           <div
@@ -1072,25 +1091,25 @@ function useDemoBarMulti3() {
       </div>
 
 
-<div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-  <div class="relative">
-    <BaseCard class="p-6">
-      <!-- Title -->
-      <div class="mb-6">
-        <BaseHeading
-          as="h3"
-          size="md"
-          weight="semibold"
-          lead="tight"
-          class="text-muted-800 dark:text-white"
-        >
-          <span>Monthly Consumption</span>
-        </BaseHeading>
-      </div>
+      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+        <div class="relative">
+          <BaseCard class="p-6">
+            <!-- Title -->
+            <div class="mb-6">
+              <BaseHeading
+                as="h3"
+                size="md"
+                weight="semibold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>Monthly Consumption</span>
+              </BaseHeading>
+            </div>
 
-      <AddonApexcharts v-bind="demoAreaMulti" />
+            <AddonApexcharts v-bind="demoAreaMulti"/>
 
- <div class="flex justify-center mt-6">
+            <div class="flex justify-center mt-6">
               <form
                 method="POST"
                 class="items-center"
@@ -1122,7 +1141,9 @@ function useDemoBarMulti3() {
                     class="text-sm py-1 px-2"
                   >
                     <!-- Options for month selection -->
-                    <option v-for="month in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="month" :value="month">{{ month }}</option>
+                    <option v-for="month in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="month" :value="month">
+                      {{ month }}
+                    </option>
                   </BaseSelect>
                 </div>
 
@@ -1137,9 +1158,9 @@ function useDemoBarMulti3() {
                 </div>
               </form>
             </div>
-    </BaseCard>
-  </div>
-</div>
+          </BaseCard>
+        </div>
+      </div>
 
 
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
@@ -1174,9 +1195,6 @@ function useDemoBarMulti3() {
       </div>
 
 
-
-
-
       <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
         <BaseCard class="p-6">
           <!-- Title -->
@@ -1194,8 +1212,6 @@ function useDemoBarMulti3() {
           <AddonApexcharts v-bind="demoBarMulti3"/>
         </BaseCard>
       </div>
-
-
 
 
       <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
@@ -1313,7 +1329,6 @@ function useDemoBarMulti3() {
           </div>
         </div>
       </div>
-
 
 
     </div>
