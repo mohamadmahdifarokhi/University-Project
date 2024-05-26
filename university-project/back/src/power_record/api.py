@@ -70,6 +70,8 @@ async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(g
             raise HTTPException(404,"Device not found")
         time_difference = (record["end_time"] - record["start_time"]).total_seconds() / 3600
         consumption = ac_power * time_difference
+        if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+            consumption = consumption * 6
         record["consumption"] = consumption
 
         # Calculate fee (if necessary)
@@ -112,6 +114,15 @@ def power_record_monthly(
     return service_show_records_on_chart_monthly(
         year=year,
         month=month,
+        user_id=user["_id"]
+    )
+
+
+@router.get("/cal_graph4", summary="shows all consumptions of devices in requested month")
+def cal_unoptimized(
+    user: User = Depends(get_current_user),
+):
+    return service_cal_graph4(
         user_id=user["_id"]
     )
 

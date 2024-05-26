@@ -58,6 +58,244 @@ def get_season(date):
         return "winter"
 
 
+def service_cal_graph4(
+        user_id
+
+):
+    pipeline = [
+        {
+            "$addFields": {
+                "season": {
+                    "$switch": {
+                        "branches": [
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 1]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 31]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 2]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "winter"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 4]},
+                                        {"$eq": [{"$month": "$start_time"}, 5]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "spring"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 7]},
+                                        {"$eq": [{"$month": "$start_time"}, 8]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "summer"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 10]},
+                                        {"$eq": [{"$month": "$start_time"}, 11]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "fall"
+                            }
+                        ],
+                        "default": "Unknown"
+                    }
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$season",
+                "totalConsumption": {
+                    "$sum": "$consumption"
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "season": "$_id",
+                "totalConsumption": 1
+            }
+        }
+    ]
+    block = db["blocks"].find_one({"user_id": str(user_id)})
+    dc_coefficient = {
+        "spring": {
+            80: 126.6,
+            100: 134.2,
+            120: 135
+        },
+        "summer": {
+            80: 133,
+            100: 141,
+            120: 142.5
+        },
+        "fall": {
+            80: 97,
+            100: 102,
+            120: 103.4
+        },
+        "winter": {
+            80: 78,
+            100: 82,
+            120: 83.2
+        }
+    }
+    season = get_current_season()
+    unoptimized_seasons = list(db["power_records"].aggregate(pipeline))
+    seasons_pv_gen = []
+    unoptimized_seasonss = []
+    for optimized_season in unoptimized_seasons:
+        pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
+            int(block['area'])] * 90
+        seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
+        unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.95 / 1000)
+        unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
+
+    pipeline = [
+        {
+            "$addFields": {
+                "season": {
+                    "$switch": {
+                        "branches": [
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 1]},
+                                        {"$eq": [{"$month": "$start_time"}, 2]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "winter"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 3]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 4]},
+                                        {"$eq": [{"$month": "$start_time"}, 5]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "spring"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 6]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 7]},
+                                        {"$eq": [{"$month": "$start_time"}, 8]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "summer"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 9]},
+                                                  {"$gte": [{"$dayOfMonth": "$start_time"}, 21]}]},
+                                        {"$eq": [{"$month": "$start_time"}, 10]},
+                                        {"$eq": [{"$month": "$start_time"}, 11]},
+                                        {"$and": [{"$eq": [{"$month": "$start_time"}, 12]},
+                                                  {"$lte": [{"$dayOfMonth": "$start_time"}, 20]}]}
+                                    ]
+                                },
+                                "then": "fall"
+                            }
+                        ],
+                        "default": "Unknown"
+                    }
+                }
+            }
+        },
+        {
+            "$addFields": {
+                "adjustedConsumption": {
+                    "$cond": {
+                        "if": {
+                            "$or": [
+                                {"$eq": ["$device", "air conditioner(small)"]},
+                                {"$eq": ["$device", "air conditioner(medium)"]},
+                                {"$eq": ["$device", "air conditioner(large)"]},
+                                {"$eq": ["$device", "heater (small)"]},
+                                {"$eq": ["$device", "heater (medium)"]},
+                                {"$eq": ["$device", "heater (large)"]},
+                            ]
+                        },
+                        "then": {"$multiply": ["$consumption", 0.33]},
+                        "else": "$consumption"
+                    }
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$season",
+                "totalConsumption": {
+                    "$sum": "$adjustedConsumption"
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "season": "$_id",
+                "totalConsumption": 1
+            }
+        }
+    ]
+
+    optimized_seasons = list(db["power_records"].aggregate(pipeline))
+    season = get_current_season()
+    seasons_pv_gen = []
+    optimized_seasonss = []
+    for optimized_season in optimized_seasons:
+        pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
+            int(block['area'])] * 90
+        seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
+        optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.55 / 1000)
+        optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
+    seasons_order = ["spring", "summer", "fall", "winter"]
+    unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
+    optimized_seasonss = sorted(optimized_seasonss, key=lambda x: seasons_order.index(x['season']))
+    un = [int(uno['unoptimized']) for uno in unoptimized_seasonss ]
+    op = [int(uno['optimized']) for uno in optimized_seasonss ]
+    return un, op
+
+
 def service_add_power_records(
         power_record: PowerRecordAddSchema,
         user_id
@@ -70,6 +308,8 @@ def service_add_power_records(
         ac_power = device['AC_power_consumption']
     time_difference = (power_record.end_time - power_record.start_time).total_seconds() / 3600
     consumption = ac_power * time_difference
+    if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+        consumption = consumption * 6
     #
     # #calculate fee due to the season and time
     # record_season = get_season(power_record.start_time)
@@ -162,28 +402,104 @@ def get_8_cal(
 
     # peak hour 7 -11 PM
     # Peak Power
-    return {'pv_gen': int(pv_gen), 'st_ca': int(st_ca), 'gr_em_sa': int(gr_em_sa), 'efficiency': int(efficiency)}
+    pipeline = [
+        {
+            "$match": {
+                "consumption": {"$exists": True},
+                "device_name": {"$exists": True}
+            }
+        },
+        {
+            "$match": {
+                "device_name": {
+                    "$in": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
+                                                                                            "heater (large)",
+                            "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "totalConsumption": {"$sum": "$consumption"}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "totalConsumption": 1
+            }
+        }
+    ]
+    peak_hour = list(db["power_records"].aggregate(pipeline))
+
+    pipeline = [
+        {
+            "$match": {
+                "consumption": {"$exists": True},
+                "device_name": {"$exists": True}
+            }
+        },
+        {
+            "$match": {
+                "device_name": {
+                    "$nin": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
+                                                                                             "heater (large)",
+                             "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "totalConsumption": {"$sum": "$consumption"}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "totalConsumption": 1
+            }
+        }
+    ]
+    peak_power = list(db["power_records"].aggregate(pipeline))
+
+    # Fetch the records
+    return {'pv_gen': int(pv_gen),
+            'st_ca': int(st_ca),
+            'gr_em_sa': int(gr_em_sa),
+            'efficiency': int(efficiency),
+            'peak_hour': peak_hour,
+            'peak_power': peak_power
+            }
 
 
-def upload_excel_file(file: UploadFile = File(...),
-                      user: User = Depends(get_current_user)):
-    if not file.filename.endswith('.xlsx'):
-        return JSONResponse(status_code=400, content={"message": "Invalid file format. Please upload a .xlsx file."})
-
-    # Read the file into a DataFrame
-    content = file.read()
-    df = pd.read_excel(BytesIO(content))
-
-    expected_columns = ["start_time", "end_time", "device_name"]
-    if not all(col in df.columns for col in expected_columns):
-        return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
-
-    records = df.to_dict('records')
-    for record in records:
-        record["user_id"] = user.id
-    result = db["power_records"].insert_many(records)
-
-    return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
+# def upload_excel_file(file: UploadFile = File(...),
+#                       user: User = Depends(get_current_user)):
+#     if not file.filename.endswith('.xlsx'):
+#         return JSONResponse(status_code=400, content={"message": "Invalid file format. Please upload a .xlsx file."})
+#
+#     # Read the file into a DataFrame
+#     content = file.read()
+#     df = pd.read_excel(BytesIO(content))
+#
+#     expected_columns = ["start_time", "end_time", "device_name"]
+#     if not all(col in df.columns for col in expected_columns):
+#         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
+#
+#     records = df.to_dict('records')
+#     for record in records:
+#         record["user_id"] = user.id
+#         device = db["device"].find_one({"name": record["device_name"]})
+#         if device and 'DC_power_consumption' in device:
+#             dc_power = device['DC_power_consumption']
+#         time_difference = (record['end_time'] - record['start_time']).total_seconds() / 3600
+#         record['consumption'] = dc_power * time_difference
+#         print(device['name'])
+#         if record['device_name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+#             print("adsqwdwqdwqdwqd")
+#             record['consumption'] = record['consumption'] * 6
+#     result = db["power_records"].insert_many(records)
+#
+#     return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
 
 
 # def service_show_records_on_chart(
