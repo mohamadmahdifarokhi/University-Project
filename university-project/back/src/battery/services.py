@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 from src.auth.models import User
 from src.auth.secures import get_current_user
 
+from ..solar_panel.schemas import SolarPanelCreate
+
 
 def service_add_battery(
     battery: BatterySchema,
@@ -15,14 +17,15 @@ def service_add_battery(
 ):  
     email = db["users"].find_one({"_id": ObjectId(user_id)})["email"]
     user_battery = db["battery"].find_one({"user_id": user_id})
-    solar_panel_id = db["solar_panels"].find_one({"user_id": str(user_id)})["_id"]
+    sp = SolarPanelCreate(user_id= str(user_id), fee=0).model_dump()
+    solar_panel = db["solar_panels"].insert_one(sp).inserted_id
 
     if user_battery is not None:
         raise HTTPException(status_code=403, detail="This user has a battery")
 
     battery = BatterySchema(
         user_id=str(user_id),
-        solar_panel_id=str(solar_panel_id),
+        solar_panel_id=str(solar_panel),
         saved_energy=battery.saved_energy,
         sold_energy=battery.sold_energy,
         email=email,
@@ -106,45 +109,48 @@ def service_battery_by_user_id(
     user_id: str,
 ):
     battery = db["battery"].find_one({"user_id": str(user_id)})
-    battery["id"] = str(battery["_id"])
-    del battery["_id"]
+    if battery:
+        battery["id"] = str(battery["_id"])
+        del battery["_id"]
 
-    # update battery saving
-    get_all_season = db["pricing"].find()
-    daylights = {}
-    for season in get_all_season:
-        daylights[season["season_name"]] = season["day_light"]
-    current_date = datetime.now()
-    created_at = battery["created_at"]
-    periods = divide_into_periods(created_at, current_date)
+        # update battery saving
+        get_all_season = db["pricing"].find()
+        daylights = {}
+        for season in get_all_season:
+            daylights[season["season_name"]] = season["day_light"]
+        current_date = datetime.now()
+        created_at = battery["created_at"]
+        periods = divide_into_periods(created_at, current_date)
 
-    total_daylight_saving = 0
-    for period in periods:
-        print(period)
-        season = period['season']
-        start = period['start']
-        end = period['end']
-        num_days = (end - start).days + 1
-        daylight = daylights.get(season, 0)  # Default to 0 if the season is not found
-        print(num_days, daylight)
-        total_daylight_saving += (num_days * daylight) * 50
+        total_daylight_saving = 0
+        for period in periods:
+            print(period)
+            season = period['season']
+            start = period['start']
+            end = period['end']
+            num_days = (end - start).days + 1
+            daylight = daylights.get(season, 0)  # Default to 0 if the season is not found
+            print(num_days, daylight)
+            total_daylight_saving += (num_days * daylight) * 50
 
-    update_result = db["battery"].update_one(
-        {
-            "user_id": str(user_id),
-        },
-        {
-            "$set": {
-                "saved_energy": total_daylight_saving
+        update_result = db["battery"].update_one(
+            {
+                "user_id": str(user_id),
             },
-        },
-        upsert=False,
-    )
-    # if update_result.modified_count == 0:
-        # raise HTTPException(status_code=404, detail="battery not found")
+            {
+                "$set": {
+                    "saved_energy": total_daylight_saving
+                },
+            },
+            upsert=False,
+        )
+        # if update_result.modified_count == 0:
+            # raise HTTPException(status_code=404, detail="battery not found")
 
 
-    return BatterySchema(**battery)
+        return BatterySchema(**battery)
+    else:
+        return None
 
 
 def get_season(date):

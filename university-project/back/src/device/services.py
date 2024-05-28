@@ -62,17 +62,20 @@ def service_list_device_all(
 def service_list_device_user(
     user_id: str,
 ):
-    devices = db["users"].find_one({"_id": ObjectId(user_id)})["devices"]
-    results = []
-    print(devices, "loplop")
-    for device_id in devices:
-        device = db["device"].find_one({"_id": ObjectId(device_id)})
-        if device:
-            device["id"] = str(device_id)
-            del device["_id"]
-            results.append(DeviceSchema(**device))
+    try:
+        devices = db["users"].find_one({"_id": ObjectId(user_id)})["devices"]
+        results = []
+        print(devices, "loplop")
+        for device_id in devices:
+            device = db["device"].find_one({"_id": ObjectId(device_id)})
+            if device:
+                device["id"] = str(device_id)
+                del device["_id"]
+                results.append(DeviceSchema(**device))
 
-    return results
+        return results
+    except:
+        return []
 
 def service_select_device(
     device_id: str,

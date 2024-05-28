@@ -78,11 +78,15 @@ class ProfileService:
             )
 
         block_details = self.db.blocks.find_one({"user_id": str(user["_id"])})
-        apartment_no = self.db.apartments.find_one({"_id": ObjectId(block_details['apartment_id'])})['apartment_no']
-        return {'photo': profile['photo'], 'user': {"_id": str(user["_id"]), "email": user['email']},
-                "area": block_details['area'],
-                "apartment_no": apartment_no,
-                }
+        if block_details:
+            apartments = self.db.apartments.find_one({"_id": ObjectId(block_details['apartment_id'])})
+            return {'photo': profile['photo'], 'user': {"_id": str(user["_id"]), "email": user['email']},
+                    "area": block_details['area'],
+                    "apartment_no": apartments['apartment_no'],
+                    }
+        else:
+            return {'photo': profile['photo'], 'user': {"_id": str(user["_id"]), "email": user['email']},
+                    }
 
     def create_profile(self, profile_data: ProfileCreate) -> ProfileOut:
         profile_id = ObjectId()
