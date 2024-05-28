@@ -27,6 +27,7 @@ const fetch24Records = app.fetch24Records;
 const fetchMonthRecords = app.fetchMonthRecords;
 const fetch8 = app.fetch8;
 const fetchGraph4 = app.fetchGraph4;
+const powerConsumption = app.powerConsumption;
 
 async function initializeData() {
   await fetch24Records();
@@ -35,6 +36,7 @@ async function initializeData() {
   await fetchOrders();
   await fetch8();
   await fetchGraph4();
+  await powerConsumption();
 }
 
 // Initialize data on component mount
@@ -79,7 +81,6 @@ const VALIDATION_TEXT = {
 const zodSchema = z.object({
   start: z.string(),
   end: z.string(),
-  consumption: z.string(),
   deviceId: z.string(),
 })
 
@@ -89,7 +90,6 @@ const validationSchema = toTypedSchema(zodSchema)
 const initialValues = computed<FormInput>(() => ({
   start: '',
   end: '',
-  consumption: '',
   deviceId: '',
 }));
 
@@ -110,7 +110,7 @@ const {
 
 const addPowerRecord = handleSubmit(async (values) => {
   console.log('lllll')
-  await app.addRecord(values.deviceId, values.start, values.end, values.consumption);
+  await app.addRecord(values.deviceId, values.start, values.end);
 });
 const fetchMonthly = handleSubmit(async (values) => {
   const selectedValues = {
@@ -639,12 +639,12 @@ function useDemoBarMulti3() {
     },
     xaxis: {
       categories: [
-        'Spring', 'Autumn', 'Fall', 'Winter'
+        'Spring', 'Summer', 'Fall', 'Winter'
       ],
     },
     yaxis: {
       title: {
-        text: 'Consumption (kw/h)',
+        text: 'Comparison (€)',
       },
     },
     fill: {
@@ -719,7 +719,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>7,549</span>
+              <span>{{ cal8['conversion_per'] }}</span>
             </BaseHeading>
           </div>
           <div
@@ -742,7 +742,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>SAVED ENERGY (kwh/day)</span>
+              <span>SAVED ENERGY IN THE BATTERY (w/day)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -765,7 +765,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>1,611</span>
+              <span>0</span>
             </BaseHeading>
           </div>
           <div
@@ -814,7 +814,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>812</span>
+              <span>{{ cal8['investment'] }}</span>
             </BaseHeading>
           </div>
           <div
@@ -837,7 +837,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>GREENHOUSE EMISSION SAVING (CO2/kwh per day)</span>
+              <span>GREENHOUSE EMISSION SAVING (gr CO2/kwh per day)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -912,7 +912,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>270</span>
+              <span>{{ cal8['power_divided_by_ac_dc'] }}</span>
             </BaseHeading>
           </div>
           <div
@@ -961,7 +961,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>{{ cal8['efficiency'] }}</span>
+              <span>{{ cal8['efficiency'] }}%</span>
             </BaseHeading>
           </div>
           <div
@@ -984,7 +984,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>PV GENERATION (kwh)</span>
+              <span>PV GENERATION (w)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1032,7 +1032,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>STORAGE CAPACITY (kwh)</span>
+              <span>SOC (%)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1058,7 +1058,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>{{ cal8['st_ca'] }}</span>
+              <span>{{ cal8['st_ca'] }}%</span>
             </BaseHeading>
           </div>
           <div
@@ -1127,7 +1127,7 @@ function useDemoBarMulti3() {
                     class="text-sm py-1 px-2"
                   >
                     <!-- Options for year selection -->
-                    <option v-for="year in [2020, 2021, 2022, 2023, 2024]" :key="year" :value="year">{{ year }}</option>
+                    <option v-for="year in [2020, 2021, 2022, 2023, 2024, 2025]" :key="year" :value="year">{{ year }}</option>
                   </BaseSelect>
                 </div>
 
@@ -1153,7 +1153,7 @@ function useDemoBarMulti3() {
                     color="primary"
                     class="w-24"
                   >
-                    {{ t("Save") }}
+                    {{ t("Show") }}
                   </BaseButton>
                 </div>
               </form>
@@ -1271,17 +1271,17 @@ function useDemoBarMulti3() {
                 icon="ri:calendar-fill"
               />
             </Field>
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">
-              <BaseInput
-                :model-value="field.value"
-                :error="errorMessage"
-                @update:model-value="handleChange"
-                @blur="handleBlur"
-                shape="curved"
-                placeholder="Consumption"
-                icon="ri:lightbulb-flash-fill"
-              />
-            </Field>
+<!--            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">-->
+<!--              <BaseInput-->
+<!--                :model-value="field.value"-->
+<!--                :error="errorMessage"-->
+<!--                @update:model-value="handleChange"-->
+<!--                @blur="handleBlur"-->
+<!--                shape="curved"-->
+<!--                placeholder="Consumption"-->
+<!--                icon="ri:lightbulb-flash-fill"-->
+<!--              />-->
+<!--            </Field>-->
             <div class="flex items-center gap-1 mt-5">
               <button type="submit" class="BaseButtonIcon" rounded="full" small>
                 <BaseButtonIcon rounded="full" small>

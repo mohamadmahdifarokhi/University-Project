@@ -15,6 +15,10 @@ export const useAppStore = defineStore('app', {
     devices: [],
     records: [],
     cal8: {},
+    area: ref(''),
+    apartment_no: ref(''),
+    peakHour: ref(''),
+    peakPower: ref(''),
     categories24: ref([]),
     values24: ref([]),
     categoriesMonth: ref([]),
@@ -128,6 +132,8 @@ export const useAppStore = defineStore('app', {
             )
             this.email = response.data.user.email;
             this.photo = response.data?.photo || '';
+            this.apartment_no = response.data?.apartment_no || '';
+            this.area = response.data?.area || '';
           }
         } else {
           // If there's no access token, handle the case.
@@ -553,6 +559,21 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
+    async powerConsumption() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/power-records/max_power`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
+        this.peakHour = response.data[0];
+        this.peakPower = response.data[1];
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
 
 
 
@@ -725,7 +746,7 @@ export const useAppStore = defineStore('app', {
       }
     },
 
-    async fetchSeasonChart(year = 2023, season = 'Spring') {
+    async fetchSeasonChart(year = 2024, season = 'Spring') {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/power-records/season-chart?year=${year}&season=${season}`, {

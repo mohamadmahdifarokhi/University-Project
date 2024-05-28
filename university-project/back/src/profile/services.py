@@ -12,6 +12,7 @@ from ..auth.schemas import ProfileCreate, ProfileOut, ProfileUpdate
 from ..db.db import client, db
 from bson import ObjectId
 
+
 class ProfileService:
     """
     Repository class for interacting with the Profile model in the database.
@@ -66,7 +67,7 @@ class ProfileService:
         Returns:
             dict: Profile object if found.
         """
-        profile = self.db.profiles.find_one({"user_id":str(user["_id"])})
+        profile = self.db.profiles.find_one({"user_id": str(user["_id"])})
         # TODO Fix this
         # profile = self.db.profiles.find_one({"user_id": user["_id"], "is_active": True})
 
@@ -75,8 +76,13 @@ class ProfileService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Profile not found with user ID: {str(user['_id'])}"
             )
-        return ProfileRes(photo=profile['photo'],user={"_id": str(user["_id"]), "email": user['email']})
 
+        block_details = self.db.blocks.find_one({"user_id": str(user["_id"])})
+        apartment_no = self.db.apartments.find_one({"_id": ObjectId(block_details['apartment_id'])})['apartment_no']
+        return {'photo': profile['photo'], 'user': {"_id": str(user["_id"]), "email": user['email']},
+                "area": block_details['area'],
+                "apartment_no": apartment_no,
+                }
 
     def create_profile(self, profile_data: ProfileCreate) -> ProfileOut:
         profile_id = ObjectId()

@@ -1,30 +1,51 @@
 <script setup lang="ts">
-const skills = [
+import { onMounted, watch } from 'vue';
+import { useAppStore } from '~/stores/app';
+import { storeToRefs } from 'pinia';
+
+const app = useAppStore();
+const { peakHour, peakPower } = storeToRefs(app);
+const powerConsumption = app.powerConsumption;
+
+async function initializeData() {
+  await powerConsumption();
+}
+
+onMounted(async () => {
+  await initializeData();
+});
+
+const skills = ref([
   {
     id: 0,
     name: 'Peak Hour Consumption',
-    count: '149 kw/h',
+    count: `${peakHour.value} w`,
     icon: 'ri:time-fill',
   },
   {
     id: 1,
     name: 'Peak Power Consumption',
-    count: '117 kw/h',
+    count: `${peakPower.value} w`,
     icon: 'ri:flashlight-fill',
   },
-  // {
-  //   id: 2,
-  //   name: 'Nuxt',
-  //   count: 94,
-  //   icon: 'logos:nuxt-icon',
-  // },
-  // {
-  //   id: 4,
-  //   name: 'Tailwind CSS',
-  //   count: 82,
-  //   icon: 'logos:tailwindcss-icon',
-  // },
-]
+]);
+
+watch([peakHour, peakPower], () => {
+  skills.value = [
+    {
+      id: 0,
+      name: 'Peak Hour Consumption',
+      count: `${peakHour.value} w`,
+      icon: 'ri:time-fill',
+    },
+    {
+      id: 1,
+      name: 'Peak Power Consumption',
+      count: `${peakPower.value} w`,
+      icon: 'ri:flashlight-fill',
+    },
+  ];
+});
 </script>
 
 <template>
@@ -37,10 +58,9 @@ const skills = [
       <div
         class="border-muted-200 dark:border-muted-700 flex size-10 items-center justify-center rounded-full border"
       >
-        <Icon :name="skill.icon" class="size-5" />
-
+        <Icon :name="skill.icon" class="size-5"/>
       </div>
-      <div >
+      <div>
         <BaseHeading
           as="h4"
           size="sm"
@@ -56,15 +76,6 @@ const skills = [
           </span>
         </BaseParagraph>
       </div>
-<!--      <div class="ms-auto flex items-center">-->
-<!--        <BaseButtonIcon-->
-<!--          rounded="lg"-->
-<!--          muted-->
-<!--          class="scale-75"-->
-<!--        >-->
-<!--          <Icon name="lucide:arrow-right" class="size-5" />-->
-<!--        </BaseButtonIcon>-->
-<!--      </div>-->
     </div>
   </div>
 </template>

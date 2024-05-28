@@ -15,6 +15,7 @@ from src.auth.models import User
 from src.auth.secures import get_current_user
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
+import math
 
 
 def service_list_power_records(
@@ -53,7 +54,7 @@ def get_season(date):
     elif 6 <= month <= 8:
         return "summer"
     elif 9 <= month <= 11:
-        return "autumn"
+        return "summer"
     else:
         return "winter"
 
@@ -291,8 +292,8 @@ def service_cal_graph4(
     seasons_order = ["spring", "summer", "fall", "winter"]
     unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
     optimized_seasonss = sorted(optimized_seasonss, key=lambda x: seasons_order.index(x['season']))
-    un = [int(uno['unoptimized']) for uno in unoptimized_seasonss ]
-    op = [int(uno['optimized']) for uno in optimized_seasonss ]
+    un = [int(uno['unoptimized']) for uno in unoptimized_seasonss]
+    op = [int(uno['optimized']) for uno in optimized_seasonss]
     return un, op
 
 
@@ -300,14 +301,12 @@ def service_add_power_records(
         power_record: PowerRecordAddSchema,
         user_id
 ):
-    print(power_record, "kokokoo")
     # calculate consumption due to power of the device
     device = db["device"].find_one({"name": power_record.device_name})
-    print(device)
-    if device and 'AC_power_consumption' in device:
-        ac_power = device['AC_power_consumption']
+    if device and 'DC_power_consumption' in device:
+        dc_power = device['DC_power_consumption']
     time_difference = (power_record.end_time - power_record.start_time).total_seconds() / 3600
-    consumption = ac_power * time_difference
+    consumption = dc_power * time_difference
     if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
         consumption = consumption * 6
     #
@@ -337,6 +336,69 @@ def service_add_power_records(
     return {"detail": "power record added"}
 
 
+def get_max_power(user_id):
+    season = get_current_season()
+    block = db["blocks"].find_one({"user_id": str(user_id)})
+    peak_hour = 0
+    peak_power = 0
+    if season in ['spring', 'fall']:
+        if int(block['area']) == 80:
+            devices = db["device"].find({"name": {"$regex": "small", "$options": "i"}})
+            for device in devices:
+                if 'lamp' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+                else:
+                    peak_power += device['DC_power_consumption']
+        if int(block['area']) == 100:
+            devices = db["device"].find({"name": {"$regex": "medium", "$options": "i"}})
+            for device in devices:
+                if 'lamp' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+                else:
+                    peak_power += device['DC_power_consumption']
+        if int(block['area']) == 120:
+            devices = db["device"].find({"name": {"$regex": "large", "$options": "i"}})
+            for device in devices:
+                if 'lamp' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+                else:
+                    peak_power += device['DC_power_consumption']
+
+    else:
+        if int(block['area']) == 80:
+            devices = db["device"].find({"name": {"$regex": "small", "$options": "i"}})
+            for device in devices:
+                if 'lamp' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+
+                elif 'air conditioner' in device['name'] or 'heater' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption'])
+                else:
+                    peak_power += device['DC_power_consumption']
+        if int(block['area']) == 100:
+            devices = db["device"].find({"name": {"$regex": "medium", "$options": "i"}})
+            for device in devices:
+                if 'lamp' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+
+                elif 'air conditioner' in device['name'] or 'heater' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption'])
+                else:
+                    peak_power += device['DC_power_consumption']
+        if int(block['area']) == 120:
+            devices = db["device"].find({"name": {"$regex": "large", "$options": "i"}})
+            for device in devices:
+                if 'lamp' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+
+                elif 'air conditioner' in device['name'] or 'heater' in device['name']:
+                    peak_hour = (peak_hour + device['DC_power_consumption'])
+                else:
+                    peak_power += device['DC_power_consumption']
+
+    return peak_hour, peak_power
+
+
 def get_current_season():
     now = datetime.now()
     month = now.month
@@ -358,46 +420,46 @@ def get_8_cal(
     # pv generation
     dc_coefficient = {
         "spring": {
-            80: 126.6,
-            100: 134.2,
-            120: 135
+            80: 80.6,
+            100: 80.6,
+            120: 80.6
         },
         "summer": {
             80: 133,
-            100: 141,
-            120: 142.5
+            100: 133,
+            120: 133
         },
         "fall": {
-            80: 97,
-            100: 102,
-            120: 103.4
+            80: 65,
+            100: 65,
+            120: 65
         },
         "winter": {
-            80: 78,
-            100: 82,
-            120: 83.2
+            80: 50,
+            100: 50,
+            120: 50
         }
     }
     block = db["blocks"].find_one({"user_id": str(user_id)})
     season = get_current_season()
 
     # Check if efficiency is already saved in block
-    if 'efficiency' in block:
-        efficiency = block['efficiency']
-    else:
-        efficiency = random.randint(80, 95)
-        block['efficiency'] = efficiency  # Save efficiency in block
-        db["blocks"].update_one({"user_id": str(user_id)}, {"$set": {"efficiency": efficiency}})
+    # if 'efficiency' in block:
+    #     efficiency = block['efficiency']
+    # else:
+    # block['efficiency'] = efficiency  # Save efficiency in block
+    # db["blocks"].update_one({"user_id": str(user_id)}, {"$set": {"efficiency": efficiency}})
 
-    pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[season][int(block['area'])]
-    st_ca = pv_gen * 1.15  # daily
-    gr_em_sa = 4.17 * 10 ** -4 * pv_gen
+    pv_gen = round((math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient[season][int(block['area'])]) * 0.86,2)
+    pv_gen_summer = (math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient['summer'][int(block['area'])]) * 0.86
+    soc = round((pv_gen / pv_gen_summer) * 100, 2)
+    gr_em_sa = round(pv_gen * 0.00417, 2)
 
     # Update block document with efficiency
 
     # investment =
     # power_divided = '' / pv_gen
-    conversion_per = 90  # around 90 first time (88-92)
+    conversion_per = 89  # around 90 first time (88-92)
     # saved_energy =
 
     # peak hour 7 -11 PM
@@ -461,14 +523,24 @@ def get_8_cal(
         }
     ]
     peak_power = list(db["power_records"].aggregate(pipeline))
+    un_op, op = service_cal_graph4(user_id)
+    investment = (sum(un_op) - sum(op))
+    season_dict = {'spring': 0, 'summer': 1, "fall": 2, "winter": 3}
+    print(op, "epwoe")
+    print(op[season_dict[season]], "epwoe")
+    power_divided_by_ac_dc = round((int((op[season_dict[season]] * 1000) / 63) / pv_gen), 2)
+    efficiency = round(pv_gen / (pv_gen + ((op[season_dict[season]] * 1000) / 63)), 2) * 100
 
     # Fetch the records
-    return {'pv_gen': int(pv_gen),
-            'st_ca': int(st_ca),
-            'gr_em_sa': int(gr_em_sa),
-            'efficiency': int(efficiency),
+    return {'pv_gen': pv_gen,
+            'st_ca': soc,
+            'gr_em_sa': gr_em_sa,
+            'efficiency': efficiency,
             'peak_hour': peak_hour,
-            'peak_power': peak_power
+            'peak_power': peak_power,
+            'conversion_per': conversion_per,
+            'investment': investment,
+            'power_divided_by_ac_dc': power_divided_by_ac_dc
             }
 
 

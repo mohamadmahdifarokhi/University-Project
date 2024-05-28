@@ -46,7 +46,7 @@ router = APIRouter(tags=["Profiles"])
 #         )
 
 
-@router.get("", response_model=ProfileRes)
+@router.get("")
 def get_profile_by_user_id(
     user: User = Security(get_user),
 ):
