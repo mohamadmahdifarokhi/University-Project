@@ -173,8 +173,8 @@ def service_cal_graph4(
         seasons_pv_gen = []
         unoptimized_seasonss = []
         for optimized_season in unoptimized_seasons:
-            pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
-                int(block['area'])] * 90
+            pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
+                int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
             unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.95 / 1000)
             unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
@@ -285,8 +285,8 @@ def service_cal_graph4(
         seasons_pv_gen = []
         optimized_seasonss = []
         for optimized_season in optimized_seasons:
-            pv_gen = ((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
-                int(block['area'])] * 90
+            pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
+                int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
             optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.55 / 1000)
             optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
