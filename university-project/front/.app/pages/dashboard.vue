@@ -27,6 +27,7 @@ const fetch24Records = app.fetch24Records;
 const fetchMonthRecords = app.fetchMonthRecords;
 const fetch8 = app.fetch8;
 const fetchGraph4 = app.fetchGraph4;
+const powerConsumption = app.powerConsumption;
 
 async function initializeData() {
   await fetch24Records();
@@ -35,6 +36,7 @@ async function initializeData() {
   await fetchOrders();
   await fetch8();
   await fetchGraph4();
+  await powerConsumption();
 }
 
 // Initialize data on component mount
@@ -740,7 +742,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>SAVED ENERGY (w/day)</span>
+              <span>SAVED ENERGY IN THE BATTERY (w/day)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -763,7 +765,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>1,611</span>
+              <span>0</span>
             </BaseHeading>
           </div>
           <div
@@ -835,7 +837,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>GREENHOUSE EMISSION SAVING (metrictons CO2/kwh per day)</span>
+              <span>GREENHOUSE EMISSION SAVING (gr CO2/kwh per day)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -959,7 +961,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>{{ cal8['efficiency'] }}</span>
+              <span>{{ cal8['efficiency'] }}%</span>
             </BaseHeading>
           </div>
           <div
@@ -1030,7 +1032,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>STORAGE CAPACITY (w)</span>
+              <span>SOC (%)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1056,7 +1058,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>{{ cal8['st_ca'] }}</span>
+              <span>{{ cal8['st_ca'] }}%</span>
             </BaseHeading>
           </div>
           <div
@@ -1125,7 +1127,7 @@ function useDemoBarMulti3() {
                     class="text-sm py-1 px-2"
                   >
                     <!-- Options for year selection -->
-                    <option v-for="year in [2020, 2021, 2022, 2023, 2024]" :key="year" :value="year">{{ year }}</option>
+                    <option v-for="year in [2020, 2021, 2022, 2023, 2024, 2025]" :key="year" :value="year">{{ year }}</option>
                   </BaseSelect>
                 </div>
 

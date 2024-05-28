@@ -444,16 +444,16 @@ def get_8_cal(
     season = get_current_season()
 
     # Check if efficiency is already saved in block
-    if 'efficiency' in block:
-        efficiency = block['efficiency']
-    else:
-        efficiency = random.randint(80, 95)
-        block['efficiency'] = efficiency  # Save efficiency in block
-        db["blocks"].update_one({"user_id": str(user_id)}, {"$set": {"efficiency": efficiency}})
+    # if 'efficiency' in block:
+    #     efficiency = block['efficiency']
+    # else:
+    # block['efficiency'] = efficiency  # Save efficiency in block
+    # db["blocks"].update_one({"user_id": str(user_id)}, {"$set": {"efficiency": efficiency}})
 
-    pv_gen = (math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient[season][int(block['area'])]) * 0.86
-    st_ca = (math.floor((int(block['area']) * 0.75) / 1.65)) * 133
-    gr_em_sa = round(4.17 * 0.0001 * pv_gen, 2)
+    pv_gen = round((math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient[season][int(block['area'])]) * 0.86,2)
+    pv_gen_summer = (math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient['summer'][int(block['area'])]) * 0.86
+    soc = round((pv_gen / pv_gen_summer) * 100, 2)
+    gr_em_sa = round(pv_gen * 0.00417, 2)
 
     # Update block document with efficiency
 
@@ -529,17 +529,16 @@ def get_8_cal(
     print(op, "epwoe")
     print(op[season_dict[season]], "epwoe")
     power_divided_by_ac_dc = round((int((op[season_dict[season]] * 1000) / 63) / pv_gen), 2)
-
+    efficiency = round(pv_gen / (pv_gen + ((op[season_dict[season]] * 1000) / 63)), 2) * 100
 
     # Fetch the records
-    return {'pv_gen': int(pv_gen),
-            'st_ca': int(st_ca),
+    return {'pv_gen': pv_gen,
+            'st_ca': soc,
             'gr_em_sa': gr_em_sa,
-            'efficiency': int(efficiency),
+            'efficiency': efficiency,
             'peak_hour': peak_hour,
             'peak_power': peak_power,
             'conversion_per': conversion_per,
-            'investment': investment,
             'investment': investment,
             'power_divided_by_ac_dc': power_divided_by_ac_dc
             }
