@@ -521,7 +521,7 @@ function useDemoBarMulti() {
     },
     yaxis: {
       title: {
-        text: 'Consumption (kw/h)',
+        text: 'Consumption (wh)',
       },
     },
     fill: {
@@ -582,6 +582,7 @@ function useDemoAreaMulti() {
       type: 'datetime',
       categories: categoriesMonth.value,
     },
+
     tooltip: {
       x: {
         format: 'dd/MM/yy HH:mm',
@@ -788,7 +789,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>INVESTMENT & SAVING (€)</span>
+              <span>ANNUALLY AVG INVESTMENT & SAVING (€)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1103,7 +1104,7 @@ function useDemoBarMulti3() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>Monthly Consumption</span>
+                <span>Monthly Consumption (wh)</span>
               </BaseHeading>
             </div>
 
