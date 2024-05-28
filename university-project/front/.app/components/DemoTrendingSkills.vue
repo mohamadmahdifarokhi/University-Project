@@ -3,13 +3,13 @@ const skills = [
   {
     id: 0,
     name: 'Peak Hour Consumption',
-    count: '149 kw/h',
+    count: '149 w',
     icon: 'ri:time-fill',
   },
   {
     id: 1,
     name: 'Peak Power Consumption',
-    count: '117 kw/h',
+    count: '119 w',
     icon: 'ri:flashlight-fill',
   },
   // {

@@ -62,6 +62,9 @@ def service_add_block(
     if block_check is not None:
         raise HTTPException(status_code=400, detail="this block is not available")
 
+    user_block_check = db["blocks"].find_one({"user_id": str(user_id)})
+    if user_block_check is not None:
+        raise HTTPException(status_code=400, detail="you have a block, you can not add more.")
 
     base_block = BlockSchemaCreate(
         user_id=str(user_id),

@@ -167,7 +167,7 @@ const fetchSeasonal = handleSubmit(async (values) => {
               <!-- Placeholder option -->
               <option disabled value="">{{ t('Select Season') }}</option>
               <!-- Options for season selection -->
-              <option v-for="season in ['Winter', 'Spring', 'Summer', 'Autumn']" :key="season" :value="season">{{ season }}</option>
+              <option v-for="season in ['Winter', 'Spring', 'Summer', 'Summer']" :key="season" :value="season">{{ season }}</option>
             </BaseSelect>
           </div>
 
@@ -177,7 +177,7 @@ const fetchSeasonal = handleSubmit(async (values) => {
               color="primary"
               class="w-24"
             >
-              {{ t("Save") }}
+              {{ t("Show") }}
             </BaseButton>
           </div>
         </form>

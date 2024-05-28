@@ -21,7 +21,7 @@ definePageMeta({
   },
 });
 
-const { email, photo } = storeToRefs(app);
+const { email, photo, area, apartment_no } = storeToRefs(app);
 const { t } = useI18n({ useScope: "local" });
 
 const handleFileUpload = async (event: Event) => {
@@ -70,7 +70,10 @@ const handleFileUpload = async (event: Event) => {
               {{ email }}
             </BaseHeading>
             <BaseHeading class="mt-2" tag="h1" size="sm" weight="medium" lead="none">
-              Block 2
+              Area : {{area}}
+            </BaseHeading>
+             <BaseHeading class="mt-2" tag="h1" size="sm" weight="medium" lead="none">
+              Apartment no : {{apartment_no}}
             </BaseHeading>
           </div>
         </div>
@@ -136,8 +139,9 @@ const handleFileUpload = async (event: Event) => {
               >
                 <Icon name="ri:product-hunt-fill" class="size-5"/>
                 <span>Upload Excel</span>
-                <input type="file" @change="handleFileUpload" class="ml-2"/>
               </div>
+                <input type="file" @change="handleFileUpload" class="ml-2"/>
+
             </li>
           </ul>
         </div>

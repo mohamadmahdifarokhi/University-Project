@@ -15,6 +15,8 @@ export const useAppStore = defineStore('app', {
     devices: [],
     records: [],
     cal8: {},
+    area: ref(''),
+    apartment_no: ref(''),
     categories24: ref([]),
     values24: ref([]),
     categoriesMonth: ref([]),
@@ -128,6 +130,8 @@ export const useAppStore = defineStore('app', {
             )
             this.email = response.data.user.email;
             this.photo = response.data?.photo || '';
+            this.apartment_no = response.data?.apartment_no || '';
+            this.area = response.data?.area || '';
           }
         } else {
           // If there's no access token, handle the case.

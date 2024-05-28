@@ -64,12 +64,12 @@ async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(g
         record["end_time"] = pd.to_datetime(record["end_time"])
         # Calculate consumption
         device = db["device"].find_one({"name": record["device_name"]})
-        if device and 'AC_power_consumption' in device:
-            ac_power = device['AC_power_consumption']
+        if device and 'DC_power_consumption' in device:
+            dc_power = device['DC_power_consumption']
         else:
             raise HTTPException(404,"Device not found")
         time_difference = (record["end_time"] - record["start_time"]).total_seconds() / 3600
-        consumption = ac_power * time_difference
+        consumption = dc_power * time_difference
         if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
             consumption = consumption * 6
         record["consumption"] = consumption
@@ -117,6 +117,14 @@ def power_record_monthly(
         user_id=user["_id"]
     )
 
+
+@router.get("/max_power", summary="shows all consumptions of devices in requested month")
+def power_max_power(
+    user: User = Depends(get_current_user),
+):
+    return get_max_power(
+        user_id=user["_id"]
+    )
 
 @router.get("/cal_graph4", summary="shows all consumptions of devices in requested month")
 def cal_unoptimized(

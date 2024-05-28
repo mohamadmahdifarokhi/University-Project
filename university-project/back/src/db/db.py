@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 from pymongo import MongoClient
 from src.logger import logger
 load_dotenv()
-print("wwwwwwwwwwwww")
 print(os.environ.get("DATABASE_URL"), "wqwdqwd")
 print('mongodb://admin:admin@university-project-db:27018/university')
 client = MongoClient(os.environ.get("DATABASE_URL"))

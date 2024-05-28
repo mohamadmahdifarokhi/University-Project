@@ -153,7 +153,7 @@ def get_season(date):
         'winter': (datetime(year, 12, 21), datetime(year + 1, 3, 20)),
         'spring': (datetime(year, 3, 21), datetime(year, 6, 20)),
         'summer': (datetime(year, 6, 21), datetime(year, 9, 22)),
-        'autumn': (datetime(year, 9, 23), datetime(year, 12, 20)),
+        'summer': (datetime(year, 9, 23), datetime(year, 12, 20)),
     }
 
     for season, (start, end) in seasons.items():
