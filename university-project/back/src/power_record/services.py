@@ -67,6 +67,11 @@ def service_cal_graph4(
     if block:
         pipeline = [
             {
+                "$match": {
+                    "user_id": user_id
+                }
+            }, {
+
                 "$addFields": {
                     "season": {
                         "$switch": {
@@ -181,6 +186,11 @@ def service_cal_graph4(
 
         pipeline = [
             {
+                "$match": {
+                    "user_id": user_id
+                }
+            }, {
+
                 "$addFields": {
                     "season": {
                         "$switch": {
@@ -297,7 +307,7 @@ def service_cal_graph4(
         op = [int(uno['optimized']) for uno in optimized_seasonss]
         return un, op
     else:
-        return 0,0
+        return 0, 0
 
 
 def service_add_power_records(
@@ -351,6 +361,8 @@ def get_max_power(user_id):
                 for device in devices:
                     if 'lamp' in device['name']:
                         peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
+                        pass
                     else:
                         peak_power += device['DC_power_consumption']
             if int(block['area']) == 100:
@@ -358,6 +370,8 @@ def get_max_power(user_id):
                 for device in devices:
                     if 'lamp' in device['name']:
                         peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
+                        pass
                     else:
                         peak_power += device['DC_power_consumption']
             if int(block['area']) == 120:
@@ -365,6 +379,8 @@ def get_max_power(user_id):
                 for device in devices:
                     if 'lamp' in device['name']:
                         peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
+                        pass
                     else:
                         peak_power += device['DC_power_consumption']
 
@@ -400,8 +416,8 @@ def get_max_power(user_id):
                     else:
                         peak_power += device['DC_power_consumption']
 
-        return peak_hour, peak_power
-    return 0,0
+        return peak_hour, peak_power + 810
+    return 0, 0
 
 
 def get_current_season():
@@ -455,8 +471,10 @@ def get_8_cal(
         # block['efficiency'] = efficiency  # Save efficiency in block
         # db["blocks"].update_one({"user_id": str(user_id)}, {"$set": {"efficiency": efficiency}})
 
-        pv_gen = round((math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient[season][int(block['area'])]) * 0.86,2)
-        pv_gen_summer = (math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient['summer'][int(block['area'])]) * 0.86
+        pv_gen = round(
+            (math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient[season][int(block['area'])]) * 0.86, 2)
+        pv_gen_summer = (math.floor((int(block['area']) * 0.75) / 1.65) * dc_coefficient['summer'][
+            int(block['area'])]) * 0.86
         soc = round((pv_gen / pv_gen_summer) * 100, 2)
         gr_em_sa = round(pv_gen * 0.00417, 2)
 
@@ -548,16 +566,16 @@ def get_8_cal(
                 'power_divided_by_ac_dc': power_divided_by_ac_dc
                 }
     else:
-        return  {'pv_gen': 0,
-         'st_ca': 0,
-         'gr_em_sa': 0,
-         'efficiency': 0,
-         'peak_hour': 0,
-         'peak_power': 0,
-         'conversion_per': 0,
-         'investment': 0,
-         'power_divided_by_ac_dc': 0
-         }
+        return {'pv_gen': 0,
+                'st_ca': 0,
+                'gr_em_sa': 0,
+                'efficiency': 0,
+                'peak_hour': 0,
+                'peak_power': 0,
+                'conversion_per': 0,
+                'investment': 0,
+                'power_divided_by_ac_dc': 0
+                }
 
 
 # def upload_excel_file(file: UploadFile = File(...),
