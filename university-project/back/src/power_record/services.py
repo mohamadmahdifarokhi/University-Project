@@ -68,7 +68,7 @@ def service_cal_graph4(
         pipeline = [
             {
                 "$match": {
-                    "user_id": str(user_id)
+                    "user_id": ObjectId(user_id)
                 }
             }, {
 
@@ -187,7 +187,7 @@ def service_cal_graph4(
         pipeline = [
             {
                 "$match": {
-                    "user_id": str(user_id)
+                    "user_id": ObjectId(user_id)
                 }
             }, {
 
