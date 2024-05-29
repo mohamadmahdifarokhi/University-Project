@@ -552,7 +552,7 @@ def get_8_cal(
         print(op, "epwoe")
         print(op[season_dict[season]], "epwoe")
         power_divided_by_ac_dc = round((int((op[season_dict[season]] * 1000) / 63) / pv_gen), 2)
-        efficiency = round(pv_gen / (pv_gen + ((op[season_dict[season]] * 1000) / 63)), 2) * 100
+        efficiency = round(pv_gen / (pv_gen + ((op[season_dict[season]] * 100) / 63)), 2) * 100
 
         # Fetch the records
         return {'pv_gen': pv_gen,
