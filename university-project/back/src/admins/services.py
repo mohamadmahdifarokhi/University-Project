@@ -434,12 +434,25 @@ def service_get_all_user(user_id):
     users = db["users"].find({})
     all_users = []
     for user in users:
-        print(user, "koskos")
+        update_user = {}
+        user_devices = []
+        profile = db["profiles"].find_one({"user_id": str(user_id)})["photo"]
+        block = db["blocks"].find_one({"user_id": str(user_id)})
+        apartment_number = db["apartments"].find_one({"_id": str(block["apartment_id"])})["apartment_no"]
+        for device_id in user["devices"]:
+            device = db["devices"].find_one({"_id": ObjectId(device_id)})["name"]
+            user_devices.append(device)
+        update_user["devices"] = user_devices
+        update_user["apartment_number"] = apartment_number
+        update_user["area"] = block["area"]
+        update_user["unit"] = block["unit"]
+        update_user["profile"] = profile
         user["id"] = str(user["_id"])
         del user["_id"]
         del user["permissions"]
         del user["password"]
-        all_users.append(user)
+        update_user["user"] = user
+        all_users.append(update_user)
     return all_users
 
 
