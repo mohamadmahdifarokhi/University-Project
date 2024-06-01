@@ -14,6 +14,7 @@ from src.apartment.api import router as apartment_router
 from src.power_record.api import router as power_record_router
 from src.pricing.api import router as pricing_router
 from src.solar_panel.routers import router as solar_panel_router
+from src.admins.api import router as admin_router
 import os
 from dotenv import load_dotenv
 from src.db import db
@@ -56,6 +57,7 @@ app.include_router(device_router)
 app.include_router(power_record_router)
 app.include_router(pricing_router)
 app.include_router(solar_panel_router)
+app.include_router(admin_router)
 
 
 # Create tables on startup

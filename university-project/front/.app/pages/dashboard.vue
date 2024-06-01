@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {ref, reactive, computed, watch, onMounted} from 'vue';
 import {useAppStore} from "~/stores/app";
+import {useAuthStore} from "@/stores/auth";
 import {toTypedSchema} from "@vee-validate/zod";
 import {Field, useForm} from 'vee-validate'
 import {z} from 'zod'
@@ -13,6 +14,7 @@ const router = useRouter();
 const app = useAppStore();
 const {orders, categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop} = storeToRefs(app);
 const cate = ref(categories24.value);
+const authStore = useAuthStore();
 
 const areaCustomers = reactive(useAreaCustomers());
 const radialBarTeam = reactive(useRadialBarTeam());
@@ -28,16 +30,36 @@ const fetchMonthRecords = app.fetchMonthRecords;
 const fetch8 = app.fetch8;
 const fetchGraph4 = app.fetchGraph4;
 const powerConsumption = app.powerConsumption;
+const fetch24RecordsAdmin = app.fetch24RecordsAdmin;
+const fetchMonthRecordsAdmin = app.fetchMonthRecordsAdmin;
+const fetchSeasonChartAdmin = app.fetchSeasonChartAdmin;
+const fetchGraph4Admin = app.fetchGraph4Admin;
 
 async function initializeData() {
-  await fetch24Records();
-  await fetchMonthRecords();
-  await fetchselectedDevice();
-  await fetchOrders();
-  await fetch8();
-  await fetchGraph4();
-  await powerConsumption();
+  console.log(authStore.isAdmin, "weifjwoief")
+
+  if (authStore.isAdmin) {
+
+
+    await fetch24RecordsAdmin();
+    await fetchMonthRecordsAdmin();
+    await fetchSeasonChartAdmin();
+    await fetchGraph4Admin();
+
+  } else {
+    await fetch24Records();
+    await fetchMonthRecords();
+    await fetchselectedDevice();
+    await fetchOrders();
+    await fetch8();
+    await fetchGraph4();
+    await powerConsumption();
+
+  }
+
+
 }
+
 
 // Initialize data on component mount
 onMounted(async () => {
@@ -686,7 +708,7 @@ function useDemoBarMulti3() {
 
     <div class="grid grid-cols-12 gap-6">
 
-      <div class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -733,7 +755,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -779,7 +801,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -828,7 +850,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -877,7 +899,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -926,7 +948,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -975,7 +997,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
 
-      <div class="col-span-12 md:col-span-6">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-6">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -1023,7 +1045,7 @@ function useDemoBarMulti3() {
           </div>
         </BaseCard>
       </div>
-      <div class="col-span-12 md:col-span-6">
+      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-6">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -1128,7 +1150,10 @@ function useDemoBarMulti3() {
                     class="text-sm py-1 px-2"
                   >
                     <!-- Options for year selection -->
-                    <option v-for="year in [2020, 2021, 2022, 2023, 2024, 2025]" :key="year" :value="year">{{ year }}</option>
+                    <option v-for="year in [2020, 2021, 2022, 2023, 2024, 2025]" :key="year" :value="year">{{
+                        year
+                      }}
+                    </option>
                   </BaseSelect>
                 </div>
 
@@ -1215,7 +1240,7 @@ function useDemoBarMulti3() {
       </div>
 
 
-      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+      <div v-if="!authStore.isAdmin" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
         <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
           <BaseCard rounded="lg" class="p-6">
             <div class="mb-6 flex items-center justify-between">
@@ -1272,17 +1297,17 @@ function useDemoBarMulti3() {
                 icon="ri:calendar-fill"
               />
             </Field>
-<!--            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">-->
-<!--              <BaseInput-->
-<!--                :model-value="field.value"-->
-<!--                :error="errorMessage"-->
-<!--                @update:model-value="handleChange"-->
-<!--                @blur="handleBlur"-->
-<!--                shape="curved"-->
-<!--                placeholder="Consumption"-->
-<!--                icon="ri:lightbulb-flash-fill"-->
-<!--              />-->
-<!--            </Field>-->
+            <!--            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">-->
+            <!--              <BaseInput-->
+            <!--                :model-value="field.value"-->
+            <!--                :error="errorMessage"-->
+            <!--                @update:model-value="handleChange"-->
+            <!--                @blur="handleBlur"-->
+            <!--                shape="curved"-->
+            <!--                placeholder="Consumption"-->
+            <!--                icon="ri:lightbulb-flash-fill"-->
+            <!--              />-->
+            <!--            </Field>-->
             <div class="flex items-center gap-1 mt-5">
               <button type="submit" class="BaseButtonIcon" rounded="full" small>
                 <BaseButtonIcon rounded="full" small>
@@ -1301,7 +1326,7 @@ function useDemoBarMulti3() {
       </div>
 
       <!-- Create a section to loop through devices -->
-      <div class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+      <div v-if="!authStore.isAdmin" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
         <div class="mb-6 flex items-center justify-between">
           <BaseHeading
             as="h3"
@@ -1335,7 +1360,7 @@ function useDemoBarMulti3() {
     </div>
 
 
-    <div class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
+    <div v-if="!authStore.isAdmin" class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
       <BaseHeading
         as="h3"
         size="md"

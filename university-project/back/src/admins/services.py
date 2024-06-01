@@ -430,17 +430,17 @@ def service_cal_graph4_super_admin(
         return 0, 0
 
 
-
-def service_get_all_user(
-    user_id
-):
+def service_get_all_user(user_id):
     users = db["users"].find({})
-
+    all_users = []
     for user in users:
+        print(user, "koskos")
         user["id"] = str(user["_id"])
         del user["_id"]
-        return user
-
+        del user["permissions"]
+        del user["password"]
+        all_users.append(user)
+    return all_users
 
 
 

@@ -286,11 +286,61 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
+    async fetch24RecordsAdmin() {
+      const accessToken = useCookie('access_token').value;
+
+      try {
+        const response = await axios.get(`${apiUrl}/super-admin/24hour-chart`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+        );
+        if (response.data) {
+          this.categories24 = response.data['categories'];
+          this.values24 = response.data['values'];
+        }
+
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
     async fetchMonthRecords(year = 2024, month = 5) {
       const accessToken = useCookie('access_token').value;
 
       try {
         const response = await axios.get(`${apiUrl}/power-records/month-chart?year=${year}&month=${month}`,
+
+
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+        );
+        if (response.data) {
+          this.valuesMonth = response.data[0];
+          this.categoriesMonth = response.data[1];
+        }
+
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        const {t} = useI18n({useScope: 'local'});
+
+        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
+      }
+    },
+    async fetchMonthRecordsAdmin(year = 2024, month = 5) {
+      const accessToken = useCookie('access_token').value;
+
+      try {
+        const response = await axios.get(`${apiUrl}/super-admin/month-chart?year=${year}&month=${month}`,
 
 
           {
@@ -505,6 +555,29 @@ export const useAppStore = defineStore('app', {
       }
     },
      async fetchGraph4() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          // params: {
+          //   page: page,
+          //   page_size: perPage,
+          // },
+        });
+        // console.log(response.data,'buybuy')
+
+        this.graph4Unop = response.data[0];
+        this.graph4op = response.data[1];
+        // console.log(this.buyOrders,'buybuyz')
+
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+     async fetchGraph4Admin() {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
@@ -750,6 +823,31 @@ export const useAppStore = defineStore('app', {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/power-records/season-chart?year=${year}&season=${season}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.status === 200) {
+          const data = response.data;
+          const datas = data.map(item => item.total_usage);
+          const labels = data.map(item => item._id);
+          this.seasonDatas = datas
+          this.seasonLabels = labels
+          console.log(datas); // list of total_usage
+          console.log(labels); // list of _id
+          // You can also return these values or set them in the state if using a framework like Vue or React
+          return {datas, labels};
+        }
+      } catch (error) {
+        console.error('Error fetching season chart data:', error);
+      }
+    },
+    async fetchSeasonChartAdmin(year = 2024, season = 'Spring') {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/super-admin/season-chart?year=${year}&season=${season}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',

@@ -120,13 +120,12 @@ function statusColor(itemStatus: string) {
                   :title="item.username"
                   :subtitle="item.position"
                   :avatar="item.src"
-                  :badge="item.badge"
                   :initials="item.initials"
                 />
               </template>
               <template #end>
                 <DemoFlexTableCell
-                  label="location"
+                  label="Block"
                   :hide-label="index > 0"
                   class="w-full sm:w-40"
                 >
@@ -137,7 +136,7 @@ function statusColor(itemStatus: string) {
                   </span>
                 </DemoFlexTableCell>
                 <DemoFlexTableCell
-                  label="industry"
+                  label="Apartment"
                   :hide-label="index > 0"
                   class="w-full sm:w-40"
                 >
@@ -148,7 +147,7 @@ function statusColor(itemStatus: string) {
                   </span>
                 </DemoFlexTableCell>
                 <DemoFlexTableCell
-                  label="status"
+                  label="area"
                   :hide-label="index > 0"
                   class="w-full sm:w-16"
                 >
@@ -162,21 +161,21 @@ function statusColor(itemStatus: string) {
                     {{ item.status }}
                   </BaseTag>
                 </DemoFlexTableCell>
-                <DemoFlexTableCell
-                  label="relations"
-                  :hide-label="index > 0"
-                  tablet-hidden
-                  class="w-full sm:w-[160px]"
-                >
-                  <BaseAvatarGroup
-                    size="xs"
-                    :avatars="item.relations"
-                    :limit="2"
-                  />
-                </DemoFlexTableCell>
+<!--                <DemoFlexTableCell-->
+<!--                  label="relations"-->
+<!--                  :hide-label="index > 0"-->
+<!--                  tablet-hidden-->
+<!--                  class="w-full sm:w-[160px]"-->
+<!--                >-->
+<!--                  <BaseAvatarGroup-->
+<!--                    size="xs"-->
+<!--                    :avatars="item.relations"-->
+<!--                    :limit="2"-->
+<!--                  />-->
+<!--                </DemoFlexTableCell>-->
                 <DemoFlexTableCell label="action" :hide-label="index > 0">
                   <BaseButtonAction color="muted">
-                    <span>View</span>
+                    <span>Devices</span>
                   </BaseButtonAction>
                 </DemoFlexTableCell>
               </template>
