@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import {ref, computed, watch, onMounted} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useAppStore} from '~/stores/app'
+import {storeToRefs} from 'pinia'
+
 definePageMeta({
   title: 'Flex List',
   middleware: ['authenticated'],
@@ -18,6 +23,8 @@ const page = computed(() => parseInt((route.query.page as string) ?? '1'))
 
 const filter = ref('')
 const perPage = ref(10)
+const selectedUserDevices = ref(null)
+const isModalOpen = ref(false)
 
 watch([filter, perPage], () => {
   router.push({
@@ -35,11 +42,11 @@ const query = computed(() => {
   }
 })
 
-const { data, pending, error, refresh } = await useFetch(
+const {data, pending, error, refresh} = await useFetch(
   '/api/company/candidates',
   {
-    query,
-  },
+    query: query.value,
+  }
 )
 
 function statusColor(itemStatus: string) {
@@ -51,9 +58,36 @@ function statusColor(itemStatus: string) {
     case 'suspended':
       return 'warning'
     default:
-      break
+      return 'default'
   }
 }
+
+async function fetchUserDevices(devices) {
+  try {
+    // const response = await fetch(`/api/company/candidates/${userId}/devices`)
+    // if (response.ok) {
+    selectedUserDevices.value = devices
+    // } else {
+    // console.error('Error fetching user devices:', response.statusText)
+    // }
+    isModalOpen.value = true
+  } catch (error) {
+    console.error('Error fetching user devices:', error)
+  }
+}
+
+const app = useAppStore()
+
+const {allUsers} = storeToRefs(app)
+const fetchusers = app.fetchusers
+
+async function initializeData() {
+  await fetchusers()
+}
+
+onMounted(async () => {
+  await initializeData()
+})
 </script>
 
 <template>
@@ -74,7 +108,7 @@ function statusColor(itemStatus: string) {
           Manage
         </BaseButton>
         <BaseButton color="primary" class="w-full sm:w-32">
-          <Icon name="lucide:plus" class="size-4" />
+          <Icon name="lucide:plus" class="size-4"/>
           <span>Add User</span>
         </BaseButton>
       </template>
@@ -89,7 +123,7 @@ function statusColor(itemStatus: string) {
                 class="block dark:hidden"
                 src="/img/illustrations/placeholders/flat/placeholder-search-4.svg"
                 alt="Placeholder image"
-              >
+              />
               <img
                 class="hidden dark:block"
                 src="/img/illustrations/placeholders/flat/placeholder-search-4-dark.svg"
@@ -108,7 +142,7 @@ function statusColor(itemStatus: string) {
             leave-to-class="opacity-0 -translate-x-full"
           >
             <DemoFlexTableRow
-              v-for="(item, index) in data?.data"
+              v-for="(item, index) in allUsers"
               :key="index"
               rounded="sm"
               spaced
@@ -117,22 +151,22 @@ function statusColor(itemStatus: string) {
                 <DemoFlexTableStart
                   label="user"
                   :hide-label="index > 0"
-                  :title="item.username"
+                  :title="item.user.email"
                   :subtitle="item.position"
-                  :avatar="item.src"
+                  :avatar="`/img/avatars/${item.profile}.svg`"
                   :initials="item.initials"
                 />
               </template>
               <template #end>
                 <DemoFlexTableCell
-                  label="Block"
+                  label="Unit"
                   :hide-label="index > 0"
                   class="w-full sm:w-40"
                 >
                   <span
                     class="text-muted-500 dark:text-muted-400 font-sans text-sm"
                   >
-                    {{ item.location }}
+                    {{ item.unit }}
                   </span>
                 </DemoFlexTableCell>
                 <DemoFlexTableCell
@@ -143,7 +177,7 @@ function statusColor(itemStatus: string) {
                   <span
                     class="text-muted-500 dark:text-muted-400 font-sans text-sm"
                   >
-                    {{ item.industry }}
+                    {{ item.apartment_number }}
                   </span>
                 </DemoFlexTableCell>
                 <DemoFlexTableCell
@@ -158,23 +192,11 @@ function statusColor(itemStatus: string) {
                     size="sm"
                     class="capitalize"
                   >
-                    {{ item.status }}
+                    {{ item.area }}
                   </BaseTag>
                 </DemoFlexTableCell>
-<!--                <DemoFlexTableCell-->
-<!--                  label="relations"-->
-<!--                  :hide-label="index > 0"-->
-<!--                  tablet-hidden-->
-<!--                  class="w-full sm:w-[160px]"-->
-<!--                >-->
-<!--                  <BaseAvatarGroup-->
-<!--                    size="xs"-->
-<!--                    :avatars="item.relations"-->
-<!--                    :limit="2"-->
-<!--                  />-->
-<!--                </DemoFlexTableCell>-->
                 <DemoFlexTableCell label="action" :hide-label="index > 0">
-                  <BaseButtonAction color="muted">
+                  <BaseButtonAction color="muted" @click="fetchUserDevices(item.devices)">
                     <span>Devices</span>
                   </BaseButtonAction>
                 </DemoFlexTableCell>
@@ -192,5 +214,37 @@ function statusColor(itemStatus: string) {
         </div>
       </div>
     </TairoContentWrapper>
+
+    <TairoModal
+      :open="isModalOpen"
+      size="lg"
+      @close="isModalOpen = false"
+    >
+      <template #header>
+        <div class="flex w-full items-center justify-between p-4 md:p-6">
+          <h3 class="font-heading text-muted-900 text-lg font-medium leading-6 dark:text-white">
+            User Devices
+          </h3>
+          <BaseButtonClose @click="isModalOpen = false"/>
+        </div>
+      </template>
+      <div class="p-4 md:p-6">
+        <div v-if="selectedUserDevices && selectedUserDevices.length > 0">
+          <ul>
+            <li v-for="device in selectedUserDevices" :key="device.id">
+              {{ device }}
+            </li>
+          </ul>
+        </div>
+        <div v-else>
+          Loading devices...
+        </div>
+      </div>
+      <template #footer>
+        <div class="p-4 md:p-6">
+          <BaseButton @click="isModalOpen = false">Close</BaseButton>
+        </div>
+      </template>
+    </TairoModal>
   </div>
 </template>

@@ -14,6 +14,7 @@ export const useAppStore = defineStore('app', {
     product: ref(),
     devices: [],
     records: [],
+    allUsers: [],
     cal8: {},
     area: ref(''),
     apartment_no: ref(''),
@@ -594,6 +595,28 @@ export const useAppStore = defineStore('app', {
 
         this.graph4Unop = response.data[0];
         this.graph4op = response.data[1];
+        // console.log(this.buyOrders,'buybuyz')
+
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    },
+     async fetchusers() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/super-admin/all_users`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          // params: {
+          //   page: page,
+          //   page_size: perPage,
+          // },
+        });
+        // console.log(response.data,'buybuy')
+
+        this.allUsers = response.data;
         // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {

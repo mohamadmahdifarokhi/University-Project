@@ -10,7 +10,7 @@ from src.auth.models import User
 from src.auth.secures import get_current_user
 
 
-def service_show_records_on_chart_super_admin(user_id, date=None):  
+def service_show_records_on_chart_super_admin(user_id, date=None):
     if date is None:
         date = datetime.now().date()
     else:
@@ -110,7 +110,6 @@ def service_show_records_on_chart_monthly_super_admin(user_id, year, month):
     ]
 
     return formatted_output, categories
-
 
 
 def get_season_dates(season, year):
@@ -436,16 +435,31 @@ def service_get_all_user(user_id):
     for user in users:
         update_user = {}
         user_devices = []
-        profile = db["profiles"].find_one({"user_id": str(user_id)})["photo"]
-        block = db["blocks"].find_one({"user_id": str(user_id)})
-        apartment_number = db["apartments"].find_one({"_id": str(block["apartment_id"])})["apartment_no"]
-        for device_id in user["devices"]:
-            device = db["devices"].find_one({"_id": ObjectId(device_id)})["name"]
-            user_devices.append(device)
+        profile = db["profiles"].find_one({"user_id": str(user['_id'])})["photo"]
+        block = db["blocks"].find_one({"user_id": str(user['_id'])})
+        if block:
+            apartment = db["apartments"].find_one({"_id": ObjectId(block["apartment_id"])})
+            if apartment:
+                apartment_no = apartment["apartment_no"]
+
+            else:
+                apartment_no = None
+        else:
+            apartment_no = None
+
+        if 'devices' in user.keys():
+            for device_id in user["devices"]:
+                print(device_id)
+                device = db["device"].find_one({"_id": ObjectId(device_id)})
+                print(device)
+                if device:
+                    user_devices.append(device["name"])
+
         update_user["devices"] = user_devices
-        update_user["apartment_number"] = apartment_number
-        update_user["area"] = block["area"]
-        update_user["unit"] = block["unit"]
+        if block:
+            update_user["apartment_number"] = apartment_no
+            update_user["area"] = block["area"]
+            update_user["unit"] = block["unit"]
         update_user["profile"] = profile
         user["id"] = str(user["_id"])
         del user["_id"]
@@ -454,71 +468,3 @@ def service_get_all_user(user_id):
         update_user["user"] = user
         all_users.append(update_user)
     return all_users
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
