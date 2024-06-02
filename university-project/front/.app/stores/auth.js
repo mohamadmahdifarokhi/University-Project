@@ -6,6 +6,7 @@ const apiUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL}`;
 export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = ref(false);
   const isAdmin = ref(false);
+  const isMng = ref(false);
 
   function setAuthenticated(auth) {
     isAuthenticated.value = auth;
@@ -13,6 +14,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   function setIsAdmin(auth) {
     isAdmin.value = auth;
+  }
+
+  function setIsMng(auth) {
+    isMng.value = auth;
   }
 
   async function checkAccessToken() {
@@ -36,8 +41,11 @@ export const useAuthStore = defineStore('auth', () => {
             console.log("asawdeqwewqd")
 
           if (response.data.scopes.includes('admin')) {
-            console.log("qweqwewqewww")
             this.setIsAdmin(true)
+
+          }
+          if (response.data.scopes.includes('manager')) {
+            this.setIsMng(true)
 
           }
 
@@ -91,6 +99,9 @@ export const useAuthStore = defineStore('auth', () => {
         setAuthenticated(true);
         if ('admin' in response.data.scopes) {
           this.setIsAdmin(true)
+        }
+         if ('manager' in response.data.scopes) {
+          this.setIsMng(true)
         }
         if (!callBackUrl.startsWith('http')) {
           router.push(callBackUrl);
@@ -379,13 +390,16 @@ export const useAuthStore = defineStore('auth', () => {
     deleteCookie('email');
     isAuthenticated.value = false;
     isAdmin.value = false;
+    isMng.value = false;
   }
 
   return {
     isAuthenticated,
     isAdmin,
+    isMng,
     setAuthenticated,
     setIsAdmin,
+    setIsMng,
     checkAccessToken,
     login,
     loginWithGoogle,
