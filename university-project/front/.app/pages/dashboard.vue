@@ -30,23 +30,35 @@ const fetchMonthRecords = app.fetchMonthRecords;
 const fetch8 = app.fetch8;
 const fetchGraph4 = app.fetchGraph4;
 const powerConsumption = app.powerConsumption;
+
 const fetch24RecordsAdmin = app.fetch24RecordsAdmin;
 const fetchMonthRecordsAdmin = app.fetchMonthRecordsAdmin;
 const fetchSeasonChartAdmin = app.fetchSeasonChartAdmin;
 const fetchGraph4Admin = app.fetchGraph4Admin;
 
+
+const fetch24RecordsMng = app.fetch24RecordsMng;
+const fetchMonthRecordsMng = app.fetchMonthRecordsMng;
+const fetchSeasonChartMng = app.fetchSeasonChartMng;
+// const fetchGraph4Mng = app.fetchGraph4Mng;
+
 async function initializeData() {
-  console.log(authStore.isAdmin, "weifjwoief")
+  console.log(authStore.isAdmin, "weifjwoief");
+  console.log(authStore.isMng, "weifjwoief");
 
   if (authStore.isAdmin) {
-
-
     await fetch24RecordsAdmin();
     await fetchMonthRecordsAdmin();
-    await fetchSeasonChartAdmin();
+    // await fetchSeasonChartAdmin();
     await fetchGraph4Admin();
-
-  } else {
+  }
+  if (authStore.isMng) {
+    await fetch24RecordsMng();
+    await fetchMonthRecordsMng();
+    // await fetchSeasonChartMng();
+    // await fetchGraph4Mng();
+  }
+  if (!authStore.isMng || authStore.isAdmin) {
     await fetch24Records();
     await fetchMonthRecords();
     await fetchselectedDevice();
@@ -54,12 +66,8 @@ async function initializeData() {
     await fetch8();
     await fetchGraph4();
     await powerConsumption();
-
   }
-
-
 }
-
 
 // Initialize data on component mount
 onMounted(async () => {

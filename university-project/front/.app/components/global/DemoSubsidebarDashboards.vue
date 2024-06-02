@@ -246,6 +246,6 @@ const authStore = useAuthStore();
     </template>
 
     <TairoSubsidebarMenu :navigation="navigation"/>
-    <TairoSubsidebarMenu v-if="authStore.isAdmin" :navigation="navigationAdmin"/>
+    <TairoSubsidebarMenu v-if="authStore.isAdmin || authStore.isMng" :navigation="navigationAdmin"/>
   </TairoSubsidebar>
 </template>

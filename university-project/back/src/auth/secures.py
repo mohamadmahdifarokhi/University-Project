@@ -176,3 +176,15 @@ def get_admin_user(user: User = Security(get_current_user, scopes=["user", "admi
         User: The current authenticated user.
     """
     return user
+
+def get_manager_user(user: User = Security(get_current_user, scopes=["user", "manager"])):
+    """
+    Get the user based on the current authentication.
+
+    Args:
+        user (User): The current authenticated user.
+
+    Returns:
+        User: The current authenticated user.
+    """
+    return user

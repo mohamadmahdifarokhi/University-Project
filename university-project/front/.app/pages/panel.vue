@@ -3,6 +3,7 @@ import {ref, computed, watch, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useAppStore} from '~/stores/app'
 import {storeToRefs} from 'pinia'
+import {useAuthStore} from "~/stores/auth";
 
 definePageMeta({
   title: 'Flex List',
@@ -41,6 +42,7 @@ const query = computed(() => {
     page: page.value,
   }
 })
+const authStore = useAuthStore();
 
 const {data, pending, error, refresh} = await useFetch(
   '/api/company/candidates',
@@ -80,9 +82,17 @@ const app = useAppStore()
 
 const {allUsers} = storeToRefs(app)
 const fetchusers = app.fetchusers
+const fetchusersMng = app.fetchusersMng
 
 async function initializeData() {
+  if (authStore.isAdmin) {
   await fetchusers()
+
+  }
+  if (authStore.isMng) {
+  await fetchusersMng()
+
+  }
 }
 
 onMounted(async () => {

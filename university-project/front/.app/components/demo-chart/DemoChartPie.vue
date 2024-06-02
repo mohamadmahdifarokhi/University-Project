@@ -7,6 +7,7 @@ import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useAppStore } from "~/stores/app";
 import { storeToRefs } from "pinia";
 import { useI18n } from 'vue-i18n';
+import {useAuthStore} from "~/stores/auth";
 const { t } = useI18n({ useScope: "local" });
 
 
@@ -14,14 +15,29 @@ const app = useAppStore();
 const { seasonDatas, seasonLabels  } = storeToRefs(app);
 
 const demoPie = reactive(useDemoPie())
+const authStore = useAuthStore();
 
 
 const fetchSeasonChart = app.fetchSeasonChart;
+const fetchSeasonChartAdmin = app.fetchSeasonChartAdmin;
+const fetchSeasonChartMng = app.fetchSeasonChartMng;
+
 
 async function initializeData() {
-  await fetchSeasonChart();
-}
+  if (authStore.isAdmin) {
+  await fetchSeasonChartAdmin()
 
+  }
+  if (authStore.isMng) {
+  await fetchSeasonChartMng()
+
+  }
+  if (!authStore.isMng || authStore.isAdmin) {
+  await fetchSeasonChart();
+
+  }
+
+}
 // Initialize data on component mount
 onMounted(async () => {
   await initializeData();

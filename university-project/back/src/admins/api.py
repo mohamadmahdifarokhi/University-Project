@@ -4,7 +4,7 @@ from .schemas import *
 from .services import *
 from src.auth.models import User
 from src.auth.secures import get_admin_user
-from ..auth.secures import get_user
+from ..auth.secures import get_user, get_manager_user
 
 router = APIRouter(
     prefix="/super-admin",
@@ -65,10 +65,10 @@ def get_all_users(
 
 @router.get("/24hour-chart-block", summary="shows all consumptions of devices in recent 24 hours for block admin")
 def power_record_24_block_admin(
-        user: User = Depends(get_admin_user)
+        user: User = Depends(get_manager_user)
 ):
     return service_show_records_on_chart_block_admin(
-        user_id=user["_id"]
+        admin_user_id=user["_id"]
     )
 
 
@@ -76,12 +76,12 @@ def power_record_24_block_admin(
 def power_record_monthly_block_admin(
         year,
         month,
-        user: User = Depends(get_admin_user),
+        user: User = Depends(get_manager_user),
 ):
     return service_show_records_on_chart_monthly_block_admin(
         year=year,
         month=month,
-        user_id=user["_id"]
+        admin_user_id=user["_id"]
     )
 
 
@@ -89,27 +89,17 @@ def power_record_monthly_block_admin(
 def power_record_seasonal_block_admin(
         year: int,
         season,
-        user: User = Depends(get_admin_user),
+        user: User = Depends(get_manager_user),
 ):
     return service_show_seasonal_records_on_chart_block_admin(
         year=year,
         season=season,
-        user_id=user["_id"]
-    )
-
-@router.get("/cal_graph4-block", summary="shows all consumptions of devices in requested month for block admin")
-def cal_unoptimized_super_admin(
-        user: User = Depends(get_admin_user),
-):
-    return service_cal_graph4_block_admin(
-        user_id=user["_id"]
+        admin_user_id=user["_id"]
     )
 
 
 @router.get("/all_users-block", summary="shows all users")
 def get_all_users_block(
-        user: User = Depends(get_admin_user),
+        user: User = Depends(get_manager_user),
 ):
-    return service_get_all_user_block(user_id=user["_id"])
-
-
+    return service_get_all_user_block(admin_user_id=user["_id"])
