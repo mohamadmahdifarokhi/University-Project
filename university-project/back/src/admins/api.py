@@ -97,7 +97,13 @@ def power_record_seasonal_block_admin(
         user_id=user["_id"]
     )
 
-
+@router.get("/cal_graph4-block", summary="shows all consumptions of devices in requested month for block admin")
+def cal_unoptimized_super_admin(
+        user: User = Depends(get_admin_user),
+):
+    return service_cal_graph4_block_admin(
+        user_id=user["_id"]
+    )
 
 
 @router.get("/all_users-block", summary="shows all users")
