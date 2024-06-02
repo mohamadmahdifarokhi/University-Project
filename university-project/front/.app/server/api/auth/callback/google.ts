@@ -29,9 +29,9 @@ export default defineEventHandler(async (event) => {
       await setCookie(event, 'email', responseData.email)
 
       // Set cookies
-      // document.cookie = `refresh_token=${responseData.refresh_token}; domain=localhost`;
-      // document.cookie = `access_token=${responseData.access_token}; domain=localhost`;
-      // document.cookie = `email=${responseData.email}; domain=localhost`;
+      // document.cookie = `refresh_token=${responseData.refresh_token}; domain=188.34.155.23`;
+      // document.cookie = `access_token=${responseData.access_token}; domain=188.34.155.23`;
+      // document.cookie = `email=${responseData.email}; domain=188.34.155.23`;
 
       // Perform any additional necessary actions
       // e.g., call addToOrderFromSession or any other function

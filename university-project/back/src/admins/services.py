@@ -431,42 +431,52 @@ def service_cal_graph4_super_admin(
 
 def service_get_all_user(user_id):
     users = db["users"].find({})
+    print(users, "wefpkweof")
     all_users = []
     for user in users:
+        print("qweqwd")
         update_user = {}
         user_devices = []
-        profile = db["profiles"].find_one({"user_id": str(user['_id'])})["photo"]
-        block = db["blocks"].find_one({"user_id": str(user['_id'])})
-        if block:
-            apartment = db["apartments"].find_one({"_id": ObjectId(block["apartment_id"])})
-            if apartment:
-                apartment_no = apartment["apartment_no"]
+        profile = db["profiles"].find_one({"user_id": str(user['_id'])})
+        if profile:
+            block = db["blocks"].find_one({"user_id": str(user['_id'])})
+            if block:
+                apartment = db["apartments"].find_one({"_id": ObjectId(block["apartment_id"])})
+                if apartment:
+                    apartment_no = apartment["apartment_no"]
 
+                else:
+                    apartment_no = None
             else:
                 apartment_no = None
-        else:
-            apartment_no = None
 
-        if 'devices' in user.keys():
-            for device_id in user["devices"]:
-                print(device_id)
-                device = db["device"].find_one({"_id": ObjectId(device_id)})
-                print(device)
-                if device:
-                    user_devices.append(device["name"])
+            if 'devices' in user.keys():
+                for device_id in user["devices"]:
+                    print(device_id)
+                    device = db["device"].find_one({"_id": ObjectId(device_id)})
+                    print(device)
+                    if device:
+                        user_devices.append(device["name"])
 
-        update_user["devices"] = user_devices
-        if block:
-            update_user["apartment_number"] = apartment_no
-            update_user["area"] = block["area"]
-            update_user["unit"] = block["unit"]
-        update_user["profile"] = profile
-        user["id"] = str(user["_id"])
-        del user["_id"]
-        del user["permissions"]
-        del user["password"]
-        update_user["user"] = user
-        all_users.append(update_user)
+            update_user["devices"] = user_devices
+            print("qwwwwwwwwwwwwweqwd")
+
+            if block:
+                update_user["apartment_number"] = apartment_no
+                update_user["area"] = block["area"]
+                update_user["unit"] = block["unit"]
+            print("rrrrrrrrrrrrrrrrrrrrrrrr")
+            
+            update_user["profile"] = profile['photo']
+            user["id"] = str(user["_id"])
+            del user["_id"]
+            del user["permissions"]
+            del user["password"]
+            update_user["user"] = user
+            print("bbbbbbbbbbbbbbbbbbbbbbbbb")
+
+            all_users.append(update_user)
+    print(all_users,"owpekd")
     return all_users
 
 
