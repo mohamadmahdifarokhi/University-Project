@@ -61,3 +61,49 @@ def get_all_users(
         user: User = Depends(get_admin_user),
 ):
     return service_get_all_user(user_id=user["_id"])
+
+
+@router.get("/24hour-chart-block", summary="shows all consumptions of devices in recent 24 hours for block admin")
+def power_record_24_super_admin(
+        user: User = Depends(get_admin_user)
+):
+    return service_show_records_on_chart_block_admin(
+        user_id=user["_id"]
+    )
+
+
+@router.get("/month-chart-block", summary="shows all consumptions of devices in requested month for super admin")
+def power_record_monthly_super_admin(
+        year,
+        month,
+        user: User = Depends(get_admin_user),
+):
+    return service_show_records_on_chart_monthly_block_admin(
+        year=year,
+        month=month,
+        user_id=user["_id"]
+    )
+
+
+@router.get("/season-chart", summary="shows all consumptions of devices in requested season for super admin")
+def power_record_seasonal_super_admin(
+        year: int,
+        season,
+        user: User = Depends(get_admin_user),
+):
+    return service_show_seasonal_records_on_chart_block_admin(
+        year=year,
+        season=season,
+        user_id=user["_id"]
+    )
+
+
+
+
+@router.get("/all_users-block", summary="shows all users")
+def get_all_users(
+        user: User = Depends(get_admin_user),
+):
+    return service_get_all_user_block(user_id=user["_id"])
+
+

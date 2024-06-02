@@ -468,3 +468,242 @@ def service_get_all_user(user_id):
         update_user["user"] = user
         all_users.append(update_user)
     return all_users
+
+
+def service_show_records_on_chart_block_admin(admin_user_id, date=None):
+    if date is None:
+        date = datetime.now().date()
+    else:
+        date = datetime.strptime(date, '%Y-%m-%d').date()
+
+    start_time = datetime.combine(date, datetime.min.time())
+    end_time = datetime.combine(date, datetime.max.time())
+
+
+    apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})
+    all_blocks = db["blocks"].find({"apartment_id": str(apartment["_id"])})
+
+    user_ids = [ObjectId(str(block["user_id"])) for block in all_blocks]
+
+    # Aggregation pipeline to sum up consumption for each device across all users
+    pipeline = [
+    {
+        "$match": {
+            "user_id": {"$in": user_ids},
+            "start_time": {"$gte": start_time, "$lt": end_time}
+        }
+    },
+    {
+        "$group": {
+            "_id": "$device_name",  # Group by device name
+            "total_consumption": {"$sum": "$consumption"}  # Sum up consumption
+        }
+    },
+    {
+        "$project": {
+            "_id": 0,
+            "device_name": "$_id",
+            "total_consumption": 1
+        }
+    }
+    ]
+
+    results = db["power_records"].aggregate(pipeline)
+    result_dict = {doc["device_name"]: doc["total_consumption"] for doc in results}
+
+    res = {
+    "categories": list(result_dict.keys()),
+    "values": list(result_dict.values())
+    }
+
+    return res
+
+
+def service_show_records_on_chart_monthly_block_admin(admin_user_id, year, month):
+    year = int(year)
+    month = int(month)
+    start_date = datetime(year, month, 1)
+    end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+    apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})
+    all_blocks = db["blocks"].find({"apartment_id": str(apartment["_id"])})
+
+    user_ids = [ObjectId(str(block["user_id"])) for block in all_blocks]
+
+    pipeline = [
+    {
+        '$match': {
+            'user_id': {'$in': user_ids},
+            'start_time': {'$gte': start_date},
+            'end_time': {'$lt': end_date}
+        }
+    },
+    {
+        '$group': {
+            '_id': {
+                'device_name': '$device_name',
+                'month': {'$dateToString': {'format': '%Y-%m', 'date': '$start_time'}}
+            },
+            'total_consumption': {'$sum': '$consumption'}
+        }
+    },
+    {
+        '$project': {
+            '_id': 0,
+            'device_name': '$_id.device_name',
+            'month': '$_id.month',
+            'total_consumption': 1
+        }
+    },
+    {
+        '$sort': {
+            'device_name': 1,
+            'month': 1
+        }
+    }
+]
+
+    results = list(db["power_records"].aggregate(pipeline))
+
+    categories = sorted({record['month'] for record in results})
+
+    device_data = {}
+    for record in results:
+        device_name = record['device_name']
+        if device_name not in device_data:
+            device_data[device_name] = {month: 0 for month in categories}
+            device_data[device_name][record['month']] = record['total_consumption']
+
+    # Format the output
+    formatted_output = [
+        {
+            'name': device_name,
+            'data': [device_data[device_name][month] for month in categories]
+        }
+        for device_name in sorted(device_data)
+    ]
+
+    return formatted_output, categories
+
+
+
+def service_show_seasonal_records_on_chart_block_admin(admin_user_id, season, year):
+    # Get the start and end dates for the specified season and year
+    start_date, end_date = get_season_dates(season, year)
+
+    # Find the apartment by admin_user_id
+    apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})
+    
+    if not apartment:
+        print("Apartment not found")
+        return []
+
+    # Find all blocks associated with the apartment
+    all_blocks = db["blocks"].find({"apartment_id": str(apartment["_id"])})
+
+    # Collect all user_ids from the blocks
+    user_ids = [ObjectId(str(block["user_id"])) for block in all_blocks]
+
+    # Define the aggregation pipeline to sum up seasonal consumption for each device across all users
+    pipeline = [
+        {
+            '$match': {
+                'user_id': {'$in': user_ids},
+                'start_time': {'$gte': start_date, '$lt': end_date}
+            }
+        },
+        {
+            '$group': {
+                '_id': '$device_name',
+                'total_usage': {'$sum': '$consumption'}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'device_name': '$_id',
+                'total_usage': 1
+            }
+        },
+        {
+            '$sort': {
+                'device_name': 1
+            }
+        }
+    ]
+
+    try:
+        # Execute the aggregation pipeline
+        result = list(db["power_records"].aggregate(pipeline))
+        
+        # Format the result into the required output
+        formatted_output = [
+            {
+                'device_name': record['device_name'],
+                'total_usage': record['total_usage']
+            }
+            for record in result
+        ]
+        
+        return formatted_output
+
+    except Exception as e:
+        print("An error occurred:", e)
+        return []
+
+
+def service_show_seasonal_records_on_chart_block_admin():
+    pass
+
+
+
+def service_get_all_user_block(admin_user_id):
+    # Find the apartment by admin_user_id
+    apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})
+    if not apartment:
+        return []
+
+    # Find all blocks associated with the apartment
+    all_blocks = db["blocks"].find({"apartment_id": str(apartment["_id"])})
+    user_ids = [ObjectId(str(block["user_id"])) for block in all_blocks]
+
+    # Find users associated with the blocks
+    users = db["users"].find({"_id": {"$in": user_ids}})
+    all_users = []
+
+    for user in users:
+        update_user = {}
+        user_devices = []
+
+        # Find the user's profile photo
+        profile = db["profiles"].find_one({"user_id": str(user['_id'])})["photo"]
+
+        # Find the block associated with the user
+        block = db["blocks"].find_one({"user_id": str(user['_id'])})
+        if block:
+            apartment = db["apartments"].find_one({"_id": ObjectId(block["apartment_id"])})
+            apartment_no = apartment["apartment_no"] if apartment else None
+        else:
+            apartment_no = None
+
+        # Gather device names associated with the user
+        if 'devices' in user:
+            for device_id in user["devices"]:
+                device = db["device"].find_one({"_id": ObjectId(device_id)})
+                if device:
+                    user_devices.append(device["name"])
+
+        update_user["devices"] = user_devices
+        if block:
+            update_user["apartment_number"] = apartment_no
+            update_user["area"] = block["area"]
+            update_user["unit"] = block["unit"]
+
+        update_user["profile"] = profile
+        user["id"] = str(user["_id"])
+        del user["_id"]
+        del user["permissions"]
+        del user["password"]
+        update_user["user"] = user
+        all_users.append(update_user)
+
+    return all_users
