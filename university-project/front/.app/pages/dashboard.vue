@@ -58,7 +58,7 @@ async function initializeData() {
     // await fetchSeasonChartMng();
     // await fetchGraph4Mng();
   }
-  if (!authStore.isMng || authStore.isAdmin) {
+  if (!authStore.isMng && !authStore.isAdmin) {
     await fetch24Records();
     await fetchMonthRecords();
     await fetchselectedDevice();

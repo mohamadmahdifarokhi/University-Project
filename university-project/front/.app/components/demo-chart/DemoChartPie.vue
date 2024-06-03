@@ -32,7 +32,7 @@ async function initializeData() {
   await fetchSeasonChartMng()
 
   }
-  if (!authStore.isMng || authStore.isAdmin) {
+  if (!authStore.isMng && !authStore.isAdmin) {
   await fetchSeasonChart();
 
   }
