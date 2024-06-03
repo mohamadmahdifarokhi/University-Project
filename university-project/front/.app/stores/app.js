@@ -605,7 +605,7 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-     async fetchGraph4() {
+    async fetchGraph4() {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
@@ -628,7 +628,7 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-     async fetchGraph4Admin() {
+    async fetchGraph4Admin() {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
@@ -651,10 +651,10 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-     async fetchGraph4Mng() {
+    async fetchGraph4Mng() {
       try {
         const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/power-records/cal_graph4-block`, {
+        const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -666,15 +666,15 @@ export const useAppStore = defineStore('app', {
         });
         // console.log(response.data,'buybuy')
 
-        this.graph4Unop = response.data[0];
-        this.graph4op = response.data[1];
+        this.graph4Unop = response.data[0].map(item => item * 0.75);
+        this.graph4op = response.data[1].map(item => item * 0.75);
         // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
     },
-     async fetchusers() {
+    async fetchusers() {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/super-admin/all_users`, {
@@ -696,7 +696,7 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-     async fetchusersMng() {
+    async fetchusersMng() {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/super-admin/all_users-block`, {
@@ -765,8 +765,6 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-
-
 
 
     async addDevice(deviceId) {
