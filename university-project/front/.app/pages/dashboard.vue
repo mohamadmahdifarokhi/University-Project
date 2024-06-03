@@ -39,8 +39,8 @@ const fetchGraph4Admin = app.fetchGraph4Admin;
 
 const fetch24RecordsMng = app.fetch24RecordsMng;
 const fetchMonthRecordsMng = app.fetchMonthRecordsMng;
-const fetchSeasonChartMng = app.fetchSeasonChartMng;
-// const fetchGraph4Mng = app.fetchGraph4Mng;
+// const fetchSeasonChartMng = app.fetchSeasonChartMng;
+const fetchGraph4Mng = app.fetchGraph4Mng;
 
 async function initializeData() {
   console.log(authStore.isAdmin, "weifjwoief");
@@ -56,7 +56,7 @@ async function initializeData() {
     await fetch24RecordsMng();
     await fetchMonthRecordsMng();
     // await fetchSeasonChartMng();
-    // await fetchGraph4Mng();
+    await fetchGraph4Mng();
   }
   if (!authStore.isMng && !authStore.isAdmin) {
     await fetch24Records();
