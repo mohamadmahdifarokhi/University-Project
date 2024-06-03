@@ -20,36 +20,17 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
-const page = computed(() => parseInt((route.query.page as string) ?? '1'))
 
 const filter = ref('')
-const perPage = ref(10)
 const selectedUserDevices = ref(null)
 const isModalOpen = ref(false)
 
-watch([filter, perPage], () => {
-  router.push({
-    query: {
-      page: undefined,
-    },
-  })
-})
 
-const query = computed(() => {
-  return {
-    filter: filter.value,
-    perPage: perPage.value,
-    page: page.value,
-  }
-})
+
+
 const authStore = useAuthStore();
 
-const {data, pending, error, refresh} = await useFetch(
-  '/api/company/candidates',
-  {
-    query: query.value,
-  }
-)
+
 
 function statusColor(itemStatus: string) {
   switch (itemStatus) {
@@ -86,12 +67,10 @@ const fetchusersMng = app.fetchusersMng
 
 async function initializeData() {
   if (authStore.isAdmin) {
-  await fetchusers()
-
+    await fetchusers()
   }
   if (authStore.isMng) {
-  await fetchusersMng()
-
+    await fetchusersMng()
   }
 }
 
@@ -103,25 +82,6 @@ onMounted(async () => {
 <template>
   <div>
     <TairoContentWrapper>
-      <template #left>
-        <BaseInput
-          v-model="filter"
-          icon="lucide:search"
-          placeholder="Filter users..."
-          :classes="{
-            wrapper: 'w-full sm:w-auto',
-          }"
-        />
-      </template>
-      <template #right>
-        <BaseButton class="w-full sm:w-32">
-          Manage
-        </BaseButton>
-        <BaseButton color="primary" class="w-full sm:w-32">
-          <Icon name="lucide:plus" class="size-4"/>
-          <span>Add User</span>
-        </BaseButton>
-      </template>
       <div>
         <div v-if="!pending && data?.data.length === 0">
           <BasePlaceholderPage
@@ -213,14 +173,6 @@ onMounted(async () => {
               </template>
             </DemoFlexTableRow>
           </TransitionGroup>
-        </div>
-        <div v-if="!pending && data?.data.length !== 0" class="mt-4">
-          <BasePagination
-            :total-items="data?.total ?? 0"
-            :item-per-page="perPage"
-            :current-page="page"
-            rounded="lg"
-          />
         </div>
       </div>
     </TairoContentWrapper>

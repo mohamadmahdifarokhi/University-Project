@@ -724,7 +724,7 @@ function useDemoBarMulti3() {
 
     <div class="grid grid-cols-12 gap-6">
 
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -771,7 +771,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -817,7 +817,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -866,7 +866,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -915,7 +915,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -964,7 +964,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
       <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-4">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -1013,7 +1013,7 @@ function useDemoBarMulti3() {
         </BaseCard>
       </div>
 
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-6">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -1061,7 +1061,7 @@ function useDemoBarMulti3() {
           </div>
         </BaseCard>
       </div>
-      <div v-if="!authStore.isAdmin" class="col-span-12 md:col-span-6">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
         <BaseCard class="p-4">
           <div class="mb-1 flex items-center justify-between">
             <BaseHeading
@@ -1256,7 +1256,7 @@ function useDemoBarMulti3() {
       </div>
 
 
-      <div v-if="!authStore.isAdmin" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
         <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
           <BaseCard rounded="lg" class="p-6">
             <div class="mb-6 flex items-center justify-between">
@@ -1342,7 +1342,7 @@ function useDemoBarMulti3() {
       </div>
 
       <!-- Create a section to loop through devices -->
-      <div v-if="!authStore.isAdmin" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
         <div class="mb-6 flex items-center justify-between">
           <BaseHeading
             as="h3"
@@ -1376,7 +1376,7 @@ function useDemoBarMulti3() {
     </div>
 
 
-    <div v-if="!authStore.isAdmin" class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
+    <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
       <BaseHeading
         as="h3"
         size="md"
