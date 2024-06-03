@@ -534,67 +534,73 @@ def service_show_records_on_chart_monthly_block_admin(admin_user_id, year, month
     month = int(month)
     start_date = datetime(year, month, 1)
     end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+    
+    # Fetch the apartment associated with the admin
     apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})
+    
+    # Fetch all blocks associated with the apartment
     all_blocks = db["blocks"].find({"apartment_id": str(apartment["_id"])})
-
+    
+    # Extract user ids from the blocks
     user_ids = [ObjectId(str(block["user_id"])) for block in all_blocks]
 
+    # MongoDB aggregation pipeline
     pipeline = [
-    {
-        '$match': {
-            'user_id': {'$in': user_ids},
-            'start_time': {'$gte': start_date},
-            'end_time': {'$lt': end_date}
+        {
+            '$match': {
+                'user_id': {'$in': user_ids},
+                'start_time': {'$gte': start_date},
+                'end_time': {'$lt': end_date}
+            }
+        },
+        {
+            '$group': {
+                '_id': {
+                    'device_name': '$device_name',
+                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$start_time'}}
+                },
+                'total_consumption': {'$sum': '$consumption'}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'device_name': '$_id.device_name',
+                'date': '$_id.day',
+                'total_consumption': 1
+            }
+        },
+        {
+            '$sort': {
+                'device_name': 1,
+                'date': 1
+            }
         }
-    },
-    {
-        '$group': {
-            '_id': {
-                'device_name': '$device_name',
-                'month': {'$dateToString': {'format': '%Y-%m', 'date': '$start_time'}}
-            },
-            'total_consumption': {'$sum': '$consumption'}
-        }
-    },
-    {
-        '$project': {
-            '_id': 0,
-            'device_name': '$_id.device_name',
-            'month': '$_id.month',
-            'total_consumption': 1
-        }
-    },
-    {
-        '$sort': {
-            'device_name': 1,
-            'month': 1
-        }
-    }
-]
+    ]
 
     results = list(db["power_records"].aggregate(pipeline))
-
-    categories = sorted({record['month'] for record in results})
-
+    
+    # Generate all dates for the specified month
+    categories = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range((end_date - start_date).days)]
+    
+    # Initialize device data dictionary
     device_data = {}
     for record in results:
         device_name = record['device_name']
         if device_name not in device_data:
-            device_data[device_name] = {month: 0 for month in categories}
-            device_data[device_name][record['month']] = record['total_consumption']
-
+            device_data[device_name] = {date: 0 for date in categories}
+        device_data[device_name][record['date']] = record['total_consumption']
+    
     # Format the output
     formatted_output = [
         {
             'name': device_name,
-            'data': [device_data[device_name][month] for month in categories]
+            'data': [device_data[device_name][date] for date in categories]
         }
         for device_name in sorted(device_data)
     ]
 
     return formatted_output, categories
-
-
 
 def service_show_seasonal_records_on_chart_block_admin(admin_user_id, season, year):
     # Get the start and end dates for the specified season and year
