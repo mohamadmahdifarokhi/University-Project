@@ -654,7 +654,7 @@ export const useAppStore = defineStore('app', {
      async fetchGraph4Mng() {
       try {
         const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/power-records/cal_graph4-block`, {
+        const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -666,8 +666,8 @@ export const useAppStore = defineStore('app', {
         });
         // console.log(response.data,'buybuy')
 
-        this.graph4Unop = response.data[0];
-        this.graph4op = response.data[1];
+        this.graph4Unop = this.graph4Unop.map(item => item * 0.75);
+        this.graph4op = this.graph4op.map(item => item * 0.75);
         // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
