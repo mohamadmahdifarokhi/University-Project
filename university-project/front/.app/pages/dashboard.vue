@@ -539,7 +539,10 @@ function useDemoBarMulti() {
     },
     colors: [primary.value, success.value, info.value, warning.value],
     dataLabels: {
-      enabled: false,
+      enabled: true,
+      formatter: function (val) {
+        return val.toFixed(2);
+      },
     },
     stroke: {
       show: true,
@@ -570,7 +573,7 @@ function useDemoBarMulti() {
   const series = shallowRef([
     {
       name: 'DC',
-      data: values24.value,
+      data: values24.value.map(value => parseFloat(value.toFixed(2))),
     },
   ]);
 
@@ -583,9 +586,9 @@ function useDemoBarMulti() {
 }
 
 function useDemoAreaMulti() {
-  const {primary, info, success} = useTailwindColors()
-  const type = 'area'
-  const height = 280
+  const {primary, info, success} = useTailwindColors();
+  const type = 'area';
+  const height = 280;
 
   const options = {
     chart: {
@@ -612,22 +615,27 @@ function useDemoAreaMulti() {
       type: 'datetime',
       categories: categoriesMonth.value,
     },
-
     tooltip: {
       x: {
         format: 'dd/MM/yy HH:mm',
       },
     },
-  }
+  };
 
-  const series = shallowRef(valuesMonth.value)
+  // Formatting the series data to 2 decimal places
+  const formattedSeries = valuesMonth.value.map(series => ({
+    name: series.name,
+    data: series.data.map(value => parseFloat(value.toFixed(2)))
+  }));
+
+  const series = shallowRef(formattedSeries);
 
   return {
     type,
     height,
     options,
     series,
-  }
+  };
 }
 
 function useDemoBarMulti3() {
