@@ -631,7 +631,7 @@ export const useAppStore = defineStore('app', {
     async fetchGraph4Admin() {
       try {
         const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
+        const response = await axios.get(`${apiUrl}/super-admin/cal_graph4`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -654,7 +654,7 @@ export const useAppStore = defineStore('app', {
     async fetchGraph4Mng() {
       try {
         const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/power-records/cal_graph4`, {
+        const response = await axios.get(`${apiUrl}/super-admin/cal_graph4`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/x-www-form-urlencoded',
