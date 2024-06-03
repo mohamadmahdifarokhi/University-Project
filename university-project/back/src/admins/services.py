@@ -635,31 +635,28 @@ def service_show_seasonal_records_on_chart_block_admin(admin_user_id, season, ye
         },
         {
             '$project': {
-                '_id': 0,
-                'device_name': '$_id',
+                '_id': 1,
                 'total_usage': 1
             }
         },
         {
             '$sort': {
-                'device_name': 1
+                '_id': 1
             }
         }
     ]
-
     try:
-        # Execute the aggregation pipeline
-        result = list(db["power_records"].aggregate(pipeline))
+        results = list(db["power_records"].aggregate(pipeline))
         
-        # Format the result into the required output
+        # Format the output
         formatted_output = [
             {
-                'device_name': record['device_name'],
-                'total_usage': record['total_usage']
+                '_id': result['_id'],
+                'total_usage': result['total_usage']
             }
-            for record in result
+            for result in results
         ]
-        
+
         return formatted_output
 
     except Exception as e:
