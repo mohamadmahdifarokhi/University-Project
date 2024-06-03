@@ -840,35 +840,35 @@ def service_get_all_user_block(admin_user_id):
         user_devices = []
 
         # Find the user's profile photo
-        profile = db["profiles"].find_one({"user_id": str(user['_id'])})["photo"]
+        profile = db["profiles"].find_one({"user_id": str(user['_id'])})
+        if profile:
+            # Find the block associated with the user
+            block = db["blocks"].find_one({"user_id": str(user['_id'])})
+            if block:
+                apartment = db["apartments"].find_one({"_id": ObjectId(block["apartment_id"])})
+                apartment_no = apartment["apartment_no"] if apartment else None
+            else:
+                apartment_no = None
 
-        # Find the block associated with the user
-        block = db["blocks"].find_one({"user_id": str(user['_id'])})
-        if block:
-            apartment = db["apartments"].find_one({"_id": ObjectId(block["apartment_id"])})
-            apartment_no = apartment["apartment_no"] if apartment else None
-        else:
-            apartment_no = None
+            # Gather device names associated with the user
+            if 'devices' in user:
+                for device_id in user["devices"]:
+                    device = db["device"].find_one({"_id": ObjectId(device_id)})
+                    if device:
+                        user_devices.append(device["name"])
 
-        # Gather device names associated with the user
-        if 'devices' in user:
-            for device_id in user["devices"]:
-                device = db["device"].find_one({"_id": ObjectId(device_id)})
-                if device:
-                    user_devices.append(device["name"])
+            update_user["devices"] = user_devices
+            if block:
+                update_user["apartment_number"] = apartment_no
+                update_user["area"] = block["area"]
+                update_user["unit"] = block["unit"]
 
-        update_user["devices"] = user_devices
-        if block:
-            update_user["apartment_number"] = apartment_no
-            update_user["area"] = block["area"]
-            update_user["unit"] = block["unit"]
-
-        update_user["profile"] = profile
-        user["id"] = str(user["_id"])
-        del user["_id"]
-        del user["permissions"]
-        del user["password"]
-        update_user["user"] = user
-        all_users.append(update_user)
+            update_user["profile"] = profile["photo"]
+            user["id"] = str(user["_id"])
+            del user["_id"]
+            del user["permissions"]
+            del user["password"]
+            update_user["user"] = user
+            all_users.append(update_user)
 
     return all_users
