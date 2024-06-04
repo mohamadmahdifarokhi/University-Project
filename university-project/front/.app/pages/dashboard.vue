@@ -683,7 +683,7 @@ function useDemoBarMulti3() {
     },
     yaxis: {
       title: {
-        text: 'Comparison (€)',
+        text: 'Cost. (€)',
       },
     },
     fill: {
