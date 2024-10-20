@@ -82,7 +82,7 @@ sqladmin==0.15.2
 SQLAlchemy==2.0.22
 SQLAlchemy-Utc==0.14.0
 SQLAlchemy-Utils==0.41.1
-starlette==0.27.0
+starlette==0.40.0
 text-unidecode==1.3
 tiktoken==0.5.2
 tqdm==4.66.1
