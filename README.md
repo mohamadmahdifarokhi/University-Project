@@ -16,6 +16,7 @@
   - [ساختار پروژه](#ساختار-پروژه)
   - [پیش‌نیازها](#پیشنیازها)
   - [راه‌اندازی پروژه](#راهاندازی-پروژه)
+  - [پشتیبان‌گیری و بازیابی دیتابیس](#پشتیبانگیری-و-بازیابی-دیتابیس)
   - [دسترسی به سرویس‌ها](#دسترسی-به-سرویسها)
   - [متغیرهای محیطی](#متغیرهای-محیطی)
   - [نکات امنیتی](#نکات-امنیتی)
@@ -121,6 +122,47 @@ http://localhost:8002/startup
 ```
 
 </div>
+
+## پشتیبان‌گیری و بازیابی دیتابیس
+
+یک نسخه‌ی پشتیبان از دیتابیس MongoDB پروژه در مسیر زیر قرار داده شده است:
+
+<div dir="ltr">
+
+```
+backups/university-mongodb-2026-06-12.archive.gz
+```
+
+</div>
+
+برای بازیابی این بکاپ، ابتدا سرویس دیتابیس را اجرا کنید:
+
+<div dir="ltr">
+
+```bash
+docker compose up -d university-project-db
+```
+
+</div>
+
+سپس فایل بکاپ را داخل دیتابیس MongoDB برگردانید:
+
+<div dir="ltr">
+
+```bash
+docker exec -i university-project-mongo mongorestore \
+  --username admin \
+  --password admin \
+  --authenticationDatabase admin \
+  --db university \
+  --drop \
+  --archive \
+  --gzip < backups/university-mongodb-2026-06-12.archive.gz
+```
+
+</div>
+
+گزینه‌ی `--drop` قبل از بازیابی، کالکشن‌های فعلی دیتابیس `university` را پاک می‌کند تا داده‌ها دقیقاً مطابق بکاپ شوند.
 
 ## دسترسی به سرویس‌ها
 
