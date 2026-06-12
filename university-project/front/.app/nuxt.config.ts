@@ -182,14 +182,11 @@ export default defineNuxtConfig({
 
   i18n: {
     locales: [
+      {code: 'fa', iso: 'fa-IR', dir: 'rtl', name: 'فارسی'},
       {code: 'en', iso: 'en-US', dir: 'ltr', name: 'English'},
     ],
-    defaultLocale: 'en',
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: 'i18n_redirected',
-      redirectOn: 'root',
-    },
+    defaultLocale: 'fa',
+    detectBrowserLanguage: false,
   },
 
 })

@@ -11,7 +11,7 @@
 export default defineAppConfig({
   nuxtIcon: {},
   tairo: {
-    title: 'Tairo',
+    title: 'دانشگاه آزاد اسلامی واحد پردیس',
     sidebar: {
       toolbar: {
         showNavBurger: true,

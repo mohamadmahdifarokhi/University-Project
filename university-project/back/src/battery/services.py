@@ -64,7 +64,7 @@ def service_list_battery_all(
     for season in get_all_season:
         daylights[season["season_name"]] = season["day_light"]
 
-    batteries = db["battery"].find()
+    batteries = list(db["battery"].find())
     for battery in batteries:
         # update battery saving
         current_date = datetime.now()
@@ -79,26 +79,24 @@ def service_list_battery_all(
             num_days = (end - start).days + 1
             daylight = daylights.get(season, 0)  # Default to 0 if the season is not found
             total_daylight_saving += (num_days * daylight) * 50
-        update_result = db["battery"].update_one(
-        {
-            "_id": battery["_id"],
-        },
-        {
-            "$set": {
-                "saved_energy": total_daylight_saving
+        db["battery"].update_one(
+            {
+                "_id": battery["_id"],
             },
-        },
-        upsert=False,
+            {
+                "$set": {
+                    "saved_energy": total_daylight_saving
+                },
+            },
+            upsert=False,
         )
-        if update_result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="battery not found")
 
     results = []
-    for battery in batteries:
+    for battery in db["battery"].find():
         user = db["users"].find_one({"_id": ObjectId(battery['user_id'])})
 
         battery["id"] = str(battery["_id"])
-        battery["email"] = str(user["email"])
+        battery["email"] = str(user["email"]) if user else battery.get("email", "")
         battery["status"] = 'available'
         del battery["_id"]
         results.append(BatterySchema(**battery))

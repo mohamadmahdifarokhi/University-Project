@@ -1,4 +1,4 @@
-FROM python:3.11.2-slim-buster
+FROM python:3.11.2-slim-bullseye
 
 WORKDIR /usr/src/app
 
@@ -6,8 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update \
-  && apt-get -y install netcat gcc postgresql postgresql-server-dev-all \
-  && apt-get clean
+  && apt-get -y install --no-install-recommends netcat gcc libpq-dev \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 
 RUN pip install --upgrade pip

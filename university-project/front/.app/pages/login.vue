@@ -126,7 +126,7 @@ const onSubmit = handleSubmit(async (values) => {
       <div class="mx-auto flex w-full max-w-xs items-center justify-between">
         <NuxtLink to="/"
                   class="text-muted-400 hover:text-primary-500 dark:text-muted-700 dark:hover:text-primary-500 transition-colors duration-300">
-          <AccountractLogo class="h-10 w-10"/>
+          <img src="/img/azad-pardis-logo.png" alt="دانشگاه آزاد اسلامی واحد پردیس" class="h-10 w-10 object-contain"/>
         </NuxtLink>
         <div>
           <BaseThemeToggle/>
@@ -202,7 +202,7 @@ const onSubmit = handleSubmit(async (values) => {
       </form>
 
       <div class="text-center">
-        <BaseText size="sm" class="text-muted-400">© {{ new Date().getFullYear() }} Uuniversity Project</BaseText>
+        <BaseText size="sm" class="text-muted-400">© {{ new Date().getFullYear() }} دانشگاه آزاد اسلامی واحد پردیس</BaseText>
       </div>
     </div>
   </div>

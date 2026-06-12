@@ -260,7 +260,7 @@ const submitOTP = handleSubmit(async (values) => {
 
       <div class="text-center">
         <BaseText size="sm" class="text-muted-400">
-          © {{ new Date().getFullYear() }} Accountract
+          © {{ new Date().getFullYear() }} دانشگاه آزاد اسلامی واحد پردیس
         </BaseText>
       </div>
     </div>

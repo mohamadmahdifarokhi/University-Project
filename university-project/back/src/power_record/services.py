@@ -320,7 +320,7 @@ def service_add_power_records(
         dc_power = device['DC_power_consumption']
     time_difference = (power_record.end_time - power_record.start_time).total_seconds() / 3600
     consumption = dc_power * time_difference
-    if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+    if device.get('kind') == 'lamp' or 'لامپ' in device['name'] or device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
         consumption = consumption * 6
     #
     # #calculate fee due to the season and time
@@ -354,67 +354,20 @@ def get_max_power(user_id):
     block = db["blocks"].find_one({"user_id": str(user_id)})
     peak_hour = 0
     peak_power = 0
+    size_by_area = {80: "small", 100: "medium", 120: "large"}
     if block:
-        if season in ['spring', 'fall']:
-            if int(block['area']) == 80:
-                devices = db["device"].find({"name": {"$regex": "small", "$options": "i"}})
-                for device in devices:
-                    if 'lamp' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption']) * 6
-                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
-                        pass
-                    else:
-                        peak_power += device['DC_power_consumption']
-            if int(block['area']) == 100:
-                devices = db["device"].find({"name": {"$regex": "medium", "$options": "i"}})
-                for device in devices:
-                    if 'lamp' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption']) * 6
-                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
-                        pass
-                    else:
-                        peak_power += device['DC_power_consumption']
-            if int(block['area']) == 120:
-                devices = db["device"].find({"name": {"$regex": "large", "$options": "i"}})
-                for device in devices:
-                    if 'lamp' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption']) * 6
-                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
-                        pass
-                    else:
-                        peak_power += device['DC_power_consumption']
-
-        else:
-            if int(block['area']) == 80:
-                devices = db["device"].find({"name": {"$regex": "small", "$options": "i"}})
-                for device in devices:
-                    if 'lamp' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption']) * 6
-
-                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption'])
-                    else:
-                        peak_power += device['DC_power_consumption']
-            if int(block['area']) == 100:
-                devices = db["device"].find({"name": {"$regex": "medium", "$options": "i"}})
-                for device in devices:
-                    if 'lamp' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption']) * 6
-
-                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption'])
-                    else:
-                        peak_power += device['DC_power_consumption']
-            if int(block['area']) == 120:
-                devices = db["device"].find({"name": {"$regex": "large", "$options": "i"}})
-                for device in devices:
-                    if 'lamp' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption']) * 6
-
-                    elif 'air conditioner' in device['name'] or 'heater' in device['name']:
-                        peak_hour = (peak_hour + device['DC_power_consumption'])
-                    else:
-                        peak_power += device['DC_power_consumption']
+        size = size_by_area.get(int(block['area']), "medium")
+        devices = db["device"].find({"size": size})
+        cooling_heating_off_peak = season in ['spring', 'fall']
+        for device in devices:
+            name = device['name']
+            if 'لامپ' in name or 'lamp' in name:
+                peak_hour = (peak_hour + device['DC_power_consumption']) * 6
+            elif 'کولر' in name or 'بخاری' in name or 'air conditioner' in name or 'heater' in name:
+                if not cooling_heating_off_peak:
+                    peak_hour = (peak_hour + device['DC_power_consumption'])
+            else:
+                peak_power += device['DC_power_consumption']
 
         return peak_hour, peak_power + 810
     return 0, 0
@@ -497,9 +450,8 @@ def get_8_cal(
             {
                 "$match": {
                     "device_name": {
-                        "$in": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
-                                                                                                "heater (large)",
-                                "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+                        "$regex": "لامپ|بخاری|کولر|lamp|heater|air conditioner"
+                    }
                 }
             },
             {
@@ -527,9 +479,8 @@ def get_8_cal(
             {
                 "$match": {
                     "device_name": {
-                        "$nin": ["lamp(small)", "lamp(medium)", "lamp(large)", "heater (small)", "heater (medium),"
-                                                                                                 "heater (large)",
-                                 "air conditioner(small), air conditioner(medium), air conditioner(large)"]}
+                        "$not": {"$regex": "لامپ|بخاری|کولر|lamp|heater|air conditioner"}
+                    }
                 }
             },
             {
@@ -549,8 +500,6 @@ def get_8_cal(
         un_op, op = service_cal_graph4(user_id)
         investment = (sum(un_op) - sum(op))
         season_dict = {'spring': 0, 'summer': 1, "fall": 2, "winter": 3}
-        print(op, "epwoe")
-        print(op[season_dict[season]], "epwoe")
         power_divided_by_ac_dc = round((int((op[season_dict[season]] * 1000) / 63) / pv_gen), 2)
         efficiency = round(pv_gen / (pv_gen + ((op[season_dict[season]] * 100) / 63)), 2) * 100
 
@@ -576,64 +525,6 @@ def get_8_cal(
                 'investment': 0,
                 'power_divided_by_ac_dc': 0
                 }
-
-
-# def upload_excel_file(file: UploadFile = File(...),
-#                       user: User = Depends(get_current_user)):
-#     if not file.filename.endswith('.xlsx'):
-#         return JSONResponse(status_code=400, content={"message": "Invalid file format. Please upload a .xlsx file."})
-#
-#     # Read the file into a DataFrame
-#     content = file.read()
-#     df = pd.read_excel(BytesIO(content))
-#
-#     expected_columns = ["start_time", "end_time", "device_name"]
-#     if not all(col in df.columns for col in expected_columns):
-#         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
-#
-#     records = df.to_dict('records')
-#     for record in records:
-#         record["user_id"] = user.id
-#         device = db["device"].find_one({"name": record["device_name"]})
-#         if device and 'DC_power_consumption' in device:
-#             dc_power = device['DC_power_consumption']
-#         time_difference = (record['end_time'] - record['start_time']).total_seconds() / 3600
-#         record['consumption'] = dc_power * time_difference
-#         print(device['name'])
-#         if record['device_name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
-#             print("adsqwdwqdwqdwqd")
-#             record['consumption'] = record['consumption'] * 6
-#     result = db["power_records"].insert_many(records)
-#
-#     return JSONResponse(status_code=200, content={"message": f"Inserted {len(result.inserted_ids)} records."})
-
-
-# def service_show_records_on_chart(
-#     user_id
-# ):
-#     time_24_hours_ago = datetime.now() - timedelta(days=1)
-
-#     query = {
-#         "user_id": ObjectId(user_id),
-#         "start_time": {"$gte": time_24_hours_ago}
-#     }
-
-#     user_device_record = db["power_records"].find(query)
-
-#     result = {}
-
-#     for record in user_device_record:
-#         device_name = record['device_name']
-#         if device_name not in result:
-#             result[device_name] = {}
-
-#         duration_seconds = (record['end_time'] - record['start_time']).total_seconds()
-#         time_key = record['start_time'] + timedelta(seconds=duration_seconds)
-#         time_key_str = time_key.strftime("%Y-%m-%d %H:%M:%S")
-
-#         result[device_name][time_key_str] = record['consumption']
-
-#     return result
 
 
 def service_show_records_on_chart(user_id, date=None):
@@ -785,5 +676,4 @@ def service_show_seasonal_records_on_chart(user_id, season, year):
         result = list(db["power_records"].aggregate(pipeline))
         return result
     except Exception as e:
-        print("An error occurred:", e)
         return []

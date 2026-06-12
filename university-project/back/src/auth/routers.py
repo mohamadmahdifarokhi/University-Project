@@ -172,7 +172,6 @@ def otp_verify(req: VerifyOtpReq):
         UserRes: User response model.
     """
     user = UserService().insert(req)
-    print(user, "dede")
     return user
 
 
@@ -220,12 +219,9 @@ def recover_password(req: TokenPasswordReq):
     Returns:
         user (UserRes): return user.
     """
-    print('asdasd')
     token = TokenService().get_by_token(req['token'])
-    print('asdsssssasd')
 
     user = UserService().get_by_email(token['email'])
-    print('asdcasd')
 
     if not authenticate(req['password'], user):
         return UserService().update(user['_id'], UserUp(password=req['password']))

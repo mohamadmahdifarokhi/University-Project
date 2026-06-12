@@ -70,21 +70,21 @@ const {locale, locales} = useI18n()
               <div class="shuriken-1 absolute block">
                 <img
                   class="size-10 h-7 w-8"
-                  src="/img/accountract.png"
+                  src="/img/azad-pardis-logo.png"
                   alt=""
                 >
               </div>
               <div class="shuriken-2 absolute block">
                 <img
                   class="animate-spin-fast size-12 h-7 w-8"
-                  src="/img/accountract.png"
+                  src="/img/azad-pardis-logo.png"
                   alt=""
                 >
               </div>
               <div class="shuriken-3 absolute block">
                 <img
                   class="animate-spin-fast size-11 h-7 w-8"
-                  src="/img/accountract.png"
+                  src="/img/azad-pardis-logo.png"
                   alt=""
                 >
               </div>

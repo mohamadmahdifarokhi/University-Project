@@ -15,14 +15,14 @@ useHead({
       : `${app.tairo?.title}`
   },
   htmlAttrs: {
-    lang: 'en',
-    dir: 'ltr',
+    lang: 'fa',
+    dir: 'rtl',
   },
   link: [
     {
       rel: 'icon',
       type: 'image/png',
-      href: '/img/accountract.png',
+      href: '/img/azad-pardis-logo.png',
     },
   ],
 

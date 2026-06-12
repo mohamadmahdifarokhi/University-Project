@@ -91,7 +91,7 @@ watch([categories24, values24, categoriesMonth, valuesMonth, graph4op, graph4Uno
 const selectedYear = ref<number | null>(null);
 const selectedMonth = ref<number | null>(null);
 definePageMeta({
-  title: 'Activity',
+  title: 'داشبورد',
   middleware: ['authenticated'],
   preview: {
     title: 'Personal dashboard v1',
@@ -554,7 +554,7 @@ function useDemoBarMulti() {
     },
     yaxis: {
       title: {
-        text: 'Consumption (wh)',
+        text: 'مصرف (وات‌ساعت)',
       },
     },
     fill: {
@@ -678,12 +678,12 @@ function useDemoBarMulti3() {
     },
     xaxis: {
       categories: [
-        'Spring', 'Summer', 'Fall', 'Winter'
+        'بهار', 'تابستان', 'پاییز', 'زمستان'
       ],
     },
     yaxis: {
       title: {
-        text: 'Cost. (€)',
+        text: 'هزینه (یورو)',
       },
     },
     fill: {
@@ -701,11 +701,11 @@ function useDemoBarMulti3() {
 
   const series = shallowRef([
     {
-      name: 'non-optimized',
+      name: 'بهینه‌نشده',
       data: graph4Unop,
     },
     {
-      name: 'optimized',
+      name: 'بهینه‌شده',
       data: graph4op,
     },
   ])
@@ -734,7 +734,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>CONVERSION PERCENT (%)</span>
+              <span>درصد تبدیل (٪)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -781,7 +781,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>SAVED ENERGY IN THE BATTERY (w/day)</span>
+              <span>انرژی ذخیره‌شده در باتری (وات/روز)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -827,7 +827,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>ANNUALLY AVG INVESTMENT & SAVING (€)</span>
+              <span>میانگین سالانه سرمایه‌گذاری و صرفه‌جویی (یورو)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -876,7 +876,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>GREENHOUSE EMISSION SAVING (gr CO2/kwh per day)</span>
+              <span>کاهش انتشار گازهای گلخانه‌ای (گرم CO2/کیلووات‌ساعت در روز)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -925,7 +925,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>POWER DIVIDED BY AC-DC</span>
+              <span>توان تقسیم‌شده بر AC-DC</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -974,7 +974,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>EFFICIENCY (%)</span>
+              <span>بازده (٪)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1023,7 +1023,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>PV GENERATION (w)</span>
+              <span>تولید پنل خورشیدی (وات)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1071,7 +1071,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>SOC (%)</span>
+              <span>وضعیت شارژ (٪)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1122,7 +1122,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>Daily Consumption</span>
+              <span>مصرف روزانه</span>
             </BaseHeading>
           </div>
           <AddonApexcharts v-bind="demoBarMulti"/>
@@ -1142,7 +1142,7 @@ function useDemoBarMulti3() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>Monthly Consumption (wh)</span>
+                <span>مصرف ماهانه (وات‌ساعت)</span>
               </BaseHeading>
             </div>
 
@@ -1222,7 +1222,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>Max Power Consumption</span>
+              <span>حداکثر مصرف توان</span>
             </BaseHeading>
             <!--          <NuxtLink-->
             <!--            to="#"-->
@@ -1248,7 +1248,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-800 dark:text-white"
             >
-              <span>Seasonal Comparison</span>
+              <span>مقایسه فصلی</span>
             </BaseHeading>
           </div>
           <AddonApexcharts v-bind="demoBarMulti3"/>
@@ -1267,7 +1267,7 @@ function useDemoBarMulti3() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>Add Product Record</span>
+                <span>افزودن رکورد مصرف</span>
               </BaseHeading>
             </div>
             <!-- Single input for device selection -->
@@ -1278,7 +1278,7 @@ function useDemoBarMulti3() {
                 @update:model-value="handleChange"
                 @blur="handleBlur"
                 shape="curved"
-                placeholder="Select Device"
+                placeholder="انتخاب دستگاه"
                 icon="ri:device-fill"
               >
                 <!-- Options for device selection -->
@@ -1297,7 +1297,7 @@ function useDemoBarMulti3() {
                 @blur="handleBlur"
                 type="datetime-local"
                 shape="curved"
-                placeholder="Start Date"
+                placeholder="تاریخ شروع"
                 icon="ri:calendar-fill"
               />
             </Field>
@@ -1309,7 +1309,7 @@ function useDemoBarMulti3() {
                 @blur="handleBlur"
                 type="datetime-local"
                 shape="curved"
-                placeholder="End Date"
+                placeholder="تاریخ پایان"
                 icon="ri:calendar-fill"
               />
             </Field>
@@ -1351,7 +1351,7 @@ function useDemoBarMulti3() {
             lead="tight"
             class="text-muted-800 dark:text-white"
           >
-            <span>Selected Products</span>
+            <span>دستگاه‌های انتخاب‌شده</span>
           </BaseHeading>
         </div>
         <!-- Loop through devices -->
@@ -1384,7 +1384,7 @@ function useDemoBarMulti3() {
         lead="tight"
         class="text-muted-800 dark:text-white mt-10 my-5"
       >
-        <span>Latest order</span>
+        <span>آخرین سفارش</span>
       </BaseHeading>
       <div class="space-y-2 pt-6">
         <TransitionGroup
@@ -1403,19 +1403,19 @@ function useDemoBarMulti3() {
           >
             <template #start>
               <DemoFlexTableStart
-                label="Buyer"
+                label="خریدار"
                 :hide-label="index > 0"
                 :title="item.user_id"
               />
               <DemoFlexTableStart
-                label="Amount"
+                label="مقدار"
                 :hide-label="index > 0"
                 :title="item.amount"
                 class="ms-20"
 
               />
               <DemoFlexTableStart
-                label="Fee"
+                label="کارمزد"
                 :hide-label="index > 0"
                 :title="item.fee"
                 class="ms-20"
@@ -1425,7 +1425,7 @@ function useDemoBarMulti3() {
 
             <template #end>
               <DemoFlexTableCell
-                label="Create"
+                label="تاریخ"
                 :hide-label="index > 0"
                 tablet-hidden
                 class="w-full sm:w-36"
@@ -1437,7 +1437,7 @@ function useDemoBarMulti3() {
                   </span>
               </DemoFlexTableCell>
               <DemoFlexTableCell
-                label="Price"
+                label="قیمت"
                 :hide-label="index > 0"
                 class="w-full sm:w-32"
               >

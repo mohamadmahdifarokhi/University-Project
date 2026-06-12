@@ -15,19 +15,22 @@ from src.power_record.api import router as power_record_router
 from src.pricing.api import router as pricing_router
 from src.solar_panel.routers import router as solar_panel_router
 from src.admins.api import router as admin_router
+from src.shop.api import catalog_router, cart_router
 import os
 from dotenv import load_dotenv
 from src.db import db
 load_dotenv()
 
-app = FastAPI(title="Uuniversity Project")
+app = FastAPI(title="دانشگاه آزاد اسلامی واحد پردیس")
 client = MongoClient(os.environ.get("DATABASE_URL"))
 # Access your database
 db = client["university"]
 # Configure CORS
 origins = [
+    "http://localhost",
     "http://localhost:80",
     "http://localhost:3000",
+    "http://127.0.0.1",
     "http://127.0.0.1:80",
     "http://127.0.0.1:3000",
     "http://188.34.155.23",
@@ -58,6 +61,8 @@ app.include_router(power_record_router)
 app.include_router(pricing_router)
 app.include_router(solar_panel_router)
 app.include_router(admin_router)
+app.include_router(catalog_router)
+app.include_router(cart_router, prefix="/users/carts")
 
 
 # Create tables on startup
@@ -104,7 +109,6 @@ def create_admin():
     """
     try:
         otp = OTPService().insert({"email": "admin@gmail.com"})
-        print("asdasdsad")
         UserService().insert(req={
             "email": "admin@gmail.com",
             "password": "admin",

@@ -117,29 +117,23 @@ def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth
     Raises:
         HTTPException: If credentials cannot be validated or if the user has insufficient permissions.
     """
-    print('fffff')
     authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": authenticate_value},
     )
-    print("aaaaa")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
-        print(user_id)
         if user_id is None:
             raise credentials_exception
         token_scopes = payload.get("scopes", [])
     except JWTError:
         raise credentials_exception
-    print("vvvv")
     user = db.users.find_one({"_id": ObjectId(user_id)})
-    print(user)
     if user is None:
         raise credentials_exception
-    print(user)
 
     for scope in security_scopes.scopes:
         if scope not in token_scopes:

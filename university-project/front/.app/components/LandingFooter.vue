@@ -15,8 +15,8 @@ const {t} = useI18n({useScope: "local"})
     >
       <img
         class="size-7"
-        src="/img/accountract.png"
-        alt="Uuniversity Project Logo"
+        src="/img/azad-pardis-logo.png"
+        alt="دانشگاه آزاد اسلامی واحد پردیس Logo"
         height="28"
         width="28"
         loading="lazy"
@@ -76,7 +76,7 @@ const {t} = useI18n({useScope: "local"})
         class="text-muted-500 dark:text-muted-400 ltablet:w-1/5 ltablet:mt-0 mt-6 flex w-full items-center justify-center text-sm"
       >
         <span  dir="ltr">
-          © Uuniversity Project {{ year }}
+          © دانشگاه آزاد اسلامی واحد پردیس {{ year }}
         </span>
       </div>
     </div>

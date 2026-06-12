@@ -51,7 +51,6 @@ class UserService:
     def update_user(self, user_id: str, user_update: UserUpdate) -> str | None:
         update_data = user_update.dict(exclude_unset=True)
         result = self.db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
-        print(result)
         if result.modified_count:
             updated_user = self.db.users.find_one({"_id": ObjectId(user_id)})
             updated_user["_id"] = str(updated_user["_id"])
@@ -84,7 +83,6 @@ class UserService:
                 admin_permission = permission_service.get_by_name("admin")
                 user_permissions.append(admin_permission)
             user_data = {"email": req['email'], "password": password, "permissions": user_permissions}
-            print(user_permissions)
             user = self.db.users.insert_one(user_data)
             user_id = user.inserted_id
 
@@ -95,7 +93,6 @@ class UserService:
         except HTTPException:
             raise
         except Exception as e:
-            print(e)
             # Logging and error handling
             raise Exception("Insert operation failed: " + str(e))
 
@@ -144,12 +141,9 @@ class UserService:
     def create_token(self, email, password, token_type="access", auth=False):
         try:
             user = self.get_by_email(email)
-            print("aaaaaaaadasd")
             if auth and not authenticate(password, user):
                 raise HTTPException(
                     status_code=400, detail="Incorrect credentials")
-            print("asdasd")
-            print(user)
 
             # Assuming PermissionSetService is a similar MongoDB service
             # scopes = PermissionSetService(self.db).get_by_user_id(user['_id'])
@@ -186,7 +180,6 @@ class OTPService:
             existing_otp = self.db.otps.find_one({"email": req['email']})
             if existing_otp:
                 raise HTTPException(status_code=409, detail='OTP has already been sent')
-            print("aaaaaaaaaa")
             if self.db.users.find_one({"email": req['email']}):
                 raise HTTPException(status_code=400, detail="Email already exists")
 
@@ -199,8 +192,6 @@ class OTPService:
             }
             result = self.db.otps.insert_one(otp_data)
             inserted_id = str(result.inserted_id)
-            print("awdww")
-            print(otp_data)
             EmailSender().send_otp_email(req['email'], otp_code)
 
             logger.info(f"Generated OTP for email: {req['email']}, OTP Code: {otp_code}")

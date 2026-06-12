@@ -49,4 +49,4 @@ class Logger:
         self.logger.addHandler(file_handler)
 
 
-logger = Logger(__name__, "accountract.log", log_to_console=True).logger
+logger = Logger(__name__, "university.log", log_to_console=True).logger

@@ -251,7 +251,7 @@ const {locale, locales} = useI18n()
 
               <BaseText class="hidden sm:inline-block">
                 <img
-                  :src="'/img/accountract.png'"
+                  :src="'/img/azad-pardis-logo.png'"
                   alt="GPT Logo"
                   class="md:h-8 md:w-8 md:mb-1 sm:h-11 sm:w-12 h-11 w-12 sm:block hidden"
                 />

@@ -9,7 +9,7 @@ const localPath = useLocalePath();
 const { locale, locales } = useI18n();
 
 definePageMeta({
-  title: 'Accountract',
+  title: 'دانشگاه آزاد اسلامی واحد پردیس',
   middleware: 'authenticated',
   preview: {
     title: 'Invoice',

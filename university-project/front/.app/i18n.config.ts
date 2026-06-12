@@ -1,7 +1,10 @@
 export default defineI18nConfig(() => ({
+  legacy: false,
+  locale: 'fa',
+  fallbackLocale: 'fa',
   messages: {
     en: {
-      "Uuniversity Project": "Uuniversity Project",
+      "Uuniversity Project": "دانشگاه آزاد اسلامی واحد پردیس",
       Lets: "Let's start by creating your account",
       Email: "Email",
       Password: "Password",
@@ -47,8 +50,8 @@ export default defineI18nConfig(() => ({
       exclusiveChatTitle: "Exclusive Chat with GPT-4",
       exclusiveChatDescription: "our exclusive chat service powered by the latest GPT-4 technology. Interact with GPT-4 on a charging basis and experience next-level conversational AI",
       exclusiveChatButton: "Go to Exclusive Chat",
-      callToActionTitle: "Uuniversity Project Shop",
-      callToActionDescription: "Uuniversity Project Shop offers various accounts for purchase and renewal",
+      callToActionTitle: "Islamic Azad University, Pardis Branch Shop",
+      callToActionDescription: "Islamic Azad University, Pardis Branch Shop offers various accounts for purchase and renewal",
       exploreShopButton: "Shop",
       emailRequired: "A valid email is required",
       passwordRequired: "A password is required",
@@ -94,7 +97,7 @@ export default defineI18nConfig(() => ({
       "Shop": "Shop",
       "Soon": "Coming Soon",
       "Current": "Current existing models in AI chatbots include",
-      "Exclusive": "Exclusive Uuniversity Project Chatbot",
+      "Exclusive": "Exclusive Islamic Azad University, Pardis Branch Chatbot",
       "Chat": "Chat bot",
       "Participation": "Mti, Mehdi, and Reza We are currently three developers on the project. If you'd like to join, please message us on Telegram. We welcome your participation",
       "Mti": "Mti",
@@ -104,7 +107,7 @@ export default defineI18nConfig(() => ({
       "Developers": "Developers",
       "GPT-4-Powered Chatbot": "GPT-4-Powered Chatbot",
       "ExperienceFutureAI": "Not only can you tap into the capabilities of GPT-4, but you can also enjoy a range of additional features alongside it. Start chatting now and experience the future of AI!",
-      "CustomerReviews": "Customer Reviews on Uuniversity Project",
+      "CustomerReviews": "Customer Reviews on Islamic Azad University, Pardis Branch",
       "ExploreFeatures": {
         "title": "Explore Our Features",
         "description": "Discover the core functionalities we offer"
@@ -141,7 +144,7 @@ export default defineI18nConfig(() => ({
 
     },
     fa: {
-      "Uuniversity Project": "اکانترکت",
+      "Uuniversity Project": "دانشگاه آزاد اسلامی واحد پردیس",
       Lets: "بیا با ایجاد حساب کاربری شروع کنیم",
       Email: "ایمیل",
       Password: "پسورد",
@@ -187,8 +190,8 @@ export default defineI18nConfig(() => ({
       exclusiveChatTitle: "چت انحصاری با GPT-4",
       exclusiveChatDescription: " سرویس چت اختصاصی ما که توسط آخرین فناوری GPT-4 قدرت گرفته شده است. با GPT-4 بر اساس شارژ تعامل کنید و تجربه یک هوش مصنوعی گفتگویی درجه‌ی بالاتر را داشته باشید",
       exclusiveChatButton: "رفتن به گفتگوی اختصاصی",
-      callToActionTitle: "فروشگاه اکانترکت",
-      callToActionDescription: "فروشگاه اکانترکت برای خرید و تمدید انواع اکانت ها",
+      callToActionTitle: "فروشگاه دانشگاه آزاد اسلامی واحد پردیس",
+      callToActionDescription: "فروشگاه دانشگاه آزاد اسلامی واحد پردیس برای خرید و تمدید انواع اکانت ها",
       exploreShopButton: "فروشگاه",
       emailRequired: "ایمیل معتبر مورد نیاز است",
       passwordRequired: "رمز عبور مورد نیاز است",
@@ -219,7 +222,7 @@ export default defineI18nConfig(() => ({
       "Shop": "فروشگاه",
       "Soon": "به زودی",
       "Current": "مدل‌های موجود فعلی در چت‌بات‌های هوش مصنوعی شامل موارد زیر می‌شود",
-      "Exclusive": "چت بات اختصاصی اکانترکت",
+      "Exclusive": "چت بات اختصاصی دانشگاه آزاد اسلامی واحد پردیس",
       "Chat": "چت بات",
       "Participation": "ما در حال حاضر سه توسعه دهنده در پروژه هستیم. اگر مایل به پیوستن هستید، لطفاً پیام خود را به ما در تلگرام ارسال کنید. مشارکت شما را خوش‌آمد می‌گوییم",
       "Mti": "ام تی",
@@ -229,7 +232,7 @@ export default defineI18nConfig(() => ({
       "Developers": "دولوپرها",
       "GPT-4-Powered Chatbot": "چت‌بات مبتنی بر GPT-4",
       "ExperienceFutureAI": "نه تنها می‌توانید از قابلیت‌های GPT-4 بهره‌مند شوید، بلکه می‌توانید از تنوع ویژگی‌های اضافی آن لذت ببرید. اکنون شروع به چت کردن کنید و آینده هوش مصنوعی را تجربه کنید!",
-      "CustomerReviews": "نظرات مشتریان درباره اکانترکت",
+      "CustomerReviews": "نظرات مشتریان درباره دانشگاه آزاد اسلامی واحد پردیس",
       "ExploreFeatures": {
         "title": "ویژگی‌های ما را کاوش کنید",
         "description": "ویژگی‌های اصلی که ارائه می‌دهیم را کشف کنید"
