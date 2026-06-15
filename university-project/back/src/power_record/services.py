@@ -530,6 +530,21 @@ def get_8_cal(
 def service_show_records_on_chart(user_id, date=None):
     if date is None:
         date = datetime.now().date()
+        # Fall back to the most recent day that actually has records for this
+        # user when today is empty (e.g. historical / seeded data).
+        day_start = datetime.combine(date, datetime.min.time())
+        day_end = datetime.combine(date, datetime.max.time())
+        has_today = db["power_records"].find_one({
+            "user_id": ObjectId(str(user_id)),
+            "start_time": {"$gte": day_start, "$lt": day_end},
+        })
+        if has_today is None:
+            latest = db["power_records"].find_one(
+                {"user_id": ObjectId(str(user_id))},
+                sort=[("start_time", pymongo.DESCENDING)],
+            )
+            if latest is not None:
+                date = latest["start_time"].date()
     else:
         date = datetime.strptime(date, '%Y-%m-%d').date()
 

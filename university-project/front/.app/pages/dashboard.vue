@@ -88,8 +88,17 @@ watch([categories24, values24, categoriesMonth, valuesMonth, graph4op, graph4Uno
 }, {
   deep: true,
 });
-const selectedYear = ref<number | null>(null);
-const selectedMonth = ref<number | null>(null);
+const now = new Date();
+const selectedYear = ref<number>(now.getFullYear());
+const selectedMonth = ref<number>(now.getMonth() + 1);
+const isMonthlyLoading = ref(false);
+const yearOptions = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
+const monthOptions = [
+  {value: 1, label: 'فروردین'}, {value: 2, label: 'اردیبهشت'}, {value: 3, label: 'خرداد'},
+  {value: 4, label: 'تیر'}, {value: 5, label: 'مرداد'}, {value: 6, label: 'شهریور'},
+  {value: 7, label: 'مهر'}, {value: 8, label: 'آبان'}, {value: 9, label: 'آذر'},
+  {value: 10, label: 'دی'}, {value: 11, label: 'بهمن'}, {value: 12, label: 'اسفند'},
+];
 definePageMeta({
   title: 'داشبورد',
   middleware: ['authenticated'],
@@ -142,14 +151,14 @@ const addPowerRecord = handleSubmit(async (values) => {
   console.log('lllll')
   await app.addRecord(values.deviceId, values.start, values.end);
 });
-const fetchMonthly = handleSubmit(async (values) => {
-  const selectedValues = {
-    year: selectedYear.value,
-    month: selectedMonth.value,
-  };
-  console.log(selectedValues);
-  await app.fetchMonthRecords(selectedYear.value, selectedMonth.value);
-});
+const fetchMonthly = async () => {
+  isMonthlyLoading.value = true;
+  try {
+    await app.fetchMonthRecords(selectedYear.value, selectedMonth.value);
+  } finally {
+    isMonthlyLoading.value = false;
+  }
+};
 
 function deleteDevice(deviceId) {
   app.deleteDevice(deviceId);
@@ -702,11 +711,11 @@ function useDemoBarMulti3() {
   const series = shallowRef([
     {
       name: 'بهینه‌نشده',
-      data: graph4Unop,
+      data: graph4Unop.value,
     },
     {
       name: 'بهینه‌شده',
-      data: graph4op,
+      data: graph4op.value,
     },
   ])
 
@@ -1148,54 +1157,45 @@ function useDemoBarMulti3() {
 
             <AddonApexcharts v-bind="demoAreaMulti"/>
 
-            <div class="flex justify-center mt-6">
+            <div class="border-muted-200 dark:border-muted-700 mt-6 flex justify-center border-t pt-6">
               <form
                 method="POST"
-                class="items-center"
-                style="max-width: 300px"
+                class="w-full max-w-md"
                 @submit.prevent="fetchMonthly"
                 novalidate
               >
-                <!-- Year selection -->
-                <div class="mb-4">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+                  <!-- Year selection -->
                   <BaseSelect
                     v-model="selectedYear"
                     shape="curved"
-                    placeholder="Select Year"
-                    icon="ri:community-fill"
-                    class="text-sm py-1 px-2"
+                    label="سال"
+                    icon="ph:calendar-blank-duotone"
+                    class="flex-1"
                   >
-                    <!-- Options for year selection -->
-                    <option v-for="year in [2020, 2021, 2022, 2023, 2024, 2025]" :key="year" :value="year">{{
-                        year
-                      }}
-                    </option>
+                    <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
                   </BaseSelect>
-                </div>
 
-                <!-- Month selection -->
-                <div class="mb-4">
+                  <!-- Month selection -->
                   <BaseSelect
                     v-model="selectedMonth"
                     shape="curved"
-                    placeholder="Select Month"
-                    icon="ri:home-line"
-                    class="text-sm py-1 px-2"
+                    label="ماه"
+                    icon="ph:calendar-check-duotone"
+                    class="flex-1"
                   >
-                    <!-- Options for month selection -->
-                    <option v-for="month in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" :key="month" :value="month">
-                      {{ month }}
-                    </option>
+                    <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
                   </BaseSelect>
-                </div>
 
-                <div class="ms-10 flex items-center gap-1 mt-5">
                   <BaseButton
                     type="submit"
                     color="primary"
-                    class="w-24"
+                    shape="curved"
+                    :loading="isMonthlyLoading"
+                    class="h-12 sm:w-32"
                   >
-                    {{ t("Show") }}
+                    <Icon name="ph:funnel-duotone" class="me-1 size-4"/>
+                    <span>{{ t("Show") }}</span>
                   </BaseButton>
                 </div>
               </form>

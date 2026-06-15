@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>توضیحات پروژه — سامانه مدیریت ریزشبکه برق مستقیم | دانشگاه آزاد اسلامی واحد پردیس</title>
+  <meta name="description" content="معرفی و توضیحات کامل سامانه مدیریت ریزشبکه برق مستقیم و انرژی خورشیدی، پروژه دانشگاهی دانشگاه آزاد اسلامی واحد پردیس." />
+  <style>
+    :root {
+      --primary: #6d4aff;
+      --primary-dark: #4a2fb0;
+      --accent: #14b8a6;
+      --bg: #0f1629;
+      --bg-2: #151d33;
+      --card: #1b2440;
+      --card-2: #212c4d;
+      --text: #eef2ff;
+      --muted: #9aa6c4;
+      --border: #2c3760;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Vazirmatn, Tahoma, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 2.1;
+      direction: rtl;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(109,74,255,0.45), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(20,184,166,0.35), transparent 40%),
+        linear-gradient(160deg, var(--primary-dark), var(--bg));
+      padding: 70px 20px 110px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero .logo {
+      width: 96px; height: auto; margin-bottom: 22px;
+      background: rgba(255,255,255,0.95); border-radius: 20px; padding: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+    }
+    .hero .badge {
+      display: inline-block; background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.28); padding: 6px 18px;
+      border-radius: 999px; font-size: 14px; color: #dfe5ff; margin-bottom: 18px;
+    }
+    .hero h1 { font-size: 34px; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.5px; }
+    .hero p { max-width: 760px; margin: 0 auto; color: #d6ddf7; font-size: 18px; }
+    .hero .cta { margin-top: 30px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 26px; border-radius: 12px; font-weight: 700; font-size: 15px;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .btn:hover { transform: translateY(-2px); text-decoration: none; }
+    .btn-primary { background: #fff; color: var(--primary-dark); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .btn-ghost { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+
+    /* ---------- Layout ---------- */
+    .container { max-width: 1040px; margin: -60px auto 0; padding: 0 20px 70px; position: relative; z-index: 2; }
+    section.card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 34px 32px;
+      margin-bottom: 26px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    }
+    h2 {
+      font-size: 23px; font-weight: 800; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    h2 .ic {
+      width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      font-size: 22px;
+    }
+    p.lead { color: var(--muted); font-size: 16.5px; }
+
+    /* ---------- Feature grid ---------- */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+    .feature {
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+      transition: transform .15s ease, border-color .15s ease;
+    }
+    .feature:hover { transform: translateY(-4px); border-color: var(--primary); }
+    .feature .emoji { font-size: 28px; display: block; margin-bottom: 10px; }
+    .feature h3 { font-size: 17px; margin-bottom: 6px; }
+    .feature p { color: var(--muted); font-size: 14.5px; line-height: 1.9; }
+
+    /* ---------- Tech table ---------- */
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 12px; }
+    th, td { padding: 13px 16px; text-align: right; border-bottom: 1px solid var(--border); font-size: 15px; }
+    th { background: var(--card-2); color: #cdd6f5; font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+    td .chip {
+      display: inline-block; background: rgba(109,74,255,0.18); color: #c9bcff;
+      border: 1px solid rgba(109,74,255,0.4); border-radius: 8px; padding: 2px 10px; font-size: 13px;
+    }
+
+    /* ---------- Modules ---------- */
+    .modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 12px; }
+    .module {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px; font-size: 14.5px;
+    }
+    .module .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+    /* ---------- Steps ---------- */
+    ol.steps { list-style: none; counter-reset: step; }
+    ol.steps li {
+      position: relative; padding: 0 54px 22px 0; counter-increment: step;
+      border-right: 2px solid var(--border); margin-right: 18px;
+    }
+    ol.steps li::before {
+      content: counter(step); position: absolute; right: -19px; top: 0;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    ol.steps li:last-child { border-right-color: transparent; }
+    code, pre {
+      font-family: "Fira Code", Consolas, monospace; direction: ltr; text-align: left;
+    }
+    pre {
+      background: #0b1120; border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; margin-top: 8px; overflow-x: auto; font-size: 13.5px; color: #cfe3ff;
+    }
+    .inline-code {
+      background: #0b1120; border: 1px solid var(--border); border-radius: 6px;
+      padding: 2px 8px; font-size: 13.5px; color: #9ad7ff;
+    }
+
+    /* ---------- Access cards ---------- */
+    .access { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 16px; }
+    .access a {
+      background: var(--card-2); border: 1px solid var(--border); border-radius: 16px;
+      padding: 18px; display: block; transition: border-color .15s ease, transform .15s ease;
+    }
+    .access a:hover { border-color: var(--accent); transform: translateY(-3px); text-decoration: none; }
+    .access .svc { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .access .url { font-size: 13.5px; color: var(--accent); direction: ltr; text-align: right; }
+
+    .note {
+      background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.4);
+      border-radius: 12px; padding: 16px 18px; color: #f6dca0; font-size: 14.5px;
+    }
+
+    footer {
+      text-align: center; padding: 34px 20px; color: var(--muted);
+      border-top: 1px solid var(--border); background: var(--bg-2); font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 26px; }
+      section.card { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Hero ===== -->
+  <header class="hero">
+    <img class="logo" src="azad-pardis-logo.png" alt="لوگوی دانشگاه آزاد اسلامی واحد پردیس" />
+    <div class="badge">پروژه دانشگاهی · دانشگاه آزاد اسلامی واحد پردیس</div>
+    <h1>سامانه مدیریت ریزشبکه برق مستقیم و انرژی خورشیدی</h1>
+    <p>
+      پلتفرمی کامل برای پایش، محاسبه و مدیریت تولید و مصرف انرژی در یک ریزشبکه برق مستقیم
+      (<span style="direction:ltr">DC Micro-grid</span>) به همراه فروشگاه و پرداخت آنلاین.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="http://localhost:80" target="_blank">🌐 ورود به وب‌سایت</a>
+      <a class="btn btn-ghost" href="http://localhost:8002/docs" target="_blank">📚 مستندات API</a>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ===== Intro ===== -->
+    <section class="card">
+      <h2><span class="ic">💡</span> معرفی پروژه</h2>
+      <p class="lead">
+        این سامانه برای محاسبه، پایش و مدیریت تولید و مصرف انرژی در یک ریزشبکه برق مستقیم طراحی شده است.
+        کاربران می‌توانند پنل‌های خورشیدی، باتری‌ها و دستگاه‌های مصرف‌کننده برق خود را ثبت کنند و میزان
+        تولید، ذخیره و فروش انرژی را مدیریت نمایند. داشبورد تحلیلی، مصرف روزانه، ماهانه و فصلی را به صورت
+        نمودار نمایش می‌دهد و شاخص‌هایی مانند بازده، درصد تبدیل، کاهش انتشار گازهای گلخانه‌ای و میزان
+        صرفه‌جویی را محاسبه می‌کند. علاوه بر این، بخش فروشگاه و پرداخت آنلاین از طریق درگاه زرین‌پال نیز
+        پیاده‌سازی شده است.
+      </p>
+    </section>
+
+    <!-- ===== Features ===== -->
+    <section class="card">
+      <h2><span class="ic">⚙️</span> امکانات اصلی</h2>
+      <div class="grid">
+        <div class="feature">
+          <span class="emoji">🔐</span>
+          <h3>احراز هویت کاربران</h3>
+          <p>ثبت‌نام با کد یک‌بارمصرف (OTP)، ورود، بازیابی رمز عبور و ورود از طریق حساب گوگل (SSO).</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">☀️</span>
+          <h3>مدیریت پنل خورشیدی</h3>
+          <p>ثبت و مدیریت پنل‌ها به همراه ظرفیت بیشینه، ظرفیت ذخیره‌شده و ظرفیت فروخته‌شده.</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">🔋</span>
+          <h3>باتری و دستگاه‌ها</h3>
+          <p>ثبت دستگاه‌های مصرف‌کننده برق با مصرف AC و DC و مدیریت ظرفیت ذخیره‌سازی باتری.</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">🏢</span>
+          <h3>آپارتمان و بلوک</h3>
+          <p>ساختاردهی مصرف انرژی بر اساس واحدها و بلوک‌های ساختمانی.</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">📊</span>
+          <h3>رکوردهای مصرف برق</h3>
+          <p>ثبت زمان شروع، پایان و میزان انرژی مصرف‌شده و نمایش نمودارهای روزانه، ماهانه و فصلی.</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">🛒</span>
+          <h3>فروشگاه و سفارش‌ها</h3>
+          <p>مدیریت قیمت‌ها، سبد خرید، ثبت سفارش و پرداخت آنلاین از طریق درگاه زرین‌پال.</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">🛠️</span>
+          <h3>پنل مدیریت</h3>
+          <p>مدیریت کاربران، مجوزها و محتوای سامانه توسط ادمین.</p>
+        </div>
+        <div class="feature">
+          <span class="emoji">🌍</span>
+          <h3>رابط چندزبانه</h3>
+          <p>پشتیبانی از زبان‌های فارسی و انگلیسی با طراحی واکنش‌گرا (Responsive).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Tech stack ===== -->
+    <section class="card">
+      <h2><span class="ic">🧱</span> معماری و تکنولوژی‌ها</h2>
+      <p class="lead" style="margin-bottom:18px">
+        سامانه از دو بخش بک‌اند و فرانت‌اند تشکیل شده که به‌صورت کانتینری با Docker اجرا می‌شوند.
+      </p>
+      <table>
+        <thead>
+          <tr><th>بخش</th><th>تکنولوژی</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>بک‌اند</td><td><span class="chip">Python 3.11</span> <span class="chip">FastAPI</span></td></tr>
+          <tr><td>پایگاه داده</td><td><span class="chip">MongoDB</span></td></tr>
+          <tr><td>کش و صف</td><td><span class="chip">Redis</span></td></tr>
+          <tr><td>فرانت‌اند</td><td><span class="chip">Nuxt 3 (Vue)</span> <span class="chip">Tailwind CSS</span></td></tr>
+          <tr><td>پرداخت</td><td><span class="chip">درگاه زرین‌پال</span></td></tr>
+          <tr><td>ذخیره‌سازی فایل</td><td><span class="chip">S3 (ArvanCloud)</span></td></tr>
+          <tr><td>اجرا</td><td><span class="chip">Docker</span> <span class="chip">Docker Compose</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===== Modules ===== -->
+    <section class="card">
+      <h2><span class="ic">🗂️</span> ماژول‌های بک‌اند</h2>
+      <div class="modules">
+        <div class="module"><span class="dot"></span> احراز هویت (auth)</div>
+        <div class="module"><span class="dot"></span> پنل خورشیدی (solar_panel)</div>
+        <div class="module"><span class="dot"></span> باتری (battery)</div>
+        <div class="module"><span class="dot"></span> دستگاه‌ها (device)</div>
+        <div class="module"><span class="dot"></span> آپارتمان (apartment)</div>
+        <div class="module"><span class="dot"></span> بلوک (block)</div>
+        <div class="module"><span class="dot"></span> رکورد مصرف (power_record)</div>
+        <div class="module"><span class="dot"></span> منبع برق (power_source)</div>
+        <div class="module"><span class="dot"></span> قیمت‌گذاری (pricing)</div>
+        <div class="module"><span class="dot"></span> سفارش‌ها (order)</div>
+        <div class="module"><span class="dot"></span> پروفایل (profile)</div>
+        <div class="module"><span class="dot"></span> مدیریت (admins)</div>
+      </div>
+    </section>
+
+    <!-- ===== Setup ===== -->
+    <section class="card">
+      <h2><span class="ic">🚀</span> راه‌اندازی پروژه</h2>
+      <ol class="steps">
+        <li>
+          <strong>ساخت فایل‌های متغیر محیطی از روی نمونه‌ها:</strong>
+          <pre>cp .env.example .env
+cp university-project/front/.app/.env.example university-project/front/.app/.env</pre>
+        </li>
+        <li>
+          <strong>اجرای کل سامانه با Docker Compose:</strong>
+          <pre>docker compose up --build</pre>
+        </li>
+        <li>
+          <strong>ساخت کالکشن‌های اولیه دیتابیس</strong> با باز کردن یک‌باره آدرس
+          <span class="inline-code">http://localhost:8002/startup</span>
+        </li>
+      </ol>
+      <div class="note" style="margin-top:18px">
+        💾 یک نسخه پشتیبان از دیتابیس در مسیر
+        <span class="inline-code">backups/university-mongodb-2026-06-12.archive.gz</span>
+        قرار دارد و می‌توان آن را با دستور <span class="inline-code">mongorestore</span> بازیابی کرد.
+      </div>
+    </section>
+
+    <!-- ===== Access ===== -->
+    <section class="card">
+      <h2><span class="ic">🔗</span> دسترسی به سرویس‌ها</h2>
+      <div class="access">
+        <a href="http://localhost:80" target="_blank">
+          <div class="svc">🌐 فرانت‌اند (وب‌سایت)</div>
+          <div class="url">http://localhost:80</div>
+        </a>
+        <a href="http://localhost:8002" target="_blank">
+          <div class="svc">⚡ بک‌اند (API)</div>
+          <div class="url">http://localhost:8002</div>
+        </a>
+        <a href="http://localhost:8002/docs" target="_blank">
+          <div class="svc">📚 مستندات API (Swagger)</div>
+          <div class="url">http://localhost:8002/docs</div>
+        </a>
+        <a href="http://localhost:8082" target="_blank">
+          <div class="svc">🗄️ مدیریت دیتابیس (Mongo Express)</div>
+          <div class="url">http://localhost:8082</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ===== Security ===== -->
+    <section class="card">
+      <h2><span class="ic">🔒</span> نکات امنیتی</h2>
+      <div class="note">
+        ⚠️ فایل <span class="inline-code">.env.example</span> صرفاً نمونه است. هرگز کلیدها و رمزهای واقعی را
+        در مخزن گیت قرار ندهید. پیش از استقرار در محیط واقعی، تمام مقادیر حساس مانند
+        <span class="inline-code">SECRET_KEY</span>، رمز SMTP، کلیدهای پرداخت و کلیدهای S3 را با مقادیر
+        جدید و امن جایگزین کنید.
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    پروژه دانشگاهی — <strong>دانشگاه آزاد اسلامی واحد پردیس</strong> · سامانه مدیریت ریزشبکه برق مستقیم
+  </footer>
+
+</body>
+</html>
