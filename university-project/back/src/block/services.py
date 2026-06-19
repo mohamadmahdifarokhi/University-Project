@@ -58,7 +58,6 @@ def service_add_block(
         raise HTTPException(status_code=400, detail="unit number is not acceptable")
     
     block_check = db["blocks"].find_one({"unit": int(block.unit), "apartment_id": str(apartment_id)})
-    print(block_check)
     if block_check is not None:
         raise HTTPException(status_code=400, detail="this block is not available")
 
@@ -76,4 +75,3 @@ def service_add_block(
     update_result = db.blocks.insert_one(base_block)
 
     return {"detail": "block added"}
-

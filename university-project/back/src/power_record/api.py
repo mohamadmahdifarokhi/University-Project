@@ -56,9 +56,7 @@ async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(g
         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
 
     records = df.to_dict('records')
-    print(user,"wwwwwwwee")
     for record in records:
-        print(record)
         record["user_id"] = user['_id']
         record["start_time"] = pd.to_datetime(record["start_time"])
         record["end_time"] = pd.to_datetime(record["end_time"])

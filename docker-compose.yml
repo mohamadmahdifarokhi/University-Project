@@ -91,6 +91,3 @@ volumes:
   university-project-db-data:
 
   redis_data:
-
-  # Volume for gpt database data
-  gpt-db-data:

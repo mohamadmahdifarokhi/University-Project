@@ -132,7 +132,6 @@ def code_verify(req: VerifyCodeReq):
 #     Returns:
 #         RedirectResponse: Redirects to the provided URI with authorization code.
 #     """
-#     print(form_data)
 #     # user = UserService().get_by_email(client_id)
 #     # scopes = PermissionSetService().get_by_user_id(user.id)
 #     # auth_code = f"{user.email}:{user.password}:user"

@@ -259,7 +259,6 @@ class OTPService:
         # Logic to update an OTP in the database
         update_data = otp_update.dict(exclude_unset=True)
         result = self.db.otps.update_one({"_id": ObjectId(otp_id)}, {"$set": update_data})
-        print(result)
         if result:
             updated_otp = self.db.otps.find_one({"_id": ObjectId(otp_id)})
             updated_otp["_id"] = str(updated_otp["_id"])
@@ -327,7 +326,6 @@ class TokenService:
     def verify_token(self, token_value: UUID):
         try:
             token = self.db.tokens.find_one({"token": str(token_value)})
-            print(token, 'masd')
             if token and token["expired_at"] >= datetime.utcnow():
                 logger.info(f"Verified token for email: {token['email']}")
                 return token

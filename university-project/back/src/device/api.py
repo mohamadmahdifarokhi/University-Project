@@ -58,7 +58,6 @@ async def select_device(
     user: User = Depends(get_user)
 
 ):
-    print(user)
     return service_select_device(
         device_id, user
     )

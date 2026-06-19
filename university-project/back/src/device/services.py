@@ -65,7 +65,6 @@ def service_list_device_user(
     try:
         devices = db["users"].find_one({"_id": ObjectId(user_id)})["devices"]
         results = []
-        print(devices, "loplop")
         for device_id in devices:
             device = db["device"].find_one({"_id": ObjectId(device_id)})
             if device:
@@ -95,7 +94,6 @@ user
     if update_result.modified_count == 0:
         raise HTTPException(status_code=404, detail="user not found")
     return {"detail": "device added."}
-
 
 
 
