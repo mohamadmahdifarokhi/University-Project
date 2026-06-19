@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import {z} from "zod";
-import {toTypedSchema} from "@vee-validate/zod";
-import { Field, useForm } from 'vee-validate'
-
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useAppStore } from "~/stores/app";
 import { storeToRefs } from "pinia";
@@ -14,130 +10,75 @@ const { t } = useI18n({ useScope: "local" });
 const app = useAppStore();
 const { seasonDatas, seasonLabels  } = storeToRefs(app);
 
-const demoPie = reactive(useDemoPie())
 const authStore = useAuthStore();
 
+const now = new Date();
+function currentSeason(d = now) {
+  const m = d.getMonth() + 1, day = d.getDate();
+  if ((m === 3 && day >= 21) || m === 4 || m === 5 || (m === 6 && day <= 20)) return 'Spring';
+  if ((m === 6 && day >= 21) || m === 7 || m === 8 || (m === 9 && day <= 22)) return 'Summer';
+  if ((m === 9 && day >= 23) || m === 10 || m === 11 || (m === 12 && day <= 20)) return 'Fall';
+  return 'Winter';
+}
+const selectedYear = ref<number>(now.getFullYear());
+const selectedSeason = ref<string>(currentSeason());
+const yearOptions = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
+const seasonOptions = [
+  {value: 'Spring', label: 'بهار'},
+  {value: 'Summer', label: 'تابستان'},
+  {value: 'Fall', label: 'پاییز'},
+  {value: 'Winter', label: 'زمستان'},
+];
 
-const fetchSeasonChart = app.fetchSeasonChart;
-const fetchSeasonChartAdmin = app.fetchSeasonChartAdmin;
-const fetchSeasonChartMng = app.fetchSeasonChartMng;
-
-
-async function initializeData() {
+async function loadSeasonal() {
   if (authStore.isAdmin) {
-  await fetchSeasonChartAdmin()
-
+    await app.fetchSeasonChartAdmin(selectedYear.value, selectedSeason.value);
+  } else if (authStore.isMng) {
+    await app.fetchSeasonChartMng(selectedYear.value, selectedSeason.value);
+  } else {
+    await app.fetchSeasonChart(selectedYear.value, selectedSeason.value);
   }
-  if (authStore.isMng) {
-  await fetchSeasonChartMng()
-
-  }
-  if (!authStore.isMng && !authStore.isAdmin) {
-  await fetchSeasonChart();
-
-  }
-
 }
-// Initialize data on component mount
+
+// Initial load on mount.
 onMounted(async () => {
-  await initializeData();
+  await loadSeasonal();
 });
 
-
-
-const VALIDATION_TEXT = {
-  EMAIL_REQUIRED: t('emailRequired'),
-  PASSWORD_REQUIRED: t('passwordRequired')
-}
-
-const zodSchema = z.object({
-  start: z.string(),
-  end: z.string(),
-  consumption: z.string(),
-  deviceId: z.string(),
-})
-
-type FormInput = z.infer<typeof zodSchema>;
-
-const validationSchema = toTypedSchema(zodSchema)
-const initialValues = computed<FormInput>(() => ({
-  start: '',
-  end: '',
-  consumption: '',
-  deviceId: '',
-}));
-
-const {
-  handleSubmit,
-  isSubmitting,
-  setFieldError,
-  meta,
-  values,
-  errors,
-  resetForm,
-  setFieldValue,
-  setErrors,
-} = useForm({
-  validationSchema,
-  initialValues,
+// Any change in the year or season selectors instantly refreshes the chart
+// (no submit button needed).
+watch([selectedYear, selectedSeason], async () => {
+  await loadSeasonal();
 });
-function useDemoPie() {
-  const { primary, info, success, warning, danger } = useTailwindColors()
-  const height = 335
-  const type = 'pie'
 
-  const options = {
+const { primary, info, success, warning, danger } = useTailwindColors();
+const demoPie = reactive({
+  type: 'pie',
+  height: 335,
+  series: computed(() => seasonDatas.value ?? []),
+  options: computed(() => ({
+    chart: { toolbar: { show: false } },
     dataLabels: {
-      style: {
-        fontSize: '12px',
-        weight: 500,
-      },
+      style: { fontSize: '12px', weight: 500 },
     },
-    colors: [primary.value, success.value, info.value, danger.value],
-    labels: seasonLabels,
+    colors: [primary.value, success.value, info.value, danger.value, warning.value],
+    labels: seasonLabels.value ?? [],
+    noData: {
+      text: 'داده‌ای برای این بازه وجود ندارد',
+      style: { fontSize: '14px' },
+    },
     responsive: [
       {
         breakpoint: 480,
         options: {
-          chart: {
-            width: 315,
-            toolbar: {
-              show: false,
-            },
-          },
-          legend: {
-            position: 'top',
-          },
+          chart: { width: 315, toolbar: { show: false } },
+          legend: { position: 'top' },
         },
       },
     ],
-    legend: {
-      position: 'right',
-      horizontalAlign: 'center',
-    },
-  }
-
-  const series = shallowRef(seasonDatas)
-
-  return {
-    type,
-    height,
-    options,
-    series,
-  }
-}
-
-const selectedYear = ref<number | null>(null);
-const selectedSeason = ref<number | null>(null);
-const fetchSeasonal = handleSubmit(async (values) => {
-  const selectedValues = {
-    year: selectedYear.value,
-    month: selectedSeason.value,
-  };
-  console.log(selectedValues);
-  await app.fetchSeasonChart(selectedYear.value, selectedSeason.value);
+    legend: { position: 'right', horizontalAlign: 'center' },
+  })),
 });
-
 </script>
 
 <template>
@@ -150,53 +91,33 @@ const fetchSeasonal = handleSubmit(async (values) => {
         lead="tight"
         class="text-muted-800 dark:text-white"
       >
-        <span>Seasonal Consumption</span>
+        <span>مصرف فصلی</span>
       </BaseHeading>
       <AddonApexcharts v-bind="demoPie" />
-      <div class="flex justify-center mt-6">
-        <form method="POST" class="items-center" style="max-width: 300px" @submit.prevent="fetchSeasonal" novalidate>
+      <div class="border-muted-200 dark:border-muted-700 mt-6 border-t pt-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
           <!-- Year selection -->
-          <div class="mb-4">
-            <BaseSelect
-              v-model="selectedYear"
-              shape="curved"
-              placeholder="Select Year"
-              icon="ri:community-fill"
-              class="text-sm py-1 px-2"
-            >
-              <!-- Placeholder option -->
-              <option disabled value="">{{ t('Select Year') }}</option>
-              <!-- Options for year selection -->
-              <option v-for="year in [2020, 2021, 2022, 2023, 2024, 2025]" :key="year" :value="year">{{ year }}</option>
-            </BaseSelect>
-          </div>
+          <BaseSelect
+            v-model="selectedYear"
+            shape="curved"
+            label="سال"
+            icon="ph:calendar-blank-duotone"
+            class="flex-1"
+          >
+            <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
+          </BaseSelect>
 
           <!-- Season selection -->
-          <div class="mb-4">
-            <BaseSelect
-              v-model="selectedSeason"
-              shape="curved"
-              placeholder="Select Season"
-              icon="ri:home-line"
-              class="text-sm py-1 px-2"
-            >
-              <!-- Placeholder option -->
-              <option disabled value="">{{ t('Select Season') }}</option>
-              <!-- Options for season selection -->
-              <option v-for="season in ['Spring', 'Summer', 'Fall','Winter']" :key="season" :value="season">{{ season }}</option>
-            </BaseSelect>
-          </div>
-
-          <div class="ms-10 flex items-center gap-1 mt-5">
-            <BaseButton
-              type="submit"
-              color="primary"
-              class="w-24"
-            >
-              {{ t("Show") }}
-            </BaseButton>
-          </div>
-        </form>
+          <BaseSelect
+            v-model="selectedSeason"
+            shape="curved"
+            label="فصل"
+            icon="ph:sun-duotone"
+            class="flex-1"
+          >
+            <option v-for="s in seasonOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </BaseSelect>
+        </div>
       </div>
     </BaseCard>
   </div></template>

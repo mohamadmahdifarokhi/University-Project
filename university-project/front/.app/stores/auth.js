@@ -21,48 +21,48 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function checkAccessToken() {
-    if (useCookie('refresh_token')) {
+    const refreshToken = useCookie('refresh_token').value;
+    const accessToken = useCookie('access_token').value;
 
-      const refreshToken = useCookie('refresh_token').value;
-      console.log(refreshToken)
-      try {
-        const response = await axios.post(`${apiUrl}/users/refresh`, {}, {
-          headers: {
-            'Authorization': `Bearer ${refreshToken}`,
-          },
-        });
-        console.log(response.data.scopes, "wqqeqwewqe")
-        if (response.status === 200) {
-          console.log('qwdqwdqwd')
+    // No tokens at all -> definitely logged out.
+    if (!refreshToken && !accessToken) {
+      this.$reset();
+      return;
+    }
 
-          document.cookie = `access_token=${response.data.access_token}; path=/`;
-          this.setAuthenticated(true);
-            console.log(response.data.scopes)
-            console.log("asawdeqwewqd")
+    // If we have an access token, consider the user authenticated up front so
+    // a transient refresh failure does not flip the navbar back to logged-out.
+    if (accessToken) {
+      this.setAuthenticated(true);
+    }
 
-          if (response.data.scopes.includes('admin')) {
-            this.setIsAdmin(true)
+    if (!refreshToken) {
+      return;
+    }
 
-          }
-          if (response.data.scopes.includes('manager')) {
-            this.setIsMng(true)
+    try {
+      const response = await axios.post(`${apiUrl}/users/refresh`, {}, {
+        headers: {
+          'Authorization': `Bearer ${refreshToken}`,
+        },
+      });
+      if (response.status === 200) {
+        document.cookie = `access_token=${response.data.access_token}; path=/`;
+        this.setAuthenticated(true);
 
-          }
-
-          console.log(isAuthenticated,"qweqwew")
+        if (response.data.scopes.includes('admin')) {
+          this.setIsAdmin(true)
         }
-
-      } catch (error) {
-        console.log(error)
-
-        if (error.response && error.response.status === 401) {
-          this.$reset()
+        if (response.data.scopes.includes('manager')) {
+          this.setIsMng(true)
         }
       }
-    } else {
-
-      this.$reset()
-
+    } catch (error) {
+      // Only force logout when the refresh token itself is rejected AND we have
+      // no usable access token. Otherwise keep the current session.
+      if (error.response && error.response.status === 401 && !accessToken) {
+        this.$reset();
+      }
     }
   }
 
@@ -97,10 +97,10 @@ export const useAuthStore = defineStore('auth', () => {
         this.addToOrderFromSession(response.data.access_token)
 
         setAuthenticated(true);
-        if ('admin' in response.data.scopes) {
+        if (response.data.scopes.includes('admin')) {
           this.setIsAdmin(true)
         }
-         if ('manager' in response.data.scopes) {
+        if (response.data.scopes.includes('manager')) {
           this.setIsMng(true)
         }
         if (!callBackUrl.startsWith('http')) {

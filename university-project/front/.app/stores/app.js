@@ -4,6 +4,16 @@ import axios from 'axios';
 
 const apiUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL}`;
 
+// Maps the current date to the season names the backend expects.
+function getCurrentSeason(date = new Date()) {
+  const m = date.getMonth() + 1; // 1-12
+  const d = date.getDate();
+  if ((m === 3 && d >= 21) || m === 4 || m === 5 || (m === 6 && d <= 20)) return 'Spring';
+  if ((m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d <= 22)) return 'Summer';
+  if ((m === 9 && d >= 23) || m === 10 || m === 11 || (m === 12 && d <= 20)) return 'Fall';
+  return 'Winter';
+}
+
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -335,7 +345,7 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecords(year = 2024, month = 5) {
+    async fetchMonthRecords(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
       const accessToken = useCookie('access_token').value;
 
       try {
@@ -361,7 +371,7 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecordsAdmin(year = 2024, month = 5) {
+    async fetchMonthRecordsAdmin(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
       const accessToken = useCookie('access_token').value;
 
       try {
@@ -387,7 +397,7 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecordsMng(year = 2024, month = 5) {
+    async fetchMonthRecordsMng(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
       const accessToken = useCookie('access_token').value;
 
       try {
@@ -935,7 +945,7 @@ export const useAppStore = defineStore('app', {
       }
     },
 
-    async fetchSeasonChart(year = 2024, season = 'Spring') {
+    async fetchSeasonChart(year = new Date().getFullYear(), season = getCurrentSeason()) {
       try {
         const accessToken = useCookie('access_token').value;
         const response = await axios.get(`${apiUrl}/power-records/season-chart?year=${year}&season=${season}`, {
