@@ -8,7 +8,6 @@ from pydantic import UUID4, BaseModel, EmailStr, constr, conint, Field
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import core_schema
 
-from ..order.models import Order
 from ..profile.models import Profile
 
 
@@ -67,7 +66,6 @@ class User(BaseModel):
     provider: str
     profile: Optional["Profile"] = None
     permissions: List["Permission"] = []
-    orders: List["Order"] = []
 
     # devices: List["Device"] = []
     # block: Optional["Block"] = None

@@ -4,7 +4,6 @@ from starlette.middleware.cors import CORSMiddleware
 
 from src.auth.secures import get_password_hash
 from src.logger import logger
-from src.order.api import router as order_router
 from src.battery.api import router as battery_router
 from src.profile.routers import router as profile_router
 from src.auth.routers import router as auth_router
@@ -15,7 +14,6 @@ from src.power_record.api import router as power_record_router
 from src.pricing.api import router as pricing_router
 from src.solar_panel.routers import router as solar_panel_router
 from src.admins.api import router as admin_router
-from src.shop.api import catalog_router, cart_router
 from dotenv import load_dotenv
 from src.db.db import db
 load_dotenv()
@@ -46,7 +44,6 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(profile_router, prefix="/users/profiles")
-app.include_router(order_router, prefix="/users/orders")
 
 
 app.include_router(apartment_router)
@@ -57,8 +54,6 @@ app.include_router(power_record_router)
 app.include_router(pricing_router)
 app.include_router(solar_panel_router)
 app.include_router(admin_router)
-app.include_router(catalog_router)
-app.include_router(cart_router, prefix="/users/carts")
 
 
 # Create tables on startup
@@ -67,7 +62,7 @@ async def on_startup():
     """
     Create collections on application startup.
     """
-    for collection_name in ("users", "permissions", "profiles", "carts"):
+    for collection_name in ("users", "permissions", "profiles"):
         try:
             db.create_collection(collection_name)
         except CollectionInvalid:

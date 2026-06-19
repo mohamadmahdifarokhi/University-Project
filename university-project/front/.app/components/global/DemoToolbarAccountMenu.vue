@@ -123,7 +123,7 @@ const logout = () => {
                   ...{{ email.substring(0, 23) }}
                 </h6>
                 <BaseButton
-                  :to="localPath('/profile/orders')"
+                  :to="localPath('/profile/records')"
                   shape="curved"
                   class="w-full"
                   @click.passive="close"

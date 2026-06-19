@@ -17,13 +17,9 @@ function getCurrentSeason(date = new Date()) {
 
 export const useAppStore = defineStore('app', {
   state: () => ({
-    activeGenre: 1,
-    categories: [],
-    products: [],
-    not_active_products: [],
-    product: ref(),
     devices: [],
     records: [],
+    availablePeriods: { years: [], months: [], seasons: [] },
     allUsers: [],
     cal8: {},
     area: ref(''),
@@ -36,13 +32,9 @@ export const useAppStore = defineStore('app', {
     valuesMonth: ref([]),
     battery: ref(''),
     batteries: [],
-    cart: [],
     seasonDatas: [],
     seasonLabels: [],
-    orders: [],
-    sellOrders: [],
     solarPanels: [],
-    buyOrders: [],
     selectedDevice: [],
     graph4op: [],
     graph4Unop: [],
@@ -54,15 +46,6 @@ export const useAppStore = defineStore('app', {
     language: ref('fa'), // Default language is English (en)
   }),
   getters: {
-    total: (state) => {
-      let price = 0;
-      if (state.cart && state.cart.cart_items) {
-        state.cart.cart_items.forEach((item) => {
-          price += item.product?.price;
-        });
-      }
-      return price;
-    },
     getDevices: (state) => {
       return state.devices;
     },
@@ -85,32 +68,11 @@ export const useAppStore = defineStore('app', {
 
       return state.valuesMonth;
     },
-    getBuyOrders: (state) => {
-
-      return state.buyOrders;
-    },
-    getSellOrders: (state) => {
-      return state.sellOrders;
-    },
     getselectedDevice: (state) => {
       return state.selectedDevice;
     },
     getApartment: (state) => {
       return state.apartments;
-    },
-    filteredProducts: (state) => {
-      if (state.activeGenre === 1) {
-        return state.products;
-      } else {
-        return state.products.filter((product) => product.category.id === state.activeGenre);
-      }
-    },
-    filteredNotActiveProducts: (state) => {
-      if (state.activeGenre === 1) {
-        return state.not_active_products;
-      } else {
-        return state.not_active_products.filter((product) => product.category.id === state.activeGenre);
-      }
     },
     textDirection: (state) => {
       return state.isRTL ? 'rtl' : 'ltr';
@@ -218,37 +180,6 @@ export const useAppStore = defineStore('app', {
         console.error('Error changing user photo:', error);
       }
     },
-    async ChangeActiveGenre(categoryID) {
-      console.log(categoryID, "qweqwe")
-      this.activeGenre = categoryID
-    },
-
-    async fetchCategories() {
-      const {t} = useI18n({useScope: 'local'});
-
-      try {
-        const categoriesResponse = await axios.get(`${apiUrl}/categories`);
-        this.categories = [{id: 1, name: {"fa": "همه", "en": "All"}}, ...categoriesResponse.data];
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        this.showErrorToast(t('fetchCategories.errors.fetchFailed'));
-      }
-    },
-
-
-    async fetchProducts() {
-
-      try {
-        const productsResponse = await axios.get(`${apiUrl}/products/?page=1&page_size=10`);
-        this.products = productsResponse.data;
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        const {t} = useI18n({useScope: 'local'});
-
-        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
-      }
-    },
-
     async fetchDevices() {
 
       try {
@@ -465,6 +396,26 @@ export const useAppStore = defineStore('app', {
       }
     },
 
+    async fetchAvailablePeriods() {
+      const accessToken = useCookie('access_token').value;
+
+      try {
+        const response = await axios.get(`${apiUrl}/power-records/available-periods`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          }
+        );
+        this.availablePeriods = response.data;
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching available periods:', error);
+        return null;
+      }
+    },
+
 
     async fetchBattery() {
       const accessToken = useCookie('access_token').value;
@@ -506,114 +457,9 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchNotActiveProducts() {
-
-      try {
-        const productsResponse = await axios.get(`${apiUrl}/products/isActivate/false/?page=1&page_size=10`);
-        this.not_active_products = productsResponse.data;
-      } catch (error) {
-        console.error('Error fetching not active products:', error);
-        const {t} = useI18n({useScope: 'local'});
-
-        this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
-      }
-    },
-
-    async fetchProductBySlug(slug) {
-      const {t} = useI18n({useScope: 'local'});
-
-      try {
-        const response = await axios.get(`${apiUrl}/products/${slug}`);
-        this.product = response.data;
-      } catch (error) {
-        console.error('Error fetching product by slug:', error);
-        this.showErrorToast(t('fetchProductBySlug.errors.fetchFailed'));
-      }
-    },
-
-    async fetchCart() {
-      const {t} = useI18n({useScope: 'local'});
-
-      const accessToken = useCookie('access_token').value;
-
-      if (accessToken) {
-        // If an access token exists, fetch the cart from the server.
-        try {
-          const cartResponse = await axios.get(`${apiUrl}/users/carts`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          });
-          this.cart = cartResponse.data;
-        } catch (error) {
-          console.error('Error fetching cart:', error);
-          this.showErrorToast(t('fetchCart.errors.fetchFailed'));
-        }
-      } else {
-        // If there's no access token, create a new cart (or retrieve it from localStorage).
-        const storedCart = localStorage.getItem('cart');
-
-        if (storedCart) {
-          // If a cart exists in localStorage, use it.
-          this.cart = JSON.parse(storedCart);
-        } else {
-          // If no cart is found, initialize an empty cart in the store.
-          this.cart = {cart_items: []};
-
-          // Save the empty cart in localStorage.
-          localStorage.setItem('cart', JSON.stringify(this.cart));
-        }
-      }
-    },
-
-
     async fetchEmail() {
       const storedEmail = localStorage.getItem('email');
       this.email = storedEmail;
-    },
-    async fetchSellOrders() {
-      try {
-        const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/users/orders/order/sell`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          // params: {
-          //   page: page,
-          //   page_size: perPage,
-          // },
-        });
-        // console.log(response.data,'sellsell')
-        this.sellOrders = response.data;
-        // console.log(this.sellOrders,'sellsellz')
-
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
-    },
-    async fetchBuyOrders() {
-      try {
-        const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/users/orders/order/buy`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          // params: {
-          //   page: page,
-          //   page_size: perPage,
-          // },
-        });
-        // console.log(response.data,'buybuy')
-
-        this.buyOrders = response.data;
-        // console.log(this.buyOrders,'buybuyz')
-
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
     },
     async fetchGraph4() {
       try {
@@ -724,24 +570,6 @@ export const useAppStore = defineStore('app', {
         this.allUsers = response.data;
         // console.log(this.buyOrders,'buybuyz')
 
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      }
-    },
-    async fetchOrders(page, perPage) {
-      try {
-        const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/users/orders/order/last-orders`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          params: {
-            page: page,
-            page_size: perPage,
-          },
-        });
-        this.orders = response.data;
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
@@ -881,30 +709,6 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-    async addOrder(user_id, solar_panel_id, amount, fee) {
-      try {
-        const orderData = {
-          user_id: user_id,
-          battery_id: solar_panel_id,
-          amount: amount,
-          fee: fee
-        };
-
-        console.log(orderData, 'kok');
-        const accessToken = useCookie('access_token').value;
-        const response = await axios.post(`${apiUrl}/users/orders/order/`, orderData, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          }
-        });
-        if (response.status === 200) {
-          this.showSuccessToast('Add');
-        }
-      } catch (error) {
-        console.error('Error adding order:', error);
-      }
-    },
     async addBattery(savedEnergy, soldEnergy) {
       try {
         const batteryData = {
@@ -1039,162 +843,6 @@ export const useAppStore = defineStore('app', {
     },
 
 
-    async addToOrder({email, password, description, userHasAccount}) {
-      try {
-        if (this.cart.cart_items.length >= 5) {
-          this.showErrorToast('Cannot add more than 5 items to the cart');
-
-          throw new Error('Cannot add more than 5 items to the cart');
-        } else {
-          if (userHasAccount.value) {
-            if (email && password) {
-              if (this.product) {
-
-                const accessToken = useCookie('access_token').value;
-                if (accessToken) {
-                  const orderData = {
-                    email: email,
-                    password: password,
-                    description: description,
-                    product_id: this.product.id,
-                  };
-                  // If an accessToken exists, add the order to the server's cart.
-                  const response = await axios.post(`${apiUrl}/users/carts/items`, orderData, {
-                    headers: {
-                      Authorization: `Bearer ${accessToken}`,
-                      'Content-Type': 'application/json',
-                      accept: 'application/json',
-                    },
-                  });
-                  if (this.cart) {
-                    this.cart.cart_items.push(
-                      response.data,
-                    );
-                  }
-                } else {
-                  const orderData = {
-                    email: email,
-                    password: password,
-                    description: description,
-                    product: this.product,
-                  };
-                  // If there's no accessToken, add the order to the cart in localStorage.
-                  this.cart.cart_items.push(
-                    orderData
-                  );
-                  localStorage.setItem('cart', JSON.stringify(this.cart));
-                }
-              } else {
-                console.error('Product not available.');
-              }
-            } else {
-              setFieldError('email', 'Email is required');
-              setFieldError('password', 'Password is required');
-            }
-          } else {
-            if (this.product) {
-
-              const accessToken = useCookie('access_token').value;
-              if (accessToken) {
-                const orderData = {
-                  product_id: this.product.id,
-                };
-                // If an accessToken exists, add the order to the server's cart.
-                const response = await axios.post(`${apiUrl}/users/carts/items`, orderData, {
-                  headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                    accept: 'application/json',
-                  },
-                });
-                if (this.cart) {
-                  this.cart.cart_items.push(
-                    response.data
-                  );
-                }
-              } else {
-                const orderData = {
-                  product: this.product,
-                };
-                this.cart.cart_items.push(
-                  orderData,
-                );
-                localStorage.setItem('cart', JSON.stringify(this.cart));
-
-              }
-            } else {
-              console.error('Product not available.');
-            }
-          }
-        }
-
-      } catch (error) {
-        console.error('Error placing order:', error);
-      }
-
-
-    },
-    async removeItem(itemToRemove) {
-      try {
-        const accessToken = useCookie('access_token').value;
-
-        if (accessToken) {
-          // If an accessToken exists, attempt to delete the order from the server's cart.
-          const cartItemId = itemToRemove.id;
-          const response = await axios.delete(`${apiUrl}/users/carts/items/${cartItemId}`, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            }
-          });
-
-          if (response.status === 204) {
-            // Remove the item from the cart in the store.
-            const index = this.cart.cart_items.indexOf(itemToRemove);
-            if (index !== -1) {
-              this.cart.cart_items.splice(index, 1);
-            }
-          } else {
-            console.error('Failed to delete CartItem:', response);
-          }
-        } else {
-
-          const index = this.cart.cart_items.indexOf(itemToRemove);
-          if (index !== -1) {
-            this.cart.cart_items.splice(index, 1);
-          }
-          localStorage.setItem('cart', JSON.stringify(this.cart));
-
-        }
-      } catch (error) {
-        console.error('Error deleting CartItem:', error);
-      }
-    },
-    async verifyPayment({authority, status, id}) {
-      const accessToken = useCookie('access_token').value;
-      try {
-        const response = await axios.post(`${apiUrl}/users/payments/verify`, {authority, status, id}, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            accept: 'application/json',
-          },
-        });
-        if (response.data.status !== 'failure') {
-          this.showSuccessToast('Success Payment');
-          return true
-        } else {
-          this.showErrorToast('Failed Payment');
-          return false
-
-        }
-      } catch (error) {
-        console.error('Error sending data to the backend:', error);
-        this.showErrorToast('Error sending data to the backend');
-        return false
-
-      }
-    },
     showSuccessToast(message) {
       const toaster = useToaster();
 
@@ -1226,27 +874,6 @@ export const useAppStore = defineStore('app', {
         icon: 'ph:warning',
         closable: true,
       });
-    },
-    async processPayment() {
-
-      try {
-        const accessToken = useCookie('access_token').value;
-        const response = await axios.post(`${apiUrl}/users/payments/request`, {}, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            accept: 'application/json',
-          },
-        });
-        if (response.data && response.data.payment_url) {
-
-          window.location.href = response.data.payment_url;
-        } else {
-          console.error('Payment URL not found in the response.');
-        }
-      } catch (error) {
-        console.error('Error processing payment:', error);
-      }
     },
     async setRTL() {
       this.isRTL = true;

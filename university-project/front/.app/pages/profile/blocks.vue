@@ -92,20 +92,18 @@ definePageMeta({
   },
 })
 const app = useAppStore();
-const {orders, categories24, values24} = storeToRefs(app);
+const {categories24, values24} = storeToRefs(app);
 const cate = ref(categories24)
 
 const areaCustomers = reactive(useAreaCustomers())
 const radialBarTeam = reactive(useRadialBarTeam())
 const barProfit = reactive(useBarProfit())
 const fetchselectedDevice = app.fetchselectedDevice;
-const fetchOrders = app.fetchOrders;
 const fetchApartment = app.fetchApartment;
 
 const initializeData = async () => {
   await fetchApartment();
   await fetchselectedDevice();
-  await fetchOrders();
 };
 
 onMounted(async () => {
@@ -554,7 +552,7 @@ function useDemoBarMulti() {
     },
     yaxis: {
       title: {
-        text: 'Consumption (kw/h)',
+        text: 'مصرف (کیلووات‌ساعت)',
       },
     },
     fill: {
@@ -634,7 +632,7 @@ function useDemoBarMulti3() {
     },
     yaxis: {
       title: {
-        text: 'Consumption (kw/h)',
+        text: 'مصرف (کیلووات‌ساعت)',
       },
     },
     fill: {
@@ -699,7 +697,7 @@ function useDemoBarMulti3() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>Add Block</span>
+                <span>افزودن بلوک</span>
               </BaseHeading>
             </div>
             <!-- Single input for device selection -->
@@ -710,7 +708,7 @@ function useDemoBarMulti3() {
                 @update:model-value="handleChange"
                 @blur="handleBlur"
                 shape="curved"
-                placeholder="Select Apartment"
+                placeholder="انتخاب واحد"
                 icon="ri:community-fill"
               >
                 <!-- Options for device selection -->
@@ -727,7 +725,7 @@ function useDemoBarMulti3() {
                 @update:model-value="handleChange"
                 @blur="handleBlur"
                 shape="curved"
-                placeholder="Select Area"
+                placeholder="انتخاب مساحت"
                 icon="ri:home-line"
               >
                 <!-- Options for device selection -->
@@ -744,7 +742,7 @@ function useDemoBarMulti3() {
                 @update:model-value="handleChange"
                 @blur="handleBlur"
                 shape="curved"
-                placeholder="Unit"
+                placeholder="شماره واحد"
                 icon="ri:home-fill"
               />
             </Field>

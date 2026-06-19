@@ -94,8 +94,6 @@ export const useAuthStore = defineStore('auth', () => {
         document.cookie = `access_token=${response.data.access_token}; path=/`;
         document.cookie = `email=${response.data.email}; path=/`;
 
-        this.addToOrderFromSession(response.data.access_token)
-
         setAuthenticated(true);
         if (response.data.scopes.includes('admin')) {
           this.setIsAdmin(true)
@@ -204,44 +202,6 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (error) {
       // Handle error
       throw error;
-    }
-  }
-
-
-  async function addToOrderFromSession(accessToken) {
-    try {
-      const cart = localStorage.getItem('cart');
-
-      if (cart) {
-        const parsedCart = JSON.parse(cart);
-        if (parsedCart.cart_items && Array.isArray(parsedCart.cart_items)) {
-          for (const order of parsedCart.cart_items) {
-            const orderData = {
-              email: order.email,
-              password: order.password,
-              description: order.description,
-              product_id: order.product.id, // Make sure to access the product's ID correctly.
-            };
-
-            const response = await axios.post(`${apiUrl}/users/carts/items`, orderData, {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-                accept: 'application/json',
-              },
-            });
-
-          }
-          localStorage.removeItem('cart');
-
-        } else {
-          console.error('cart_items is missing or not an array in the cart.');
-        }
-      } else {
-        console.log('No cart found in localStorage.');
-      }
-    } catch (error) {
-      console.error('Error adding orders from localStorage:', error);
     }
   }
 
@@ -403,7 +363,6 @@ export const useAuthStore = defineStore('auth', () => {
     checkAccessToken,
     login,
     loginWithGoogle,
-    addToOrderFromSession,
     sendOTP,
     verifyOTP,
     initiatePasswordRecovery,

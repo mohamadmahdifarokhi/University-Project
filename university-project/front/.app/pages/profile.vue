@@ -70,10 +70,10 @@ const handleFileUpload = async (event: Event) => {
               {{ email }}
             </BaseHeading>
             <BaseHeading class="mt-2" tag="h1" size="sm" weight="medium" lead="none">
-              Area : {{area}}
+              مساحت: {{area}} متر مربع
             </BaseHeading>
              <BaseHeading class="mt-2" tag="h1" size="sm" weight="medium" lead="none">
-              Apartment no : {{apartment_no}}
+              شماره واحد: {{apartment_no}}
             </BaseHeading>
           </div>
         </div>
@@ -90,16 +90,6 @@ const handleFileUpload = async (event: Event) => {
               >
                 <Icon name="ph:buildings-duotone" class="h-4 w-4"/>
                 <span>{{ t('Blocks') }}</span>
-              </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
-                :to="localPath('/profile/orders')"
-                exact-active-class="!text-primary-500 !bg-primary-500/10"
-                class="text-muted-400 hover:text-muted-600 dark:hover:text-muted-200 hover:bg-muted-50 dark:hover:bg-muted-700/50 flex items-center gap-2 rounded-lg p-3 transition-colors duration-300"
-              >
-                <Icon name="ph:buildings-duotone" class="h-4 w-4"/>
-                <span>{{ t('Orders') }}</span>
               </NuxtLink>
             </li>
             <li>
@@ -121,27 +111,6 @@ const handleFileUpload = async (event: Event) => {
                 <Icon name="ph:gear-six-duotone" class="h-4 w-4"/>
                 <span>{{ t('Settings') }}</span>
               </NuxtLink>
-            </li>
-            <li>
-              <NuxtLink
-                :to="localPath('/profile/products')"
-                exact-active-class="!text-primary-500 !bg-primary-500/10"
-                class="text-muted-400 hover:text-muted-600 dark:hover:text-muted-200 hover:bg-muted-50 dark:hover:bg-muted-700/50 flex items-center gap-2 rounded-lg p-3 transition-colors duration-300"
-              >
-                <Icon name="ri:product-hunt-fill" class="size-5"/>
-                <span>Available Products</span>
-              </NuxtLink>
-            </li>
-            <li>
-              <div
-                exact-active-class="!text-primary-500 !bg-primary-500/10"
-                class="text-muted-400 hover:text-muted-600 dark:hover:text-muted-200 hover:bg-muted-50 dark:hover:bg-muted-700/50 flex items-center gap-2 rounded-lg p-3 transition-colors duration-300"
-              >
-                <Icon name="ri:product-hunt-fill" class="size-5"/>
-                <span>Upload Excel</span>
-              </div>
-                <input type="file" @change="handleFileUpload" class="ml-2"/>
-
             </li>
           </ul>
         </div>

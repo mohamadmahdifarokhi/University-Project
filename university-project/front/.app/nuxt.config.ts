@@ -5,6 +5,12 @@ import {
 } from './config/routes-rules'
 
 export default defineNuxtConfig({
+  // This is a token-authenticated, client-driven dashboard. Server-side
+  // rendering tries to call the backend from inside the container (where the
+  // public 127.0.0.1:8002 URL is not reachable), which makes every page hang
+  // on refused connections. Rendering purely on the client avoids that.
+  ssr: false,
+
   extends: [
     /**
      * App layers: these are the layers that contains specific features

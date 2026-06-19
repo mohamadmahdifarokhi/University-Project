@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import {useAppStore} from "~/stores/app";
 import {storeToRefs} from 'pinia';
-import {ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
+import {ref, computed, watch} from 'vue';
 
 const app = useAppStore();
-const router = useRouter();
+const {records} = storeToRefs(app);
 
 definePageMeta({
-  title: 'Orders',
+  title: 'Records',
   middleware: 'authenticated',
   preview: {
     title: 'Edit profile 4',
@@ -19,138 +18,112 @@ definePageMeta({
     order: 79,
   }
 });
-const route = useRoute();
-
-const page = computed(() => parseInt((route.query.page as string) ?? '1'))
-const filter = ref('')
-
-const perPage = ref(2)
-
-watch([page, perPage], () => {
-  fetchOrders(page.value, perPage.value);
-});
-
-const {locale, locales} = useI18n()
 
 const {t} = useI18n({useScope: "local"})
-const query = computed(() => {
-  return {
-    filter: filter.value,
-    perPage: perPage.value,
-    page: page.value,
-  }
-})
-function deleteRecord(recordId){
+
+const page = ref(1);
+const perPage = ref(8);
+
+const totalItems = computed(() => records.value?.length ?? 0);
+const totalPages = computed(() => Math.max(1, Math.ceil(totalItems.value / perPage.value)));
+
+const paginatedRecords = computed(() => {
+  const start = (page.value - 1) * perPage.value;
+  return (records.value ?? []).slice(start, start + perPage.value);
+});
+
+// Keep the current page in range when the data size changes.
+watch(totalPages, (tp) => {
+  if (page.value > tp) page.value = tp;
+});
+
+function deleteRecord(recordId) {
   app.deleteRecord(recordId)
 }
-const formatPrice = (price: number) => {
-  if (price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  }
-};
-const fetchRecords = app.fetchRecords;
-
-
-function statusColor(itemStatus: string) {
-  switch (itemStatus) {
-    case 'online':
-      return 'success'
-    case 'working':
-      return 'info'
-    case 'suspended':
-      return 'warning'
-    default:
-      break
-  }
-}
-
-
-const getOrderProgress = (order) => {
-  const statusOrderMap = {
-    not_processed: 0,
-    processed: 100,
-    cancelled: 100,
-  };
-
-  return statusOrderMap[order.status];
+const formatDate = (value) => {
+  return toJalaliDateTime(value);
 };
 
-const getItemProgress = (item) => {
-  const statusItemMap = {
-    not_processed: 0,
-    processed: 100,
-    cancelled: 100,
-  };
-
-  return statusItemMap[item.status];
-};
 const initializeData = async () => {
-  await fetchRecords();
+  await app.fetchRecords();
 };
 initializeData()
-
 </script>
-
-<style scoped>
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background-color: #ccc;
-  margin-top: 4px;
-  border-radius: 4px;
-}
-
-.progress-bar > div {
-  height: 100%;
-  background-color: #007BFF;
-  border-radius: 4px;
-  transition: width 0.3s ease-in-out;
-}
-</style>
 
 <template>
   <div>
-    <div class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
-      <BaseCard rounded="lg" class="p-6">
-        <div class="mb-6 flex items-center justify-between">
-          <BaseHeading
-            as="h3"
-            size="md"
-            weight="semibold"
-            lead="tight"
-            class="text-muted-800 dark:text-white"
-          >
-            <span>Records</span>
-          </BaseHeading>
+    <BaseCard rounded="lg" class="p-6">
+      <div class="mb-6 flex items-center justify-between">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 dark:text-white"
+        >
+          <span>{{ t('Records') }}</span>
+        </BaseHeading>
+        <BaseText size="sm" class="text-muted-400">
+          {{ totalItems }}
+        </BaseText>
+      </div>
 
-        </div>
-        <div class="mb-2 space-y-5">
-
-          <div v-for="record in app.getRecords" class="flex items-center gap-2">
-                          <div>
-                          <BaseHeading
-                            as="h4"
-                            size="sm"
-                            weight="medium"
-                            lead="snug"
-                            class="text-muted-800 dark:text-white mb-10"
-                          >
-                            <div>Device Name: {{ record.device_name }}</div>
-                            <div>Start Time: {{ record.start_time }}</div>
-                            <div>End Time: {{ record.end_time }}</div>
-                            <div>Consumption: {{ record.consumption }}</div>
-                          </BaseHeading>
-                        </div>
-                        <div class="ms-auto flex items-center gap-1">
-                          <BaseButtonIcon @click="deleteRecord(record.power_record_id)" rounded="full" small>
-                            <Icon name="ri:delete-bin-fill" />
-                          </BaseButtonIcon>
-                        </div>
-
+      <div v-if="paginatedRecords.length" class="space-y-3">
+        <div
+          v-for="record in paginatedRecords"
+          :key="record.power_record_id"
+          class="border-muted-200 dark:border-muted-700 flex items-center gap-2 rounded-lg border p-4"
+        >
+          <div class="grid grid-cols-2 gap-x-6 gap-y-1 grow">
+            <BaseText size="sm" class="text-muted-800 dark:text-white font-medium">
+              {{ record.device_name }}
+            </BaseText>
+            <BaseText size="sm" class="text-muted-500 dark:text-muted-400">
+              {{ record.consumption }} Wh
+            </BaseText>
+            <BaseText size="xs" class="text-muted-400">
+              {{ formatDate(record.start_time) }}
+            </BaseText>
+            <BaseText size="xs" class="text-muted-400">
+              {{ formatDate(record.end_time) }}
+            </BaseText>
           </div>
+          <BaseButtonIcon @click="deleteRecord(record.power_record_id)" rounded="full" small>
+            <Icon name="ri:delete-bin-fill"/>
+          </BaseButtonIcon>
         </div>
-      </BaseCard>
-    </div>
+      </div>
+
+      <div v-else class="py-10 text-center">
+        <BaseText size="sm" class="text-muted-400">
+          {{ t('NoRecords') }}
+        </BaseText>
+      </div>
+
+      <div v-if="totalPages > 1" class="mt-6 flex items-center justify-center gap-2">
+        <BaseButton
+          shape="curved"
+          size="sm"
+          :disabled="page <= 1"
+          @click="page--"
+        >
+          <Icon name="lucide:chevron-right" class="size-4"/>
+        </BaseButton>
+
+        <BaseText size="sm" class="text-muted-500 dark:text-muted-400 px-2">
+          {{ page }} / {{ totalPages }}
+        </BaseText>
+
+        <BaseButton
+          shape="curved"
+          size="sm"
+          :disabled="page >= totalPages"
+          @click="page++"
+        >
+          <Icon name="lucide:chevron-left" class="size-4"/>
+        </BaseButton>
+      </div>
+    </BaseCard>
   </div>
 </template>

@@ -281,8 +281,6 @@ async def auth_callback(request: Request):
             random_numbers = random.randint(1, 26)
             profile = {"user_id": user_id, "photo": random_numbers}
             db.profile.insert_one(profile)
-            cart = {"user_id": user_id}
-            db.cart.insert_one(cart)
 
             a_token = create_token(
                 data={"sub": str(user_id), "scopes": ["user"]},
@@ -293,7 +291,7 @@ async def auth_callback(request: Request):
                 expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
             )
             logger.info(f"Inserted User with ID: {user_id}, Email: {email}")
-            logger.info("Inserted Profile, Cart")
+            logger.info("Inserted Profile")
             return {
                 "access_token": a_token,
                 "expires_in": timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES).total_seconds(),

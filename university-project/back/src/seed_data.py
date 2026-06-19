@@ -28,28 +28,10 @@ DEVICES = [
 ]
 
 PRICING = [
-    {"season_name": "spring", "general_price": 1200, "peak_price": 2400, "day_light": 13},
-    {"season_name": "summer", "general_price": 1500, "peak_price": 3000, "day_light": 14},
-    {"season_name": "fall", "general_price": 1250, "peak_price": 2500, "day_light": 11},
-    {"season_name": "winter", "general_price": 1000, "peak_price": 2100, "day_light": 10},
-]
-
-CATEGORIES = [
-    {"name": {"fa": "پنل خورشیدی", "en": "Solar Panel"}},
-    {"name": {"fa": "باتری", "en": "Battery"}},
-    {"name": {"fa": "اینورتر", "en": "Inverter"}},
-    {"name": {"fa": "پایش و کنترل", "en": "Monitoring"}},
-]
-
-PRODUCTS = [
-    ("solar-panel-450w", "پنل خورشیدی ۴۵۰ وات", "Solar Panel 450W", "پنل مونوکریستال مناسب پشت‌بام", "450W monocrystalline rooftop panel", 12000000, "Solar Panel", "/img/flashlight-line.png"),
-    ("solar-panel-600w", "پنل خورشیدی ۶۰۰ وات", "Solar Panel 600W", "پنل توان بالا برای واحدهای پرمصرف", "High-output panel for larger homes", 16800000, "Solar Panel", "/img/flashlight-line.png"),
-    ("lithium-battery-5kwh", "باتری لیتیومی ۵ کیلووات‌ساعت", "Lithium Battery 5kWh", "ذخیره‌ساز انرژی خانگی", "Residential energy storage battery", 35000000, "Battery", "/img/battery-saver-line.png"),
-    ("lithium-battery-10kwh", "باتری لیتیومی ۱۰ کیلووات‌ساعت", "Lithium Battery 10kWh", "ذخیره‌ساز ظرفیت بالا", "High-capacity storage battery", 62000000, "Battery", "/img/battery-saver-line.png"),
-    ("hybrid-inverter-3kw", "اینورتر هیبرید ۳ کیلووات", "Hybrid Inverter 3kW", "اینورتر خورشیدی تک‌فاز", "Single-phase hybrid solar inverter", 22000000, "Inverter", "/img/exchange-line.png"),
-    ("hybrid-inverter-5kw", "اینورتر هیبرید ۵ کیلووات", "Hybrid Inverter 5kW", "اینورتر مناسب سیستم‌های ترکیبی", "Hybrid inverter for mixed systems", 31000000, "Inverter", "/img/exchange-line.png"),
-    ("smart-meter", "کنتور هوشمند", "Smart Meter", "پایش لحظه‌ای مصرف و تولید", "Live consumption and generation meter", 4500000, "Monitoring", "/img/speed-up-line.svg"),
-    ("energy-gateway", "درگاه مدیریت انرژی", "Energy Gateway", "اتصال تجهیزات به داشبورد", "Gateway for dashboard telemetry", 7800000, "Monitoring", "/img/database-line.png"),
+    {"season_name": "spring", "general_price": 1100, "peak_price": 2900, "day_light": 13},
+    {"season_name": "summer", "general_price": 1425, "peak_price": 3800, "day_light": 14},
+    {"season_name": "fall", "general_price": 1100, "peak_price": 2900, "day_light": 11},
+    {"season_name": "winter", "general_price": 1250, "peak_price": 3300, "day_light": 10},
 ]
 
 
@@ -79,7 +61,11 @@ def ensure_demo_user(email, password):
     else:
         db["users"].update_one(
             {"_id": user["_id"]},
-            {"$set": {"permissions": [permissions["user"]], "provider": user.get("provider", "local")}},
+            {"$set": {
+                "password": get_password_hash(password),
+                "permissions": [permissions["user"]],
+                "provider": user.get("provider", "local"),
+            }},
         )
 
     db["profiles"].update_one(
@@ -165,7 +151,7 @@ def seed_power_records(user_id):
     db["power_records"].delete_many({"user_id": ObjectId(str(user_id))})
     records = []
     now = datetime.now().replace(minute=0, second=0, microsecond=0)
-    for day in range(120):
+    for day in range(400):
         day_start = now - timedelta(days=day)
         for device in DEVICES:
             for _ in range(random.randint(1, 3)):
@@ -188,53 +174,6 @@ def seed_power_records(user_id):
     return len(records)
 
 
-def seed_shop():
-    cat_ids = {}
-    for category in CATEGORIES:
-        db["categories"].update_one({"name.en": category["name"]["en"]}, {"$set": category}, upsert=True)
-        cat_ids[category["name"]["en"]] = db["categories"].find_one({"name.en": category["name"]["en"]})["_id"]
-
-    for slug, fa, en, desc_fa, desc_en, price, category_en, icon in PRODUCTS:
-        db["products"].update_one(
-            {"slug": slug},
-            {"$set": {
-                "slug": slug,
-                "name": {"fa": fa, "en": en},
-                "description": {"fa": desc_fa, "en": desc_en},
-                "price": price,
-                "logo": icon,
-                "photo": "/img/azad-pardis-logo.png",
-                "background": "/img/164.png",
-                "isActivate": True,
-                "category_id": str(cat_ids[category_en]),
-            }},
-            upsert=True,
-        )
-    return len(CATEGORIES), len(PRODUCTS)
-
-
-def seed_orders(user_id, battery_id):
-    db["orders"].delete_many({"user_id": str(user_id)})
-    db["orders"].delete_many({"seller_id": str(user_id)})
-    orders = [
-        {"amount": 120, "fee": 6000, "created_at": datetime.now() - timedelta(days=40)},
-        {"amount": 80, "fee": 4000, "created_at": datetime.now() - timedelta(days=12)},
-        {"amount": 150, "fee": 7500, "created_at": datetime.now() - timedelta(days=2)},
-    ]
-    docs = []
-    for order in orders:
-        docs.append({
-            "user_id": str(user_id),
-            "battery_id": str(battery_id),
-            "seller_id": str(user_id),
-            "amount": order["amount"],
-            "fee": order["fee"],
-            "created_at": order["created_at"],
-        })
-    db["orders"].insert_many(docs)
-    return len(docs)
-
-
 def main():
     email = sys.argv[1] if len(sys.argv) > 1 else DEMO_EMAIL
     password = sys.argv[2] if len(sys.argv) > 2 else DEMO_PASSWORD
@@ -245,13 +184,11 @@ def main():
     apartment_id = ensure_apartment()
     ensure_block(user_id, apartment_id)
     ensure_devices(user_id)
-    battery = ensure_battery(user_id)
+    ensure_battery(user_id)
     power_record_count = seed_power_records(user_id)
-    category_count, product_count = seed_shop()
-    order_count = seed_orders(user_id, battery["_id"])
 
     print(f"Demo user: {email} / {password}")
-    print(f"Seeded {power_record_count} power records, {product_count} products, {category_count} categories, {order_count} orders.")
+    print(f"Seeded {power_record_count} power records.")
 
 
 if __name__ == "__main__":

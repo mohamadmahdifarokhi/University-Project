@@ -60,12 +60,6 @@ const config = useRuntimeConfig()
         ]"
       >
         <NuxtLink
-          :to="localPath('/')"
-          class="inline-flex items-center justify-center px-6"
-        >
-          {{ t("Shop") }}
-        </NuxtLink>
-        <NuxtLink
           class="inline-flex items-center justify-center px-6"
           :to="config.public.GPT_SERVER_URL"
         >

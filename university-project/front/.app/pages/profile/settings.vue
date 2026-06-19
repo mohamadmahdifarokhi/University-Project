@@ -186,7 +186,7 @@ const onSubmit = handleSubmit(
 <!--          </BaseText>-->
         </div>
         <div class="flex items-center gap-2">
-          <BaseButton class="w-24" :to="localPath('/profile/orders')">{{ t("Cancel") }}</BaseButton>
+          <BaseButton class="w-24" :to="localPath('/profile/records')">{{ t("Cancel") }}</BaseButton>
           <BaseButton
             type="submit"
             color="primary"

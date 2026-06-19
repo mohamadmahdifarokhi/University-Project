@@ -181,7 +181,7 @@ def service_cal_graph4(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.95 / 1000)
+            unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 1425 / 1000)
             unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
 
         pipeline = [
@@ -298,7 +298,7 @@ def service_cal_graph4(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.55 / 1000)
+            optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 825 / 1000)
             optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
         seasons_order = ["spring", "summer", "fall", "winter"]
         unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
@@ -679,3 +679,55 @@ def service_show_seasonal_records_on_chart(user_id, season, year):
         return result
     except Exception as e:
         return []
+
+
+def _season_of_date(d):
+    """Map a date to (season, season_year) using the SAME day-accurate
+    boundaries as get_season_dates so availability matches the chart query."""
+    md = (d.month, d.day)
+    if (3, 21) <= md <= (6, 20):
+        return "Spring", d.year
+    elif (6, 21) <= md <= (9, 22):
+        return "Summer", d.year
+    elif (9, 23) <= md <= (12, 20):
+        return "Fall", d.year
+    elif md >= (12, 21):
+        return "Winter", d.year
+    else:  # md <= (3, 20)  -> belongs to previous year's Winter
+        return "Winter", d.year - 1
+
+
+def service_available_periods(user_id):
+    """Return the distinct (year, month) and (year, season) combos that
+    actually have power records for this user, so the dashboard selectors
+    only offer filters that contain data."""
+    pipeline = [
+        {'$match': {'user_id': ObjectId(str(user_id))}},
+        {
+            '$group': {
+                '_id': {
+                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$start_time'}}
+                }
+            }
+        },
+    ]
+    rows = list(db["power_records"].aggregate(pipeline))
+    days = [datetime.strptime(r['_id']['day'], '%Y-%m-%d') for r in rows]
+
+    month_set = {(d.year, d.month) for d in days}
+    months = sorted(month_set, key=lambda x: (x[0], x[1]))
+
+    # Seasonal availability derived from actual record dates (day-accurate).
+    season_set = {_season_of_date(d) for d in days}
+    season_order = {"Spring": 0, "Summer": 1, "Fall": 2, "Winter": 3}
+    seasons = sorted(season_set, key=lambda x: (x[1], season_order[x[0]]))
+
+    years = sorted({y for y, _ in months})
+
+    return {
+        "years": years,
+        "months": [{"year": y, "month": m} for y, m in months],
+        "seasons": [{"year": y, "season": s} for s, y in seasons],
+    }
+
+

@@ -22,13 +22,30 @@ function currentSeason(d = now) {
 }
 const selectedYear = ref<number>(now.getFullYear());
 const selectedSeason = ref<string>(currentSeason());
-const yearOptions = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
-const seasonOptions = [
-  {value: 'Spring', label: 'بهار'},
-  {value: 'Summer', label: 'تابستان'},
-  {value: 'Fall', label: 'پاییز'},
-  {value: 'Winter', label: 'زمستان'},
-];
+
+const { availablePeriods } = storeToRefs(app);
+
+const SEASON_LABELS = {
+  Spring: 'بهار',
+  Summer: 'تابستان',
+  Fall: 'پاییز',
+  Winter: 'زمستان',
+};
+
+// Only offer years/seasons that actually have data.
+const yearOptions = computed(() => {
+  const years = [...new Set((availablePeriods.value?.seasons ?? []).map((s) => s.year))];
+  return years.sort((a, b) => a - b).map((y) => ({
+    value: y,
+    label: gregorianYearToJalaliLabel(y),
+  }));
+});
+
+const seasonOptions = computed(() => {
+  return (availablePeriods.value?.seasons ?? [])
+    .filter((s) => s.year === selectedYear.value)
+    .map((s) => ({ value: s.season, label: SEASON_LABELS[s.season] ?? s.season }));
+});
 
 async function loadSeasonal() {
   if (authStore.isAdmin) {
@@ -42,7 +59,25 @@ async function loadSeasonal() {
 
 // Initial load on mount.
 onMounted(async () => {
+  if (!app.availablePeriods?.seasons?.length) {
+    await app.fetchAvailablePeriods();
+  }
+  // Default to the most recent season that has data.
+  const seasons = app.availablePeriods?.seasons ?? [];
+  if (seasons.length) {
+    const last = seasons[seasons.length - 1];
+    selectedYear.value = last.year;
+    selectedSeason.value = last.season;
+  }
   await loadSeasonal();
+});
+
+// When the year changes, ensure the selected season is valid for it.
+watch(selectedYear, () => {
+  const seasons = seasonOptions.value;
+  if (seasons.length && !seasons.some((s) => s.value === selectedSeason.value)) {
+    selectedSeason.value = seasons[seasons.length - 1].value;
+  }
 });
 
 // Any change in the year or season selectors instantly refreshes the chart
@@ -104,7 +139,7 @@ const demoPie = reactive({
             icon="ph:calendar-blank-duotone"
             class="flex-1"
           >
-            <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
+            <option v-for="year in yearOptions" :key="year.value" :value="year.value">{{ year.label }}</option>
           </BaseSelect>
 
           <!-- Season selection -->

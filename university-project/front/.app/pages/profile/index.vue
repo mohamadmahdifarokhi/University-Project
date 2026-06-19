@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  title: 'Orders',
+  title: 'Records',
   middleware: 'profile',
   preview: {
     title: 'Edit profile 4',

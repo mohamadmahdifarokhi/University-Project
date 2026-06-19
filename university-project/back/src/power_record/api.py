@@ -144,3 +144,12 @@ def power_record_seasonal(
         season=season,
         user_id=user["_id"]
     )
+
+
+@router.get("/available-periods", summary="years/months/seasons that have data for the user")
+def power_record_available_periods(
+    user: User = Depends(get_current_user),
+):
+    return service_available_periods(
+        user_id=user["_id"]
+    )

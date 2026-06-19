@@ -178,13 +178,6 @@ const navigation = [
   // {
   //   divider: true,
   // },
-  {
-    name: 'SHOP',
-    to: '/shop',
-  },
-  {
-    divider: true,
-  },
   // {
   //   name: 'Charts',
   //   children: [

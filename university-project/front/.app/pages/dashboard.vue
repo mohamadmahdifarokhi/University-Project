@@ -12,7 +12,7 @@ const {t} = useI18n({useScope: "local"});
 const router = useRouter();
 
 const app = useAppStore();
-const {orders, categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop} = storeToRefs(app);
+const {categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop} = storeToRefs(app);
 const cate = ref(categories24.value);
 const authStore = useAuthStore();
 
@@ -24,7 +24,7 @@ const demoAreaMulti = reactive(useDemoAreaMulti());
 const demoBarMulti3 = reactive(useDemoBarMulti3());
 
 const fetchselectedDevice = app.fetchselectedDevice;
-const fetchOrders = app.fetchOrders;
+const fetchAvailablePeriods = app.fetchAvailablePeriods;
 const fetch24Records = app.fetch24Records;
 const fetchMonthRecords = app.fetchMonthRecords;
 const fetch8 = app.fetch8;
@@ -59,10 +59,17 @@ async function initializeData() {
     await fetchGraph4Mng();
   }
   if (!authStore.isMng && !authStore.isAdmin) {
+    await fetchAvailablePeriods();
+    // Default the monthly selector to the most recent period that has data.
+    const months = app.availablePeriods?.months ?? [];
+    if (months.length) {
+      const last = months[months.length - 1];
+      selectedYear.value = last.year;
+      selectedMonth.value = last.month;
+    }
     await fetch24Records();
-    await fetchMonthRecords();
+    await fetchMonthRecords(selectedYear.value, selectedMonth.value);
     await fetchselectedDevice();
-    await fetchOrders();
     await fetch8();
     await fetchGraph4();
     await powerConsumption();
@@ -89,16 +96,28 @@ watch([categories24, values24, categoriesMonth, valuesMonth, graph4op, graph4Uno
   deep: true,
 });
 const now = new Date();
+const isMonthlyLoading = ref(false);
+
+const { availablePeriods } = storeToRefs(app);
+
+// Only offer years/months that actually have data.
+const yearOptions = computed(() =>
+  (availablePeriods.value?.years ?? []).map((y) => ({
+    value: y,
+    label: gregorianYearToJalaliLabel(y),
+  }))
+);
+
 const selectedYear = ref<number>(now.getFullYear());
 const selectedMonth = ref<number>(now.getMonth() + 1);
-const isMonthlyLoading = ref(false);
-const yearOptions = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
-const monthOptions = [
-  {value: 1, label: 'فروردین'}, {value: 2, label: 'اردیبهشت'}, {value: 3, label: 'خرداد'},
-  {value: 4, label: 'تیر'}, {value: 5, label: 'مرداد'}, {value: 6, label: 'شهریور'},
-  {value: 7, label: 'مهر'}, {value: 8, label: 'آبان'}, {value: 9, label: 'آذر'},
-  {value: 10, label: 'دی'}, {value: 11, label: 'بهمن'}, {value: 12, label: 'اسفند'},
-];
+
+const monthOptions = computed(() => {
+  const months = (availablePeriods.value?.months ?? [])
+    .filter((m) => m.year === selectedYear.value)
+    .map((m) => ({ value: m.month, label: gregorianMonthToJalaliLabel(m.year, m.month) }));
+  return months;
+});
+
 definePageMeta({
   title: 'داشبورد',
   middleware: ['authenticated'],
@@ -159,6 +178,20 @@ const fetchMonthly = async () => {
     isMonthlyLoading.value = false;
   }
 };
+
+// When the year changes, make sure the selected month is valid for it.
+watch(selectedYear, () => {
+  const months = monthOptions.value;
+  if (months.length && !months.some((m) => m.value === selectedMonth.value)) {
+    selectedMonth.value = months[months.length - 1].value;
+  }
+});
+
+// Any change in the year or month selectors instantly refreshes the chart
+// (no submit button needed).
+watch([selectedYear, selectedMonth], async () => {
+  await fetchMonthly();
+});
 
 function deleteDevice(deviceId) {
   app.deleteDevice(deviceId);
@@ -623,10 +656,25 @@ function useDemoAreaMulti() {
     xaxis: {
       type: 'datetime',
       categories: categoriesMonth.value,
+      labels: {
+        formatter: function (val: any) {
+          try {
+            return toJalaliDate(val);
+          } catch (e) {
+            return val;
+          }
+        },
+      },
     },
     tooltip: {
       x: {
-        format: 'dd/MM/yy HH:mm',
+        formatter: function (val: any) {
+          try {
+            return toJalaliDate(val);
+          } catch (e) {
+            return val;
+          }
+        },
       },
     },
   };
@@ -692,7 +740,7 @@ function useDemoBarMulti3() {
     },
     yaxis: {
       title: {
-        text: 'هزینه (یورو)',
+        text: 'هزینه (تومان)',
       },
     },
     fill: {
@@ -1158,12 +1206,7 @@ function useDemoBarMulti3() {
             <AddonApexcharts v-bind="demoAreaMulti"/>
 
             <div class="border-muted-200 dark:border-muted-700 mt-6 flex justify-center border-t pt-6">
-              <form
-                method="POST"
-                class="w-full max-w-md"
-                @submit.prevent="fetchMonthly"
-                novalidate
-              >
+              <div class="w-full max-w-md">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
                   <!-- Year selection -->
                   <BaseSelect
@@ -1173,7 +1216,7 @@ function useDemoBarMulti3() {
                     icon="ph:calendar-blank-duotone"
                     class="flex-1"
                   >
-                    <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
+                    <option v-for="y in yearOptions" :key="y.value" :value="y.value">{{ y.label }}</option>
                   </BaseSelect>
 
                   <!-- Month selection -->
@@ -1186,19 +1229,8 @@ function useDemoBarMulti3() {
                   >
                     <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
                   </BaseSelect>
-
-                  <BaseButton
-                    type="submit"
-                    color="primary"
-                    shape="curved"
-                    :loading="isMonthlyLoading"
-                    class="h-12 sm:w-32"
-                  >
-                    <Icon name="ph:funnel-duotone" class="me-1 size-4"/>
-                    <span>{{ t("Show") }}</span>
-                  </BaseButton>
                 </div>
-              </form>
+              </div>
             </div>
           </BaseCard>
         </div>
@@ -1372,93 +1404,6 @@ function useDemoBarMulti3() {
         </div>
       </div>
 
-
-    </div>
-
-
-    <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
-      <BaseHeading
-        as="h3"
-        size="md"
-        weight="semibold"
-        lead="tight"
-        class="text-muted-800 dark:text-white mt-10 my-5"
-      >
-        <span>آخرین سفارش</span>
-      </BaseHeading>
-      <div class="space-y-2 pt-6">
-        <TransitionGroup
-          enter-active-class="transform-gpu"
-          enter-from-class="opacity-0 -translate-x-full"
-          enter-to-class="opacity-100 translate-x-0"
-          leave-active-class="absolute transform-gpu"
-          leave-from-class="opacity-100 translate-x-0"
-          leave-to-class="opacity-0 -translate-x-full"
-        >
-
-          <DemoFlexTableRow
-            v-for="(item, index) in orders"
-            :key="index"
-            rounded="sm"
-          >
-            <template #start>
-              <DemoFlexTableStart
-                label="خریدار"
-                :hide-label="index > 0"
-                :title="item.user_id"
-              />
-              <DemoFlexTableStart
-                label="مقدار"
-                :hide-label="index > 0"
-                :title="item.amount"
-                class="ms-20"
-
-              />
-              <DemoFlexTableStart
-                label="کارمزد"
-                :hide-label="index > 0"
-                :title="item.fee"
-                class="ms-20"
-
-              />
-            </template>
-
-            <template #end>
-              <DemoFlexTableCell
-                label="تاریخ"
-                :hide-label="index > 0"
-                tablet-hidden
-                class="w-full sm:w-36"
-              >
-                  <span
-                    class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                  >
-                    {{ item.created_at }}
-                  </span>
-              </DemoFlexTableCell>
-              <DemoFlexTableCell
-                label="قیمت"
-                :hide-label="index > 0"
-                class="w-full sm:w-32"
-              >
-                <div
-                  class="flex w-full items-center justify-end gap-1 sm:justify-center"
-                >
-
-                    <span
-                      class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                    >
-                      20
-                    </span>
-                </div>
-              </DemoFlexTableCell>
-
-            </template>
-          </DemoFlexTableRow>
-        </TransitionGroup>
-
-
-      </div>
 
     </div>
 
