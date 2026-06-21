@@ -118,6 +118,20 @@ const monthOptions = computed(() => {
   return months;
 });
 
+// Pagination for the selected-devices list.
+const devicePage = ref(1);
+const devicePerPage = ref(6);
+const deviceTotalPages = computed(() =>
+  Math.max(1, Math.ceil((app.getselectedDevice?.length ?? 0) / devicePerPage.value))
+);
+const paginatedDevices = computed(() => {
+  const start = (devicePage.value - 1) * devicePerPage.value;
+  return (app.getselectedDevice ?? []).slice(start, start + devicePerPage.value);
+});
+watch(deviceTotalPages, (tp) => {
+  if (devicePage.value > tp) devicePage.value = tp;
+});
+
 definePageMeta({
   title: 'داشبورد',
   middleware: ['authenticated'],
@@ -884,7 +898,7 @@ function useDemoBarMulti3() {
               lead="tight"
               class="text-muted-500 dark:text-muted-400"
             >
-              <span>میانگین سالانه سرمایه‌گذاری و صرفه‌جویی (یورو)</span>
+              <span>میانگین سالانه سرمایه‌گذاری و صرفه‌جویی (تومان)</span>
             </BaseHeading>
             <BaseIconBox
               size="xs"
@@ -1321,28 +1335,20 @@ function useDemoBarMulti3() {
               </BaseSelect>
             </Field>
             <!-- Other input fields -->
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="start">
-              <BaseInput
+            <Field v-slot="{ field, errorMessage, handleChange }" class="mb-2" name="start">
+              <JalaliDateTimePicker
                 :model-value="field.value"
                 :error="errorMessage"
+                placeholder="تاریخ و زمان شروع"
                 @update:model-value="handleChange"
-                @blur="handleBlur"
-                type="datetime-local"
-                shape="curved"
-                placeholder="تاریخ شروع"
-                icon="ri:calendar-fill"
               />
             </Field>
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="end">
-              <BaseInput
+            <Field v-slot="{ field, errorMessage, handleChange }" class="mb-2" name="end">
+              <JalaliDateTimePicker
                 :model-value="field.value"
                 :error="errorMessage"
+                placeholder="تاریخ و زمان پایان"
                 @update:model-value="handleChange"
-                @blur="handleBlur"
-                type="datetime-local"
-                shape="curved"
-                placeholder="تاریخ پایان"
-                icon="ri:calendar-fill"
               />
             </Field>
             <!--            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">-->
@@ -1387,20 +1393,32 @@ function useDemoBarMulti3() {
           </BaseHeading>
         </div>
         <!-- Loop through devices -->
-        <div v-for="device in app.getselectedDevice" :key="device.name">
-          <div class="ltablet:col-span-4 col-span-4 md:col-span-4 lg:col-span-4">
-
-            <BaseCard rounded="lg" class="p-6 mt-3">
-
-              <span> {{ device.name }}</span>
-              <button @click="deleteDevice(device.id)" class="BaseButtonIcon ms-5" rounded="full" small>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div v-for="device in paginatedDevices" :key="device.name">
+            <BaseCard rounded="lg" class="flex items-center justify-between p-4">
+              <span>{{ device.name }}</span>
+              <BaseButtonIcon
+                rounded="full"
+                small
+                color="danger"
+                @click="deleteDevice(device.id)"
+              >
                 <Icon name="ri:delete-bin-fill"/>
-              </button>
-
-              <!-- Button to delete device -->
-
+              </BaseButtonIcon>
             </BaseCard>
           </div>
+        </div>
+
+        <div v-if="deviceTotalPages > 1" class="mt-6 flex items-center justify-center gap-2">
+          <BaseButton shape="curved" size="sm" :disabled="devicePage <= 1" @click="devicePage--">
+            <Icon name="lucide:chevron-right" class="size-4"/>
+          </BaseButton>
+          <BaseText size="sm" class="text-muted-500 dark:text-muted-400 px-2">
+            {{ devicePage }} / {{ deviceTotalPages }}
+          </BaseText>
+          <BaseButton shape="curved" size="sm" :disabled="devicePage >= deviceTotalPages" @click="devicePage++">
+            <Icon name="lucide:chevron-left" class="size-4"/>
+          </BaseButton>
         </div>
       </div>
 

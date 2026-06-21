@@ -59,6 +59,59 @@ def get_season(date):
         return "winter"
 
 
+# ---------------------------------------------------------------------------
+# Iranian residential electricity tariff (تعرفه برق خانگی پلکانی)
+# ---------------------------------------------------------------------------
+# Iran prices residential power with a tiered ("پلکانی") structure based on the
+# monthly consumption pattern (الگوی مصرف): low-consumption ("کم‌مصرف")
+# subscribers pay a heavily subsidised lifeline rate, while high-consumption
+# ("پرمصرف") subscribers pay progressively higher rates. This matches the model
+# confirmed by multiple sources (Tavanir / Ministry of Energy; the residential
+# sector is >60% of national use, and low-use households get bill discounts).
+#
+# IMPORTANT / صداقت داده‌ای: The per-tier rates below are in Toman per kWh and
+# are REALISTIC APPROXIMATIONS of the 1404 (2025) non-tropical residential
+# schedule, anchored to the commonly cited reference of ~1000 Toman/kWh for an
+# average household (e.g. Technolife 1404). The exact official Tavanir rial
+# figures change periodically and were not machine-retrievable at build time.
+# To use the official numbers, just replace the values in TARIFF_TIERS_TOMAN.
+TARIFF_TIERS_TOMAN = [
+    (100, 500),    # تا ۱۰۰ کیلووات‌ساعت در ماه — کم‌مصرف/یارانه‌ای
+    (200, 1000),   # ۱۰۱ تا ۲۰۰ — حدود نرخ مرجع متوسط (~۱۰۰۰ تومان)
+    (300, 1500),   # ۲۰۱ تا ۳۰۰ — نزدیک سقف الگوی مصرف
+    (400, 2500),   # ۳۰۱ تا ۴۰۰ — پرمصرف
+    (500, 3500),   # ۴۰۱ تا ۵۰۰
+    (float("inf"), 5000),  # بالای ۵۰۰ — پرمصرف شدید (بدون یارانه)
+]
+
+# Summer (peak season) carries a surcharge in Iran's tariff schedule.
+SUMMER_SURCHARGE = 1.15
+
+
+def tiered_cost_toman(monthly_kwh, season=None):
+    """Return the monthly bill in Toman for a given consumption using Iran's
+    tiered residential tariff. Consumption is billed cumulatively across tiers.
+    """
+    if monthly_kwh <= 0:
+        return 0.0
+    remaining = monthly_kwh
+    cost = 0.0
+    prev_cap = 0
+    for cap, rate in TARIFF_TIERS_TOMAN:
+        tier_kwh = min(remaining, cap - prev_cap)
+        if tier_kwh <= 0:
+            break
+        cost += tier_kwh * rate
+        remaining -= tier_kwh
+        prev_cap = cap
+        if remaining <= 0:
+            break
+    if season == "summer":
+        cost *= SUMMER_SURCHARGE
+    return cost
+
+
+
 def service_cal_graph4(
         user_id
 
@@ -181,7 +234,10 @@ def service_cal_graph4(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 1425 / 1000)
+            unoptimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
+            # Bill the grid energy with the tiered tariff (monthly basis x3 months).
+            monthly_kwh = unoptimized_grid_kwh / 3
+            unoptimized = tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3 / 1000
             unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
 
         pipeline = [
@@ -258,14 +314,10 @@ def service_cal_graph4(
                     "adjustedConsumption": {
                         "$cond": {
                             "if": {
-                                "$or": [
-                                    {"$eq": ["$device", "air conditioner(small)"]},
-                                    {"$eq": ["$device", "air conditioner(medium)"]},
-                                    {"$eq": ["$device", "air conditioner(large)"]},
-                                    {"$eq": ["$device", "heater (small)"]},
-                                    {"$eq": ["$device", "heater (medium)"]},
-                                    {"$eq": ["$device", "heater (large)"]},
-                                ]
+                                "$regexMatch": {
+                                    "input": "$device_name",
+                                    "regex": "کولر|بخاری|air conditioner|heater"
+                                }
                             },
                             "then": {"$multiply": ["$consumption", 0.33]},
                             "else": "$consumption"
@@ -298,7 +350,9 @@ def service_cal_graph4(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 825 / 1000)
+            optimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
+            monthly_kwh = optimized_grid_kwh / 3
+            optimized = tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3 / 1000
             optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
         seasons_order = ["spring", "summer", "fall", "winter"]
         unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
