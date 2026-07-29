@@ -1,228 +1,86 @@
 <script setup lang="ts">
-import {useAppStore} from "~/stores/app";
-import {storeToRefs} from "pinia";
-import {onMounted} from "vue";
-const app = useAppStore();
-
-// definePageMeta({
-//   title: 'Flex List',
-//   preview: {
-//     title: 'Flex list 3',
-//     description: 'For list views and collections',
-//     categories: ['layouts', 'lists'],
-//     src: '/img/screens/layouts-list-flex-3.png',
-//     srcDark: '/img/screens/layouts-list-flex-3-dark.png',
-//     order: 43,
-//   },
-// })
-
-
-const {sellOrders, buyOrders} = storeToRefs(app);
-
-
-const fetchSellOrders = app.fetchSellOrders;
-const fetchBuyOrders = app.fetchBuyOrders;
-
-
-
-const initializeData = async () => {
-  await fetchSellOrders();
-  await fetchBuyOrders();
+import { useAppStore } from '~/stores/app'
+import { storeToRefs } from 'pinia'
+definePageMeta({ title: 'سفارش‌های انرژی', middleware: 'authenticated' })
+const app = useAppStore()
+const { sellOrders, buyOrders } = storeToRefs(app)
+const loading = ref(true)
+const errorMessage = ref('')
+const filter = ref('')
+const active = ref<'buy' | 'sell'>('buy')
+const source = computed(() => active.value === 'buy' ? buyOrders.value : sellOrders.value)
+const rows = computed(() => (source.value || []).filter((x: any) => JSON.stringify(x).toLowerCase().includes(filter.value.toLowerCase())))
+const money = (n: any) => new Intl.NumberFormat('fa-IR').format(Number(n || 0))
+const date = (v: any) => v ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(v)) : '—'
+async function load() {
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    await Promise.all([app.fetchBuyOrders(), app.fetchSellOrders()])
+  }
+  catch {
+    errorMessage.value = 'دریافت تاریخچه سفارش‌ها ممکن نشد.'
+  }
+  finally {
+    loading.value = false
+  }
 }
-onMounted(async () => {
-    await initializeData();
-  });
-
+onMounted(load)
 </script>
-
 <template>
-  <div>
-    <TairoContentWrapperTabbed
-      :labels="['Buy', 'Sell']"
-      reverse
-      rounded="lg"
-    >
-      <template #left>
-        <BaseInput
-          v-model="filter"
-          rounded="lg"
-          icon="lucide:search"
-          placeholder="Filter courses..."
-          :classes="{
-            wrapper: 'w-full sm:w-auto',
-          }"
-        />
-      </template>
-      <template #tab-1>
-<!--{{sellOrders}}-->
-<!--            {{buyOrders}}-->
-<!--            {{ app.getSellOrders }}-->
-<!--            {{ app.getBuyOrders }}-->
-        <div class="space-y-2 pt-6">
-          <TransitionGroup
-            enter-active-class="transform-gpu"
-            enter-from-class="opacity-0 -translate-x-full"
-            enter-to-class="opacity-100 translate-x-0"
-            leave-active-class="absolute transform-gpu"
-            leave-from-class="opacity-100 translate-x-0"
-            leave-to-class="opacity-0 -translate-x-full"
-          >
-
-            <DemoFlexTableRow
-              v-for="(item, index) in app.getSellOrders"
-              :key="index"
-              rounded="sm"
-            >
-                        <template #start>
-                <DemoFlexTableStart
-                  label="Buyer"
-                  :hide-label="index > 0"
-                  :title="item.user_id"
-                />
-                <DemoFlexTableStart
-                  label="Amount"
-                  :hide-label="index > 0"
-                  :title="item.amount"
-                  class="ms-20"
-
-                />
-                 <DemoFlexTableStart
-                  label="Fee"
-                  :hide-label="index > 0"
-                  :title="item.fee"
-                  class="ms-20"
-
-                />
-              </template>
-
-              <template #end>
-                <DemoFlexTableCell
-                  label="Create"
-                  :hide-label="index > 0"
-                  tablet-hidden
-                  class="w-full sm:w-36"
-                >
-                  <span
-                    class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                  >
-                    {{ item.created_at }}
-                  </span>
-                </DemoFlexTableCell>
-                <DemoFlexTableCell
-                  label="Price"
-                  :hide-label="index > 0"
-                  class="w-full sm:w-32"
-                >
-                  <div
-                    class="flex w-full items-center justify-end gap-1 sm:justify-center"
-                  >
-
-                    <span
-                      class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                    >
-                      20
-                    </span>
-                  </div>
-                </DemoFlexTableCell>
-
-              </template>
-            </DemoFlexTableRow>
-          </TransitionGroup>
-
-          <div v-if="!pending && data?.data.length !== 0" class="pt-6">
-            <BasePagination
-              :total-items="data?.total ?? 0"
-              :item-per-page="perPage"
-              :current-page="page"
-              rounded="full"
-            />
-          </div>
+  <section>
+    <div class="mb-6">
+      <BaseHeading as="h1" size="xl">
+        تاریخچه تبادل انرژی
+      </BaseHeading><BaseParagraph class="text-muted-500 mt-2">
+        خرید و فروش انرژی ذخیره‌شده را یک‌جا پیگیری کنید.
+      </BaseParagraph>
+    </div>
+    <div class="mb-5 flex flex-wrap gap-2">
+      <BaseButton :color="active==='buy'?'primary':'default'" @click="active='buy'">
+        خریدها
+      </BaseButton><BaseButton :color="active==='sell'?'primary':'default'" @click="active='sell'">
+        فروش‌ها
+      </BaseButton><BaseInput
+        v-model="filter"
+        class="sm:ms-auto"
+        icon="lucide:search"
+        placeholder="جست‌وجوی سفارش…"
+      />
+    </div>
+    <BaseCard v-if="loading" class="p-8 text-center">
+      در حال دریافت سفارش‌ها…
+    </BaseCard>
+    <BaseMessage v-else-if="errorMessage" type="danger">
+      {{ errorMessage }} <BaseButton
+        size="sm"
+        class="ms-2"
+        @click="load"
+      >
+        تلاش دوباره
+      </BaseButton>
+    </BaseMessage>
+    <BaseCard v-else-if="!rows.length" class="p-10 text-center">
+      <Icon name="ph:receipt-duotone" class="text-muted-400 mx-auto size-12" /><BaseHeading class="mt-3">
+        هنوز سفارشی ثبت نشده است
+      </BaseHeading><BaseButton
+        to="/shop"
+        color="primary"
+        class="mt-4"
+      >
+        مشاهده بازار انرژی
+      </BaseButton>
+    </BaseCard>
+    <div v-else class="space-y-3">
+      <BaseCard
+        v-for="item in rows"
+        :key="item.id || item._id || item.created_at"
+        class="p-4"
+      >
+        <div class="grid gap-4 sm:grid-cols-4">
+          <div><small class="text-muted-500">طرف معامله</small><p>{{ item.seller_id || item.user_id || 'سامانه' }}</p></div><div><small class="text-muted-500">مقدار انرژی</small><p>{{ money(item.amount) }} کیلووات‌ساعت</p></div><div><small class="text-muted-500">مبلغ</small><p>{{ money(item.fee) }} ریال</p></div><div><small class="text-muted-500">زمان ثبت</small><p>{{ date(item.created_at) }}</p></div>
         </div>
-      </template>
-
-
-      <template #tab-2>
-        <div class="space-y-2 pt-6">
-          <TransitionGroup
-            enter-active-class="transform-gpu"
-            enter-from-class="opacity-0 -translate-x-full"
-            enter-to-class="opacity-100 translate-x-0"
-            leave-active-class="absolute transform-gpu"
-            leave-from-class="opacity-100 translate-x-0"
-            leave-to-class="opacity-0 -translate-x-full"
-          >
-
-            <DemoFlexTableRow
-              v-for="(item, index) in app.getBuyOrders"
-              :key="index"
-              rounded="sm"
-            >
-              <template #start>
-                <DemoFlexTableStart
-                  label="Seller"
-                  :hide-label="index > 0"
-                  :title="item.seller_id"
-                />
-                <DemoFlexTableStart
-                  label="Amount"
-                  :hide-label="index > 0"
-                  :title="item.amount"
-                  class="ms-20"
-
-                />
-                 <DemoFlexTableStart
-                  label="Fee"
-                  :hide-label="index > 0"
-                  :title="item.fee"
-                  class="ms-20"
-
-                />
-              </template>
-
-              <template #end>
-                <DemoFlexTableCell
-                  label="Create"
-                  :hide-label="index > 0"
-                  tablet-hidden
-                  class="w-full sm:w-36"
-                >
-                  <span
-                    class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                  >
-                    {{ item.created_at }}
-                  </span>
-                </DemoFlexTableCell>
-                <DemoFlexTableCell
-                  label="Price"
-                  :hide-label="index > 0"
-                  class="w-full sm:w-32"
-                >
-                  <div
-                    class="flex w-full items-center justify-end gap-1 sm:justify-center"
-                  >
-
-                    <span
-                      class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                    >
-                      20
-                    </span>
-                  </div>
-                </DemoFlexTableCell>
-
-              </template>
-            </DemoFlexTableRow>
-          </TransitionGroup>
-
-          <div v-if="!pending && data?.data.length !== 0" class="pt-6">
-            <BasePagination
-              :total-items="data?.total ?? 0"
-              :item-per-page="perPage"
-              :current-page="page"
-              rounded="full"
-            />
-          </div>
-        </div>
-      </template>
-    </TairoContentWrapperTabbed>
-  </div>
+      </BaseCard>
+    </div>
+  </section>
 </template>

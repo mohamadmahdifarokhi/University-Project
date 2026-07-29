@@ -30,16 +30,8 @@ const router = useRouter()
 
 definePageMeta({
   layout: 'empty',
-  title: 'Login',
+  title: 'ورود به سامانه انرژی',
   middleware: ['no-authenticated', 'redirect'],
-  preview: {
-    title: 'Login 2',
-    description: 'For authentication and sign in',
-    categories: ['layouts', 'authentication'],
-    src: '/img/screens/auth-login-2.png',
-    srcDark: '/img/screens/auth-login-2-dark.png',
-    order: 97,
-  },
 })
 
 
@@ -93,7 +85,7 @@ const onSubmit = handleSubmit(async (values) => {
   <video autoplay muted loop class="absolute inset-0 z-0 object-cover w-full h-full">
     <source src="/auth.mp4" type="video/mp4">
     <!-- Add additional <source> elements for other video formats -->
-    Your browser does not support the video tag.
+    مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
   </video>
   <div class="h-screen md:flex dark:bg-muted-900">
 
@@ -106,13 +98,13 @@ const onSubmit = handleSubmit(async (values) => {
         >
          <div class="text-start mb-20">
           <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
-          MICRO GRID ENERGEY
+          سامانه مدیریت
         </BaseHeading>
         <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
-          MANAGEMENT
+          ریزشبکه انرژی
         </BaseHeading>
         <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
-          SYSTEM
+          دانشگاه پردیس
         </BaseHeading>
         </div>
         <BaseHeading as="h2" size="3xl" weight="medium" class="relative text-white mb-3">
@@ -137,9 +129,9 @@ const onSubmit = handleSubmit(async (values) => {
         <BaseHeading as="h2" size="3xl" weight="medium">
           <NuxtLink
             to="/"
-            aria-label="Go to homepage"
+            aria-label="صفحه اصلی"
           >
-            <span class="text-muted-800 dark:text-white items-center">DC Micro-grid Planner</span>
+            <span class="text-muted-800 dark:text-white items-center">سامانه مدیریت انرژی دانشگاه</span>
           </NuxtLink>
         </BaseHeading>
         <BaseParagraph size="sm" class="text-muted-400 mb-6">

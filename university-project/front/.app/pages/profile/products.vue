@@ -1,153 +1,83 @@
 <script setup lang="ts">
-import {useAppStore} from "~/stores/app";
-import {storeToRefs} from 'pinia';
-import {ref, watch} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
+import { useAppStore } from '~/stores/app'
+import { storeToRefs } from 'pinia'
 
-const app = useAppStore();
-const router = useRouter();
+definePageMeta({ title: 'تجهیزات قابل انتخاب', middleware: 'authenticated' })
 
-definePageMeta({
-  title: 'Orders',
-  middleware: 'authenticated',
-  preview: {
-    title: 'Edit profile 4',
-    description: 'For editing a user profile',
-    categories: ['layouts', 'profile', 'forms'],
-    src: '/img/screens/layouts-subpages-profile-4.png',
-    srcDark: '/img/screens/layouts-subpages-profile-4-dark.png',
-    order: 79,
+const app = useAppStore()
+const { devices } = storeToRefs(app)
+const loading = ref(true)
+const errorMessage = ref('')
+const adding = ref<string | null>(null)
+
+async function load() {
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    await app.fetchDevices()
   }
-});
-const route = useRoute();
-
-const page = computed(() => parseInt((route.query.page as string) ?? '1'))
-const filter = ref('')
-
-const perPage = ref(2)
-
-watch([page, perPage], () => {
-  fetchOrders(page.value, perPage.value);
-});
-
-const {locale, locales} = useI18n()
-
-const {t} = useI18n({useScope: "local"})
-const query = computed(() => {
-  return {
-    filter: filter.value,
-    perPage: perPage.value,
-    page: page.value,
+  catch {
+    errorMessage.value = 'فهرست تجهیزات دریافت نشد.'
   }
-})
-function addDevice (deviceId){
-  app.addDevice(deviceId)
-}
-const formatPrice = (price: number) => {
-  if (price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-  }
-};
-const fetchDevices = app.fetchDevices;
-
-
-function statusColor(itemStatus: string) {
-  switch (itemStatus) {
-    case 'online':
-      return 'success'
-    case 'working':
-      return 'info'
-    case 'suspended':
-      return 'warning'
-    default:
-      break
+  finally {
+    loading.value = false
   }
 }
 
+async function add(device: any) {
+  adding.value = String(device.id)
+  try {
+    await app.addDevice(device.id)
+  }
+  catch {
+    errorMessage.value = 'افزودن تجهیز انجام نشد.'
+  }
+  finally {
+    adding.value = null
+  }
+}
 
-const getOrderProgress = (order) => {
-  const statusOrderMap = {
-    not_processed: 0,
-    processed: 100,
-    cancelled: 100,
-  };
-
-  return statusOrderMap[order.status];
-};
-
-const getItemProgress = (item) => {
-  const statusItemMap = {
-    not_processed: 0,
-    processed: 100,
-    cancelled: 100,
-  };
-
-  return statusItemMap[item.status];
-};
-const initializeData = async () => {
-  await fetchDevices();
-};
-initializeData()
-
+onMounted(load)
 </script>
-
-<style scoped>
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background-color: #ccc;
-  margin-top: 4px;
-  border-radius: 4px;
-}
-
-.progress-bar > div {
-  height: 100%;
-  background-color: #007BFF;
-  border-radius: 4px;
-  transition: width 0.3s ease-in-out;
-}
-</style>
-
 <template>
-  <div>
-    <div class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
-      <BaseCard rounded="lg" class="p-6">
-        <div class="mb-6 flex items-center justify-between">
-          <BaseHeading
-            as="h3"
-            size="md"
-            weight="semibold"
-            lead="tight"
-            class="text-muted-800 dark:text-white"
+  <section>
+    <div class="mb-6">
+      <BaseHeading as="h1" size="xl">
+        تجهیزات قابل انتخاب
+      </BaseHeading><BaseParagraph class="text-muted-500 mt-2">
+        مصرف‌کننده‌های ساختمان را برای ثبت و تحلیل مصرف انرژی فعال کنید.
+      </BaseParagraph>
+    </div><BaseCard v-if="loading" class="p-8 text-center">
+      در حال دریافت تجهیزات…
+    </BaseCard><BaseMessage v-else-if="errorMessage" type="danger">
+      {{ errorMessage }} <BaseButton size="sm" @click="load">
+        تلاش دوباره
+      </BaseButton>
+    </BaseMessage><BaseCard v-else-if="!devices.length" class="p-10 text-center">
+      تجهیز فعالی در سامانه تعریف نشده است.
+    </BaseCard><div v-else class="space-y-3">
+      <BaseCard
+        v-for="x in devices"
+        :key="x.id"
+        class="p-4"
+      >
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <BaseHeading size="sm">
+              {{ x.name }}
+            </BaseHeading><BaseParagraph class="text-muted-500 mt-1">
+              توان نامی: {{ x.power||x.consumption||'—' }} وات
+            </BaseParagraph>
+          </div><BaseButton
+            color="primary"
+            size="sm"
+            :loading="adding===String(x.id)"
+            @click="add(x)"
           >
-            <span>Available Products</span>
-          </BaseHeading>
-
-        </div>
-        <div class="mb-2 space-y-5">
-
-          <div v-for="device in app.getDevices" class="flex items-center gap-2">
-                          <div>
-                          <BaseHeading
-                            as="h4"
-                            size="sm"
-                            weight="medium"
-                            lead="snug"
-                            class="text-muted-800 dark:text-white"
-                          >
-                            <span>{{ device.name }}</span>
-                          </BaseHeading>
-                        </div>
-                        <div class="ms-auto flex items-center gap-1">
-                          <BaseButtonIcon @click="addDevice(device.id)" rounded="full" small>
-                            <Icon name="ri:add-circle-fill" />
-                          </BaseButtonIcon>
-                        </div>
-
-          </div>
+            افزودن
+          </BaseButton>
         </div>
       </BaseCard>
     </div>
-  </div>
+  </section>
 </template>

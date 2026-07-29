@@ -153,19 +153,15 @@ def service_battery_by_user_id(
 
 def get_season(date):
     year = date.year
-    seasons = {
-        'winter': (datetime(year, 12, 21), datetime(year + 1, 3, 20)),
-        'spring': (datetime(year, 3, 21), datetime(year, 6, 20)),
-        'summer': (datetime(year, 6, 21), datetime(year, 9, 22)),
-        'summer': (datetime(year, 9, 23), datetime(year, 12, 20)),
-    }
-
-    for season, (start, end) in seasons.items():
-        if start <= date <= end:
-            return season, start, end
-
-    # Handle the case where the date is in the beginning of the year and belongs to last year's winter
-    return 'Winter', datetime(year - 1, 12, 21), datetime(year, 3, 20)
+    if date <= datetime(year, 3, 20):
+        return "winter", datetime(year - 1, 12, 21), datetime(year, 3, 20)
+    if date <= datetime(year, 6, 20):
+        return "spring", datetime(year, 3, 21), datetime(year, 6, 20)
+    if date <= datetime(year, 9, 22):
+        return "summer", datetime(year, 6, 21), datetime(year, 9, 22)
+    if date <= datetime(year, 12, 20):
+        return "fall", datetime(year, 9, 23), datetime(year, 12, 20)
+    return "winter", datetime(year, 12, 21), datetime(year + 1, 3, 20)
 
 def divide_into_periods(created_at, current_date):
     periods = []
@@ -174,6 +170,8 @@ def divide_into_periods(created_at, current_date):
     while current <= current_date:
         season, start, end = get_season(current)
         period_end = min(end, current_date)
+        if period_end < current:
+            raise ValueError("Season calculation did not advance")
         periods.append({
             'season': season,
             'start': current,

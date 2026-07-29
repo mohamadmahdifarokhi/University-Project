@@ -40,7 +40,17 @@ def service_update_device(
     device_id: str,
     device_data: DeviceUpdateSchema,
 ):
-    pass
+    if not ObjectId.is_valid(device_id):
+        raise HTTPException(status_code=400, detail="invalid device id")
+    result = db["device"].find_one_and_update(
+        {"_id": ObjectId(device_id)},
+        {"$set": device_data.model_dump(exclude_unset=True)},
+        return_document=pymongo.ReturnDocument.AFTER,
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="device not found")
+    result["id"] = str(result.pop("_id"))
+    return DeviceSchema(**result)
 
 def service_device_get(
     device_id:str,    
@@ -95,7 +105,6 @@ user
     if update_result.modified_count == 0:
         raise HTTPException(status_code=404, detail="user not found")
     return {"detail": "device added."}
-
 
 
 

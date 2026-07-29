@@ -1,320 +1,137 @@
 <script setup lang="ts">
-import {onMounted} from "vue";
-import {storeToRefs} from "pinia";
-import {useAppStore} from "~/stores/app";
-const app = useAppStore();
-
-definePageMeta({
-  title: 'Table List',
-  preview: {
-    title: 'Table list 1',
-    description: 'For list views and collections',
-    categories: ['layouts', 'lists'],
-    src: '/img/screens/layouts-table-list-1.png',
-    srcDark: '/img/screens/layouts-table-list-1-dark.png',
-    order: 44,
-  },
-})
-function addOrder(user_id, solar_panel_id, amount, fee) {
-  app.addOrder(user_id, solar_panel_id, amount, fee)
-}
-const config = useRuntimeConfig()
-if (import.meta.dev && !config.public.mapboxToken) {
-  console.warn(
-    'NUXT_PUBLIC_MAPBOX_TOKEN environment variable is not defined, mapbox features are disabled',
-  )
-}
-const route = useRoute()
-const router = useRouter()
-const page = computed(() => parseInt((route.query.page as string) ?? '1'))
-const amount = 0
-const filter = ref('')
-const perPage = ref(10)
-
-watch([filter, perPage], () => {
-  router.push({
-    query: {
-      page: undefined,
-    },
-  })
-})
-
-const query = computed(() => {
-  return {
-    filter: filter.value,
-    perPage: perPage.value,
-    page: page.value,
+import { useAppStore } from '~/stores/app'
+import { storeToRefs } from 'pinia'
+definePageMeta({ title: 'بازار انرژی', middleware: 'authenticated' })
+const app = useAppStore()
+const { batteries } = storeToRefs(app)
+const loading = ref(true)
+const buying = ref<string | null>(null)
+const errorMessage = ref('')
+const search = ref('')
+const amounts = reactive<Record<string, number>>({})
+const items = computed(() => (batteries.value || []).filter((x: any) => JSON.stringify(x).toLowerCase().includes(search.value.toLowerCase())))
+const key = (item: any) => String(item.id || item._id || item.battery_id)
+const number = (value: any) => new Intl.NumberFormat('fa-IR').format(Number(value || 0))
+async function load() {
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    await app.fetchAllBattery()
   }
-})
-
-const { data, pending, error, refresh } = await useFetch(
-  '/api/company/members/',
-  {
-    query,
-  },
-)
-
-const selected = ref<number[]>([])
-
-const isAllVisibleSelected = computed(() => {
-  return selected.value.length === data.value?.data.length
-})
-
-function toggleAllVisibleSelection() {
-  if (isAllVisibleSelected.value) {
-    selected.value = []
+  catch {
+    errorMessage.value = 'بازار انرژی در دسترس نیست.'
   }
-  else {
-    selected.value = data.value?.data.map(item => item.id) ?? []
+  finally {
+    loading.value = false
   }
 }
-
-const {solarPanels, batteries} = storeToRefs(app);
-
-const fetchSolarPanels = app.fetchSolarPanels;
-const fetchAllBattery = app.fetchAllBattery;
-
-
-const initializeData = async () => {
-  await fetchSolarPanels();
-  await fetchAllBattery();
+async function buy(item: any) {
+  const id = key(item)
+  const amount = Number(amounts[id])
+  if (!Number.isFinite(amount) || amount <= 0 || amount > Number(item.saved_energy || 0)) {
+    errorMessage.value = 'مقدار خرید باید بیشتر از صفر و کمتر از انرژی موجود باشد.'
+    return
+  }
+  buying.value = id
+  errorMessage.value = ''
+  try {
+    await app.addOrder(item.user_id, item.id || item._id, amount, item.fee)
+    amounts[id] = 0
+    await load()
+  }
+  catch {
+    errorMessage.value = 'ثبت سفارش انجام نشد. دوباره تلاش کنید.'
+  }
+  finally {
+    buying.value = null
+  }
 }
-onMounted(async () => {
-    await initializeData();
-  });
-
+onMounted(load)
 </script>
-
 <template>
-  <div>
-    <TairoContentWrapper>
-      <template #left>
-        <BaseInput
-          v-model="filter"
-          icon="lucide:search"
-          placeholder="Filter users..."
-          :classes="{
-            wrapper: 'w-full sm:w-auto',
-          }"
-        />
-      </template>
-      <template #right>
-        <BaseSelect
-          v-model="perPage"
-          label=""
-          :classes="{
-            wrapper: 'w-full sm:w-40',
-          }"
-        >
-          <option :value="10">
-            10 per page
-          </option>
-          <option :value="25">
-            25 per page
-          </option>
-          <option :value="50">
-            50 per page
-          </option>
-          <option :value="100">
-            100 per page
-          </option>
-        </BaseSelect>
-      </template>
-      <div>
-        <div v-if="!pending && data?.data.length === 0">
-          <BasePlaceholderPage
-            title="No matching results"
-            subtitle="Looks like we couldn't find any matching results for your search terms. Try other search terms."
-          >
-            <template #image>
-              <img
-                class="block dark:hidden"
-                src="/img/illustrations/placeholders/flat/placeholder-search-4.svg"
-                alt="Placeholder image"
+  <TairoContentWrapper>
+    <template #left>
+      <BaseInput
+        v-model="search"
+        icon="lucide:search"
+        placeholder="جست‌وجوی عرضه‌کننده…"
+      />
+    </template>
+    <div class="mb-7">
+      <BaseHeading as="h1" size="2xl">
+        بازار تبادل انرژی
+      </BaseHeading><BaseParagraph class="text-muted-500 mt-2">
+        انرژی مازاد ذخیره‌شده در ریزشبکه دانشگاه را با قیمت شفاف خریداری کنید.
+      </BaseParagraph>
+    </div>
+    <BaseMessage
+      v-if="errorMessage"
+      type="danger"
+      class="mb-4"
+      @close="errorMessage=''"
+    >
+      {{ errorMessage }}
+    </BaseMessage>
+    <BaseCard v-if="loading" class="p-10 text-center">
+      در حال دریافت عرضه‌های فعال…
+    </BaseCard>
+    <BaseCard v-else-if="!items.length" class="p-10 text-center">
+      <Icon name="ph:battery-empty-duotone" class="text-muted-400 mx-auto size-12" /><BaseHeading class="mt-3">
+        عرضه فعالی وجود ندارد
+      </BaseHeading><BaseParagraph class="text-muted-500 mt-2">
+        پس از ذخیره انرژی مازاد، پیشنهادها اینجا نمایش داده می‌شوند.
+      </BaseParagraph>
+    </BaseCard>
+    <div v-else class="grid gap-4 lg:grid-cols-2">
+      <BaseCard
+        v-for="item in items"
+        :key="key(item)"
+        class="overflow-hidden"
+      >
+        <div class="border-success-500 border-s-4 p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <BaseHeading>{{ item.email||'عرضه‌کننده ریزشبکه' }}</BaseHeading><BaseTag
+                color="success"
+                variant="pastel"
+                class="mt-2"
               >
-              <img
-                class="hidden dark:block"
-                src="/img/illustrations/placeholders/flat/placeholder-search-4-dark.svg"
-                alt="Placeholder image"
-              >
-            </template>
-          </BasePlaceholderPage>
-        </div>
-        <div v-else>
-          <div class="w-full">
-            <TairoTable rounded="sm" :scrollable="false">
-              <template #header>
-<!--                <TairoTableHeading-->
-<!--                  uppercase-->
-<!--                  spaced-->
-<!--                  class="p-4"-->
-
-<!--                >-->
-<!--                  <div class="flex items-center">-->
-<!--                    <BaseCheckbox-->
-<!--                      :model-value="isAllVisibleSelected"-->
-<!--                      :indeterminate="-->
-<!--                        selected.length > 0 && !isAllVisibleSelected-->
-<!--                      "-->
-<!--                      name="table-1-main"-->
-<!--                      rounded="sm"-->
-<!--                      color="primary"-->
-<!--                      @click="toggleAllVisibleSelection"-->
-<!--                    />-->
-<!--                  </div>-->
-<!--                </TairoTableHeading>-->
-                <TairoTableHeading uppercase spaced>
-                  Users
-                </TairoTableHeading>
-                <TairoTableHeading uppercase spaced>
-                  Saved
-                </TairoTableHeading>
-                <TairoTableHeading uppercase spaced>
-                  Status
-                </TairoTableHeading>
-                <TairoTableHeading uppercase spaced>
-                  Sold
-                </TairoTableHeading>
-                <TairoTableHeading
-                  uppercase
-                  spaced
-                  class="text-end"
-                >
-                  Action
-                </TairoTableHeading>
-              </template>
-
-              <TairoTableRow v-if="selected.length > 0" :hoverable="false">
-                <TairoTableCell
-                  colspan="6"
-                  class="bg-success-100 text-success-700 dark:bg-success-700 dark:text-success-100 p-4"
-                >
-                  You have selected {{ selected.length }} items of the total
-                  {{ data?.total }} items.
-                  <a
-                    href="#"
-                    class="outline-none hover:underline focus:underline"
-                  >Click here to everything</a>
-                </TairoTableCell>
-              </TairoTableRow>
-
-              <TairoTableRow v-for="item in batteries">
-<!--                <TairoTableCell spaced>-->
-<!--                  <div class="flex items-center">-->
-<!--                    <BaseCheckbox-->
-<!--                      v-model="selected"-->
-<!--                      :value="item.id"-->
-<!--                      :name="`item-checkbox-${item.id}`"-->
-<!--                      rounded="sm"-->
-<!--                      color="primary"-->
-<!--                    />-->
-<!--                  </div>-->
-<!--                </TairoTableCell>-->
-                <TairoTableCell spaced>
-                  <div class="flex items-center">
-<!--                    <BaseAvatar-->
-<!--                      :src="item.picture"-->
-<!--                      :text="item.initials"-->
-<!--                      :class="getRandomColor()"-->
-<!--                    />-->
-                    <div class="ms-3 leading-none">
-                      <h4 class="font-sans text-sm font-medium">
-                        {{ item.email }}
-                      </h4>
-
-                    </div>
-                  </div>
-                </TairoTableCell>
-                <TairoTableCell light spaced>
-                  {{ item.saved_energy }}
-                </TairoTableCell>
-                <TairoTableCell spaced class="capitalize">
-                  <BaseTag
-                    v-if="item.status === 'available'"
-                    color="success"
-                    variant="pastel"
-                    rounded="full"
-                    size="sm"
-                    class="font-medium"
-                  >
-                    {{ item.status }}
-                  </BaseTag>
-                  <BaseTag
-                    v-else-if="item.status === 'Unavailable'"
-                    color="info"
-                    variant="pastel"
-                    rounded="full"
-                    size="sm"
-                    class="font-medium"
-                  >
-                    {{ item.status }}
-                  </BaseTag>
-                  <BaseTag
-                    v-else-if="item.status === 'busy'"
-                    color="warning"
-                    variant="pastel"
-                    rounded="full"
-                    size="sm"
-                    class="font-medium"
-                  >
-                    {{ item.status }}
-                  </BaseTag>
-                  <BaseTag
-                    v-else-if="item.status === 'offline'"
-                    color="muted"
-                    variant="pastel"
-                    rounded="full"
-                    size="sm"
-                    class="font-medium"
-                  >
-                    {{ item.status }}
-                  </BaseTag>
-                </TairoTableCell>
-                <TairoTableCell spaced>
-                  {{ item.sold_energy }}
-                </TairoTableCell>
-
-                <TairoTableCell spaced>
-                  <div class="flex justify-center">
-                    <BaseInput
-    v-model="amount"
-    type="number"
-    placeholder="Enter amount..."
-    :classes="{
-      wrapper: 'w-full sm:w-auto',
-    }"
-  />
-                    <BaseButtonIcon class="ms-3" @click="addOrder(item.user_id, item.id, amount, item.fee)" rounded="full" small>
-                  <Icon name="ri:add-circle-fill"/>
-                </BaseButtonIcon>
-<!--                    <BaseDropdown-->
-<!--                      variant="context"-->
-<!--                      label="Dropdown"-->
-<!--                      orientation="end"-->
-<!--                      rounded="md"-->
-<!--                    >-->
-<!--                      <BaseDropdownItem-->
-<!--                        to="#"-->
-<!--                        title="User"-->
-<!--                        text="View details"-->
-<!--                        rounded="md"-->
-<!--                      />-->
-<!--                    </BaseDropdown>-->
-                  </div>
-                </TairoTableCell>
-              </TairoTableRow>
-            </TairoTable>
-          </div>
-          <div class="mt-6">
-            <BasePagination
-              :total-items="data?.total ?? 0"
-              :item-per-page="perPage"
-              :current-page="page"
-              rounded="lg"
-            />
+                آماده معامله
+              </BaseTag>
+            </div><Icon name="ph:battery-charging-vertical-duotone" class="text-success-500 size-10" />
+          </div><dl class="mt-5 grid grid-cols-2 gap-3">
+            <div>
+              <dt class="text-muted-500 text-xs">
+                انرژی موجود
+              </dt><dd class="font-semibold">
+                {{ number(item.saved_energy) }} کیلووات‌ساعت
+              </dd>
+            </div><div>
+              <dt class="text-muted-500 text-xs">
+                نرخ واحد
+              </dt><dd class="font-semibold">
+                {{ number(item.fee) }} ریال
+              </dd>
+            </div>
+          </dl><div class="mt-5 flex flex-col gap-2 sm:flex-row">
+            <BaseInput
+              v-model.number="amounts[key(item)]"
+              type="number"
+              min="1"
+              :max="item.saved_energy"
+              placeholder="مقدار خرید"
+              class="flex-1"
+            /><BaseButton
+              color="primary"
+              :loading="buying===key(item)"
+              :disabled="buying!==null"
+              @click="buy(item)"
+            >
+              ثبت خرید
+            </BaseButton>
           </div>
         </div>
-      </div>
-    </TairoContentWrapper>
-  </div>
+      </BaseCard>
+    </div>
+  </TairoContentWrapper>
 </template>

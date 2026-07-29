@@ -1,9 +1,16 @@
 @font-face {
-    font-family: 'IranSansX(Pro)';
-    src: url('~static/fonts/IranSansX(Pro).woff2') format('woff2'), /* Modern Browsers */
-         url('~IranSansX(Pro).woff') format('woff'); /* Older Browsers */
+  font-family: 'IRANSansX';
+  src: url('/fonts/IRANSansX-Regular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
 }
 
-body {
-    font-family: 'IranSansX(Pro)', sans-serif;
+html, body, button, input, textarea, select {
+  font-family: 'IRANSansX', Tahoma, sans-serif !important;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(var(--color-primary-500) / .45);
+  outline-offset: 2px;
 }

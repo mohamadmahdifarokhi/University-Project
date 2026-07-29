@@ -1,51 +1,51 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue';
-import { useAppStore } from '~/stores/app';
-import { storeToRefs } from 'pinia';
+import { onMounted, watch } from 'vue'
+import { useAppStore } from '~/stores/app'
+import { storeToRefs } from 'pinia'
 
-const app = useAppStore();
-const { peakHour, peakPower } = storeToRefs(app);
-const powerConsumption = app.powerConsumption;
+const app = useAppStore()
+const { peakHour, peakPower } = storeToRefs(app)
+const powerConsumption = app.powerConsumption
 
 async function initializeData() {
-  await powerConsumption();
+  await powerConsumption()
 }
 
 onMounted(async () => {
-  await initializeData();
-});
+  await initializeData()
+})
 
 const skills = ref([
   {
     id: 0,
-    name: 'Peak Hour Consumption',
-    count: `${peakHour.value} w`,
+    name: 'ساعت اوج مصرف',
+    count: `${peakHour.value || '—'}`,
     icon: 'ri:time-fill',
   },
   {
     id: 1,
-    name: 'Peak Power Consumption',
-    count: `${peakPower.value} w`,
+    name: 'بیشینه توان مصرفی',
+    count: `${peakPower.value || '—'} وات`,
     icon: 'ri:flashlight-fill',
   },
-]);
+])
 
 watch([peakHour, peakPower], () => {
   skills.value = [
     {
       id: 0,
-      name: 'Peak Hour Consumption',
-      count: `${peakHour.value} w`,
+      name: 'ساعت اوج مصرف',
+      count: `${peakHour.value || '—'}`,
       icon: 'ri:time-fill',
     },
     {
       id: 1,
-      name: 'Peak Power Consumption',
-      count: `${peakPower.value} w`,
+      name: 'بیشینه توان مصرفی',
+      count: `${peakPower.value || '—'} وات`,
       icon: 'ri:flashlight-fill',
     },
-  ];
-});
+  ]
+})
 </script>
 
 <template>
@@ -58,7 +58,7 @@ watch([peakHour, peakPower], () => {
       <div
         class="border-muted-200 dark:border-muted-700 flex size-10 items-center justify-center rounded-full border"
       >
-        <Icon :name="skill.icon" class="size-5"/>
+        <Icon :name="skill.icon" class="size-5" />
       </div>
       <div>
         <BaseHeading

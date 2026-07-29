@@ -62,7 +62,7 @@ services:
   university-project-front:
     build: ./university-project/front
     container_name: university-project-front
-    # command: "node .app/.output/server/index.mjs"
+    command: pnpm exec nuxi dev .app --host 0.0.0.0 --port 3000
     working_dir: /usr/src/app
     volumes:
       - ./university-project/front:/usr/src/app
@@ -75,6 +75,9 @@ services:
     ports:
       - "80:3000"
     env_file: ./university-project/front/.app/.env
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
     depends_on:
       - university-project
       - university-project-db

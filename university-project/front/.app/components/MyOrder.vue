@@ -36,11 +36,6 @@ const {t} = useI18n({useScope: "local"})
 <template>
   <div class="ltablet:col-span-4 col-span-12 lg:col-span-4 hidden md:block">
     <div class="bg-muted-200 dark:bg-muted-800 flex flex-col gap-6 rounded-2xl p-6">
-      <div>
-        <BaseHeading tag="h3" size="xl" weight="medium" class="text-muted-800 dark:text-muted-100">
-          <span>{{ t('Order') }}</span>
-        </BaseHeading>
-      </div>
       <!-- Items -->
       <ul class="space-y-4">
         <li v-for="item in cart.cart_items" :key="item.product?.id">

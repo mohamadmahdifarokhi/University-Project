@@ -88,7 +88,7 @@ export default defineAppConfig({
         // },
         items: [
           {
-            title: 'DC Micro-grid Planner',
+            title: 'برنامه‌ریز ریزشبکه برق مستقیم',
             icon: {name: 'ph:sidebar-duotone', class: 'w-5 h-5'},
             subsidebar: {component: 'DemoSubsidebarDashboards'},
             activePath: '/dashboards',

@@ -3,6 +3,7 @@ import axios from 'axios';
 
 
 const apiUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL}`;
+const uiText = (fa, en) => import.meta.client && document.documentElement.lang.startsWith('en') ? en : fa;
 
 // Maps the current date to the season names the backend expects.
 function getCurrentSeason(date = new Date()) {
@@ -138,9 +139,6 @@ export const useAppStore = defineStore('app', {
           });
 
           if (response.data) {
-            console.log(
-              response.data, "qweqwewww"
-            )
             this.email = response.data.user.email;
             this.photo = response.data?.photo || '';
             this.apartment_no = response.data?.apartment_no || '';
@@ -179,10 +177,8 @@ export const useAppStore = defineStore('app', {
               }
             )
           ;
-          console.log(response)
-          console.log('response')
           if (response.status === 200) {
-            this.showSuccessToast('Success Send');
+            this.showSuccessToast(uiText('پیام با موفقیت ارسال شد.', 'Message sent successfully.'));
 
             return true
           }
@@ -219,7 +215,6 @@ export const useAppStore = defineStore('app', {
       }
     },
     async ChangeActiveGenre(categoryID) {
-      console.log(categoryID, "qweqwe")
       this.activeGenre = categoryID
     },
 
@@ -434,13 +429,14 @@ export const useAppStore = defineStore('app', {
           }
         });
         if (response.status === 200) {
-          window.location.reload();
-
-          this.showSuccessToast('Delete');
+          this.selectedDevice = this.selectedDevice.filter(item => String(item.id) !== String(deviceId));
+          this.showSuccessToast(uiText('تجهیز حذف شد.', 'Device removed.'));
+          return true;
 
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
       }
     },
 
@@ -585,12 +581,11 @@ export const useAppStore = defineStore('app', {
           //   page_size: perPage,
           // },
         });
-        // console.log(response.data,'sellsell')
         this.sellOrders = response.data;
-        // console.log(this.sellOrders,'sellsellz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
       }
     },
     async fetchBuyOrders() {
@@ -606,10 +601,8 @@ export const useAppStore = defineStore('app', {
           //   page_size: perPage,
           // },
         });
-        // console.log(response.data,'buybuy')
 
         this.buyOrders = response.data;
-        // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -628,11 +621,9 @@ export const useAppStore = defineStore('app', {
           //   page_size: perPage,
           // },
         });
-        // console.log(response.data,'buybuy')
 
         this.graph4Unop = response.data[0];
         this.graph4op = response.data[1];
-        // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -651,11 +642,9 @@ export const useAppStore = defineStore('app', {
           //   page_size: perPage,
           // },
         });
-        // console.log(response.data,'buybuy')
 
         this.graph4Unop = response.data[0];
         this.graph4op = response.data[1];
-        // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -674,11 +663,9 @@ export const useAppStore = defineStore('app', {
           //   page_size: perPage,
           // },
         });
-        // console.log(response.data,'buybuy')
 
         this.graph4Unop = response.data[0].map(item => item * 0.75);
         this.graph4op = response.data[1].map(item => item * 0.75);
-        // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -697,10 +684,8 @@ export const useAppStore = defineStore('app', {
           //   page_size: perPage,
           // },
         });
-        // console.log(response.data,'buybuy')
 
         this.allUsers = response.data;
-        // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -719,10 +704,8 @@ export const useAppStore = defineStore('app', {
           //   page_size: perPage,
           // },
         });
-        // console.log(response.data,'buybuy')
 
         this.allUsers = response.data;
-        // console.log(this.buyOrders,'buybuyz')
 
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -787,11 +770,13 @@ export const useAppStore = defineStore('app', {
           }
         });
         if (response.status === 200) {
-          this.showSuccessToast('Add');
+          this.showSuccessToast(uiText('تجهیز اضافه شد.', 'Device added.'));
+          return true;
 
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
       }
     },
     async importExcel(file) {
@@ -808,10 +793,12 @@ export const useAppStore = defineStore('app', {
         });
 
         if (response.status === 200) {
-          this.showSuccessToast('File uploaded successfully');
+          this.showSuccessToast(uiText('فایل سوابق با موفقیت بارگذاری شد.', 'Records file uploaded successfully.'));
+          return true;
         }
       } catch (error) {
         console.error('Error uploading file:', error);
+        throw error;
       }
     },
     async deleteRecord(recordId) {
@@ -824,13 +811,13 @@ export const useAppStore = defineStore('app', {
           }
         });
         if (response.status === 200) {
-          window.location.reload();
-
-          this.showSuccessToast('Delete');
-
+          this.records = this.records.filter(item => item.power_record_id !== recordId);
+          this.showSuccessToast(uiText('سابقه حذف شد.', 'Record deleted.'));
+          return true;
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
       }
     },
     async addBlock(apartment_no, area, unit) {
@@ -840,7 +827,6 @@ export const useAppStore = defineStore('app', {
           unit: unit,
           area: area,
         };
-        console.log(recordData, 'kok')
         const accessToken = useCookie('access_token').value;
         const response = await axios.post(`${apiUrl}/blocks/blocks`, recordData, {
           headers: {
@@ -849,11 +835,12 @@ export const useAppStore = defineStore('app', {
           }
         });
         if (response.status === 200) {
-          this.showSuccessToast('Add');
-
+          this.showSuccessToast(uiText('مشخصات ساختمان ثبت شد.', 'Building details saved.'));
+          return true;
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
       }
     },
 
@@ -865,7 +852,6 @@ export const useAppStore = defineStore('app', {
           end_time: end,
           consumption: consumption
         };
-        console.log(recordData, 'kok')
         const accessToken = useCookie('access_token').value;
         const response = await axios.post(`${apiUrl}/power-records/add-record`, recordData, {
           headers: {
@@ -874,7 +860,7 @@ export const useAppStore = defineStore('app', {
           }
         });
         if (response.status === 200) {
-          this.showSuccessToast('Add');
+          this.showSuccessToast(uiText('سابقه مصرف ثبت شد.', 'Consumption record added.'));
 
         }
       } catch (error) {
@@ -890,7 +876,6 @@ export const useAppStore = defineStore('app', {
           fee: fee
         };
 
-        console.log(orderData, 'kok');
         const accessToken = useCookie('access_token').value;
         const response = await axios.post(`${apiUrl}/users/orders/order/`, orderData, {
           headers: {
@@ -899,10 +884,12 @@ export const useAppStore = defineStore('app', {
           }
         });
         if (response.status === 200) {
-          this.showSuccessToast('Add');
+          this.showSuccessToast(uiText('سفارش انرژی ثبت شد.', 'Energy order placed.'));
+          return true;
         }
       } catch (error) {
         console.error('Error adding order:', error);
+        throw error;
       }
     },
     async addBattery(savedEnergy, soldEnergy) {
@@ -922,7 +909,7 @@ export const useAppStore = defineStore('app', {
         });
 
         if (response.status === 200) {
-          this.showSuccessToast('Battery added successfully');
+          this.showSuccessToast(uiText('باتری با موفقیت ثبت شد.', 'Battery added successfully.'));
         }
       } catch (error) {
         console.error('Error adding battery:', error);
@@ -942,6 +929,7 @@ export const useAppStore = defineStore('app', {
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
       }
     },
 
@@ -961,8 +949,6 @@ export const useAppStore = defineStore('app', {
           const labels = data.map(item => item._id);
           this.seasonDatas = datas
           this.seasonLabels = labels
-          console.log(datas); // list of total_usage
-          console.log(labels); // list of _id
           // You can also return these values or set them in the state if using a framework like Vue or React
           return {datas, labels};
         }
@@ -986,8 +972,6 @@ export const useAppStore = defineStore('app', {
           const labels = data.map(item => item._id);
           this.seasonDatas = datas
           this.seasonLabels = labels
-          console.log(datas); // list of total_usage
-          console.log(labels); // list of _id
           // You can also return these values or set them in the state if using a framework like Vue or React
           return {datas, labels};
         }
@@ -1011,8 +995,6 @@ export const useAppStore = defineStore('app', {
           const labels = data.map(item => item._id);
           this.seasonDatas = datas
           this.seasonLabels = labels
-          console.log(datas); // list of total_usage
-          console.log(labels); // list of _id
           // You can also return these values or set them in the state if using a framework like Vue or React
           return {datas, labels};
         }
@@ -1035,6 +1017,7 @@ export const useAppStore = defineStore('app', {
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
       }
     },
 
@@ -1042,7 +1025,7 @@ export const useAppStore = defineStore('app', {
     async addToOrder({email, password, description, userHasAccount}) {
       try {
         if (this.cart.cart_items.length >= 5) {
-          this.showErrorToast('Cannot add more than 5 items to the cart');
+          this.showErrorToast(uiText('حداکثر پنج مورد می‌توان به سبد اضافه کرد.', 'A maximum of five items can be added.'));
 
           throw new Error('Cannot add more than 5 items to the cart');
         } else {
@@ -1088,8 +1071,8 @@ export const useAppStore = defineStore('app', {
                 console.error('Product not available.');
               }
             } else {
-              setFieldError('email', 'Email is required');
-              setFieldError('password', 'Password is required');
+              setFieldError('email', uiText('ایمیل الزامی است.', 'Email is required.'));
+              setFieldError('password', uiText('رمز عبور الزامی است.', 'Password is required.'));
             }
           } else {
             if (this.product) {
@@ -1181,16 +1164,16 @@ export const useAppStore = defineStore('app', {
           },
         });
         if (response.data.status !== 'failure') {
-          this.showSuccessToast('Success Payment');
+          this.showSuccessToast(uiText('پرداخت با موفقیت تأیید شد.', 'Payment confirmed.'));
           return true
         } else {
-          this.showErrorToast('Failed Payment');
+          this.showErrorToast(uiText('پرداخت ناموفق بود.', 'Payment failed.'));
           return false
 
         }
       } catch (error) {
         console.error('Error sending data to the backend:', error);
-        this.showErrorToast('Error sending data to the backend');
+        this.showErrorToast(uiText('ارتباط با سرویس پرداخت انجام نشد.', 'Could not contact the payment service.'));
         return false
 
       }
@@ -1199,7 +1182,7 @@ export const useAppStore = defineStore('app', {
       const toaster = useToaster();
 
       toaster.show({
-        title: 'Success',
+        title: uiText('انجام شد', 'Completed'),
         message: message,
         color: 'success',
         icon: 'ph:check',
@@ -1210,7 +1193,7 @@ export const useAppStore = defineStore('app', {
       const toaster = useToaster();
 
       toaster.show({
-        title: 'Oops!',
+        title: uiText('خطا', 'Error'),
         message: message,
         color: 'danger',
         icon: 'lucide:alert-triangle',
@@ -1220,7 +1203,7 @@ export const useAppStore = defineStore('app', {
     showWarningToast(message) {
       const toaster = useToaster();
       toaster.show({
-        title: 'Warning',
+        title: uiText('هشدار', 'Warning'),
         message: message,
         color: 'warning',
         icon: 'ph:warning',

@@ -11,7 +11,7 @@ const {t} = useI18n({useScope: "local"})
 
 const followers = [
   {
-    'data-nui-tooltip': 'DC Micro-grid Planner',
+    'data-nui-tooltip': 'برنامه‌ریز ریزشبکه برق مستقیم',
     'src': '/img/accountract.png',
   },
   {

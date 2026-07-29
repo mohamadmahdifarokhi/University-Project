@@ -52,6 +52,10 @@ def device_get(
         device_id
     )
 
+@router.patch("/{device_id}", response_model=DeviceSchema, summary="updates a device")
+def device_update(device_id: str, payload: DeviceUpdateSchema):
+    return service_update_device(device_id, payload)
+
 @router.patch("/select", summary="select device")
 async def select_device(
     device_id: str,

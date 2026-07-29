@@ -1,23 +1,9 @@
 import { useAuthStore } from "@/stores/auth";
 
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore();
-
-  if (authStore.isAuthenticated) {
-    if (from.path.startsWith('/en/')) {
-      // Redirect to '/en/profile/orders'
-      return navigateTo('/en/profile/orders');
-    } else {
-      // Redirect to '/profile/orders'
-      return navigateTo('/profile/orders');
-    }
-  } else {
-    if (from.path.startsWith('/en/')) {
-      // Redirect to '/en/login'
-      return navigateTo('/en/login');
-    } else {
-      // Redirect to '/login'
-      return navigateTo('/login');
-    }
-  }
+  await authStore.checkAccessToken();
+  const english = to.path.startsWith('/en/');
+  if (!authStore.isAuthenticated) return navigateTo(english ? '/en/login' : '/login');
+  return navigateTo(english ? '/en/profile/orders' : '/profile/orders', { replace: true });
 });

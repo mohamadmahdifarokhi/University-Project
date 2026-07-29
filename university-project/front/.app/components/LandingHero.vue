@@ -138,7 +138,7 @@ const {locale, locales} = useI18n()
           lead="tight"
           class="text-muted-800 xs:!text-4xl mx-auto mb-4 max-w-2xl dark:text-white"
         >
-          {{ t('DC Micro-grid Planner') }}
+          {{ t('برنامه‌ریز ریزشبکه برق مستقیم') }}
           <!--          <span-->
           <!--            class="text-primary-500 font-hairline underline decoration-dotted"-->
           <!--          >ract</span>-->

@@ -5,6 +5,10 @@ import {
 } from './config/routes-rules'
 
 export default defineNuxtConfig({
+  // The dashboard authentication flow relies on browser cookies/localStorage.
+  // Render it as an SPA so route guards run in their intended client context.
+  ssr: false,
+
   extends: [
     /**
      * App layers: these are the layers that contains specific features
@@ -51,6 +55,7 @@ export default defineNuxtConfig({
 
   css: [
     '~/assets/css/colors.css',
+    '~/assets/css/font.css',
     '@fontsource-variable/fira-code/index.css',
     '@fontsource-variable/inter/index.css',
     '@fontsource-variable/karla/index.css',
@@ -107,6 +112,20 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    // Always revalidate application documents so a deployed UI update cannot
+    // remain hidden behind an old browser cache. Hashed assets stay immutable.
+    '/**': {
+      headers: {
+        'cache-control': 'no-store, no-cache, must-revalidate',
+        pragma: 'no-cache',
+        expires: '0',
+      },
+    },
+    '/_nuxt/**': {
+      headers: {
+        'cache-control': 'public, max-age=31536000, immutable',
+      },
+    },
     ...demoRules,
     ...landingRules,
     ...(import.meta.env.ENABLE_DOCUMENTATION ? documentationRules : {}),

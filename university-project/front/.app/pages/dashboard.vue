@@ -1,120 +1,108 @@
 <script setup lang="ts">
-import {ref, reactive, computed, watch, onMounted} from 'vue';
-import {useAppStore} from "~/stores/app";
-import {useAuthStore} from "@/stores/auth";
-import {toTypedSchema} from "@vee-validate/zod";
-import {Field, useForm} from 'vee-validate'
-import {z} from 'zod'
-import {storeToRefs} from "pinia";
-import {useI18n} from 'vue-i18n';
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { useAppStore } from '~/stores/app'
+import { useAuthStore } from '@/stores/auth'
+import { toTypedSchema } from '@vee-validate/zod'
+import { Field, useForm } from 'vee-validate'
+import { z } from 'zod'
+import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 
-const {t} = useI18n({useScope: "local"});
-const router = useRouter();
+const { t } = useI18n({ useScope: 'local' })
+const router = useRouter()
 
-const app = useAppStore();
-const {orders, categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop} = storeToRefs(app);
-const cate = ref(categories24.value);
-const authStore = useAuthStore();
+const app = useAppStore()
+const { orders, categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop, peakHour, peakPower } = storeToRefs(app)
+const cate = ref(categories24.value)
+const authStore = useAuthStore()
+const dashboardLoading = ref(true)
+const dashboardError = ref('')
+const dashboardEmpty = computed(() => !categories24.value?.length && !categoriesMonth.value?.length && !orders.value?.length && !Object.keys(cal8.value || {}).length)
 
-const areaCustomers = reactive(useAreaCustomers());
-const radialBarTeam = reactive(useRadialBarTeam());
-const barProfit = reactive(useBarProfit());
-const demoBarMulti = reactive(useDemoBarMulti());
-const demoAreaMulti = reactive(useDemoAreaMulti());
-const demoBarMulti3 = reactive(useDemoBarMulti3());
+const areaCustomers = reactive(useAreaCustomers())
+const radialBarTeam = reactive(useRadialBarTeam())
+const barProfit = reactive(useBarProfit())
+const dailyConsumptionChart = reactive(useDailyConsumptionChart())
+const monthlyConsumptionChart = reactive(useMonthlyConsumptionChart())
+const optimizationChart = reactive(useOptimizationChart())
 
-const fetchselectedDevice = app.fetchselectedDevice;
-const fetchOrders = app.fetchOrders;
-const fetch24Records = app.fetch24Records;
-const fetchMonthRecords = app.fetchMonthRecords;
-const fetch8 = app.fetch8;
-const fetchGraph4 = app.fetchGraph4;
-const powerConsumption = app.powerConsumption;
+const fetchselectedDevice = app.fetchselectedDevice
+const fetchOrders = app.fetchOrders
+const fetch24Records = app.fetch24Records
+const fetchMonthRecords = app.fetchMonthRecords
+const fetch8 = app.fetch8
+const fetchGraph4 = app.fetchGraph4
+const powerConsumption = app.powerConsumption
 
-const fetch24RecordsAdmin = app.fetch24RecordsAdmin;
-const fetchMonthRecordsAdmin = app.fetchMonthRecordsAdmin;
-const fetchSeasonChartAdmin = app.fetchSeasonChartAdmin;
-const fetchGraph4Admin = app.fetchGraph4Admin;
+const fetch24RecordsAdmin = app.fetch24RecordsAdmin
+const fetchMonthRecordsAdmin = app.fetchMonthRecordsAdmin
+const fetchSeasonChartAdmin = app.fetchSeasonChartAdmin
+const fetchGraph4Admin = app.fetchGraph4Admin
 
-
-const fetch24RecordsMng = app.fetch24RecordsMng;
-const fetchMonthRecordsMng = app.fetchMonthRecordsMng;
+const fetch24RecordsMng = app.fetch24RecordsMng
+const fetchMonthRecordsMng = app.fetchMonthRecordsMng
 // const fetchSeasonChartMng = app.fetchSeasonChartMng;
-const fetchGraph4Mng = app.fetchGraph4Mng;
+const fetchGraph4Mng = app.fetchGraph4Mng
 
 async function initializeData() {
-  console.log(authStore.isAdmin, "weifjwoief");
-  console.log(authStore.isMng, "weifjwoief");
-
-  if (authStore.isAdmin) {
-    await fetch24RecordsAdmin();
-    await fetchMonthRecordsAdmin();
-    // await fetchSeasonChartAdmin();
-    await fetchGraph4Admin();
+  dashboardLoading.value = true
+  dashboardError.value = ''
+  try {
+    if (authStore.isAdmin) {
+      await Promise.all([fetch24RecordsAdmin(), fetchMonthRecordsAdmin(), fetchGraph4Admin()])
+    }
+    else if (authStore.isMng) {
+      await Promise.all([fetch24RecordsMng(), fetchMonthRecordsMng(), fetchGraph4Mng()])
+    }
+    else {
+      await Promise.all([fetch24Records(), fetchMonthRecords(), fetchselectedDevice(), fetchOrders(1, 5), fetch8(), fetchGraph4(), powerConsumption()])
+    }
   }
-  if (authStore.isMng) {
-    await fetch24RecordsMng();
-    await fetchMonthRecordsMng();
-    // await fetchSeasonChartMng();
-    await fetchGraph4Mng();
+  catch {
+    dashboardError.value = 'اطلاعات داشبورد دریافت نشد. اتصال سرویس انرژی را بررسی کنید.'
   }
-  if (!authStore.isMng && !authStore.isAdmin) {
-    await fetch24Records();
-    await fetchMonthRecords();
-    await fetchselectedDevice();
-    await fetchOrders();
-    await fetch8();
-    await fetchGraph4();
-    await powerConsumption();
+  finally {
+    dashboardLoading.value = false
   }
 }
 
 // Initialize data on component mount
 onMounted(async () => {
-  await initializeData();
-});
+  await initializeData()
+})
 
 // Watchers for reactive updates
 watch([categories24, values24, categoriesMonth, valuesMonth, graph4op, graph4Unop], () => {
   // Update your charts here
-  demoBarMulti.options.xaxis.categories = categories24.value;
-  demoBarMulti.series[0].data = values24.value;
-  demoAreaMulti.options.xaxis.categories = categoriesMonth.value;
-  demoAreaMulti.series = valuesMonth.value;
+  dailyConsumptionChart.options.xaxis.categories = categories24.value
+  dailyConsumptionChart.series[0].data = values24.value
+  monthlyConsumptionChart.options.xaxis.categories = categoriesMonth.value
+  monthlyConsumptionChart.series = valuesMonth.value
 
-  demoBarMulti3.series[0].data = graph4Unop.value;
-  demoBarMulti3.series[1].data = graph4op.value;
-
+  optimizationChart.series[0].data = graph4Unop.value
+  optimizationChart.series[1].data = graph4op.value
 }, {
   deep: true,
-});
-const now = new Date();
-const selectedYear = ref<number>(now.getFullYear());
-const selectedMonth = ref<number>(now.getMonth() + 1);
-const isMonthlyLoading = ref(false);
-const yearOptions = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
+})
+const now = new Date()
+const selectedYear = ref<number>(now.getFullYear())
+const selectedMonth = ref<number>(now.getMonth() + 1)
+const isMonthlyLoading = ref(false)
+const yearOptions = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027]
 const monthOptions = [
-  {value: 1, label: 'فروردین'}, {value: 2, label: 'اردیبهشت'}, {value: 3, label: 'خرداد'},
-  {value: 4, label: 'تیر'}, {value: 5, label: 'مرداد'}, {value: 6, label: 'شهریور'},
-  {value: 7, label: 'مهر'}, {value: 8, label: 'آبان'}, {value: 9, label: 'آذر'},
-  {value: 10, label: 'دی'}, {value: 11, label: 'بهمن'}, {value: 12, label: 'اسفند'},
-];
+  { value: 1, label: 'فروردین' }, { value: 2, label: 'اردیبهشت' }, { value: 3, label: 'خرداد' },
+  { value: 4, label: 'تیر' }, { value: 5, label: 'مرداد' }, { value: 6, label: 'شهریور' },
+  { value: 7, label: 'مهر' }, { value: 8, label: 'آبان' }, { value: 9, label: 'آذر' },
+  { value: 10, label: 'دی' }, { value: 11, label: 'بهمن' }, { value: 12, label: 'اسفند' },
+]
 definePageMeta({
   title: 'داشبورد',
   middleware: ['authenticated'],
-  preview: {
-    title: 'Personal dashboard v1',
-    description: 'For personal usage and reports',
-    categories: ['dashboards'],
-    src: '/img/screens/dashboards-personal-1.png',
-    srcDark: '/img/screens/dashboards-personal-1-dark.png',
-    order: 1,
-  },
-});
+})
 
 const VALIDATION_TEXT = {
   EMAIL_REQUIRED: t('emailRequired'),
-  PASSWORD_REQUIRED: t('passwordRequired')
+  PASSWORD_REQUIRED: t('passwordRequired'),
 }
 
 const zodSchema = z.object({
@@ -123,14 +111,14 @@ const zodSchema = z.object({
   deviceId: z.string(),
 })
 
-type FormInput = z.infer<typeof zodSchema>;
+type FormInput = z.infer<typeof zodSchema>
 
 const validationSchema = toTypedSchema(zodSchema)
 const initialValues = computed<FormInput>(() => ({
   start: '',
   end: '',
   deviceId: '',
-}));
+}))
 
 const {
   handleSubmit,
@@ -145,27 +133,27 @@ const {
 } = useForm({
   validationSchema,
   initialValues,
-});
+})
 
 const addPowerRecord = handleSubmit(async (values) => {
-  console.log('lllll')
-  await app.addRecord(values.deviceId, values.start, values.end);
-});
+  await app.addRecord(values.deviceId, values.start, values.end)
+})
 const fetchMonthly = async () => {
-  isMonthlyLoading.value = true;
+  isMonthlyLoading.value = true
   try {
-    await app.fetchMonthRecords(selectedYear.value, selectedMonth.value);
-  } finally {
-    isMonthlyLoading.value = false;
+    await app.fetchMonthRecords(selectedYear.value, selectedMonth.value)
   }
-};
+  finally {
+    isMonthlyLoading.value = false
+  }
+}
 
 function deleteDevice(deviceId) {
-  app.deleteDevice(deviceId);
+  app.deleteDevice(deviceId)
 }
 
 function useAreaCustomers() {
-  const {primary, info, success} = useTailwindColors()
+  const { primary, info, success } = useTailwindColors()
   const type = 'area'
   const height = 258
 
@@ -213,15 +201,15 @@ function useAreaCustomers() {
 
   const series = shallowRef([
     {
-      name: 'Iron',
+      name: 'اتو',
       data: [31, 40, 28, 51, 42, 109, 100],
     },
     {
-      name: 'Refrigerator',
+      name: 'یخچال',
       data: [11, 32, 45, 32, 34, 52, 41],
     },
     {
-      name: 'Oven',
+      name: 'فر برقی',
       data: [78, 53, 36, 10, 14, 5, 2],
     },
   ])
@@ -235,7 +223,7 @@ function useAreaCustomers() {
 }
 
 function useRadialBarTeam() {
-  const {primary} = useTailwindColors()
+  const { primary } = useTailwindColors()
   const type = 'radialBar'
   const height = 455
 
@@ -314,7 +302,7 @@ function useRadialBarTeam() {
 }
 
 function useBarProfit() {
-  const {primary} = useTailwindColors()
+  const { primary } = useTailwindColors()
   const type = 'bar'
   const height = 255
 
@@ -343,7 +331,7 @@ function useBarProfit() {
       },
     },
     xaxis: {
-      categories: ['May', 'Jun', 'Jul', 'Aug', 'Sep'],
+      categories: ['اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور'],
       position: 'top',
       axisBorder: {
         show: false,
@@ -390,7 +378,7 @@ function useBarProfit() {
 
   const series = shallowRef([
     {
-      name: 'Ratio',
+      name: 'نسبت بهره‌وری',
       data: [2.3, 3.1, 4.0, 10.1, 4.0],
     },
   ])
@@ -404,7 +392,7 @@ function useBarProfit() {
 }
 
 function useDemoTimeline() {
-  const {primary, info, success, warning, danger} = useTailwindColors()
+  const { primary, info, success, warning, danger } = useTailwindColors()
   const type = 'rangeBar'
   const height = 280
 
@@ -517,10 +505,10 @@ function useDemoTimeline() {
   }
 }
 
-function useDemoBarMulti() {
-  const {primary, info, success, warning} = useTailwindColors();
-  const type = 'bar';
-  const height = 280;
+function useDailyConsumptionChart() {
+  const { primary, info, success, warning } = useTailwindColors()
+  const type = 'bar'
+  const height = 280
 
   const options = {
     chart: {
@@ -534,8 +522,8 @@ function useDemoBarMulti() {
               chart: {
                 width: '100%',
               },
-            });
-          });
+            })
+          })
         },
       },
     },
@@ -550,7 +538,7 @@ function useDemoBarMulti() {
     dataLabels: {
       enabled: true,
       formatter: function (val) {
-        return val.toFixed(2);
+        return val.toFixed(2)
       },
     },
     stroke: {
@@ -577,27 +565,27 @@ function useDemoBarMulti() {
       text: '',
       align: 'left',
     },
-  };
+  }
 
   const series = shallowRef([
     {
       name: 'DC',
       data: values24.value.map(value => parseFloat(value.toFixed(2))),
     },
-  ]);
+  ])
 
   return {
     type,
     height,
     options,
     series,
-  };
+  }
 }
 
-function useDemoAreaMulti() {
-  const {primary, info, success} = useTailwindColors();
-  const type = 'area';
-  const height = 280;
+function useMonthlyConsumptionChart() {
+  const { primary, info, success } = useTailwindColors()
+  const type = 'area'
+  const height = 280
 
   const options = {
     chart: {
@@ -629,26 +617,26 @@ function useDemoAreaMulti() {
         format: 'dd/MM/yy HH:mm',
       },
     },
-  };
+  }
 
   // Formatting the series data to 2 decimal places
   const formattedSeries = valuesMonth.value.map(series => ({
     name: series.name,
-    data: series.data.map(value => parseFloat(value.toFixed(2)))
-  }));
+    data: series.data.map(value => parseFloat(value.toFixed(2))),
+  }))
 
-  const series = shallowRef(formattedSeries);
+  const series = shallowRef(formattedSeries)
 
   return {
     type,
     height,
     options,
     series,
-  };
+  }
 }
 
-function useDemoBarMulti3() {
-  const {primary, info, success, warning} = useTailwindColors()
+function useOptimizationChart() {
+  const { primary, info, success, warning } = useTailwindColors()
   const type = 'bar'
   const height = 280
 
@@ -664,8 +652,8 @@ function useDemoBarMulti3() {
               chart: {
                 width: '100%',
               },
-            });
-          });
+            })
+          })
         },
       },
     },
@@ -687,7 +675,7 @@ function useDemoBarMulti3() {
     },
     xaxis: {
       categories: [
-        'بهار', 'تابستان', 'پاییز', 'زمستان'
+        'بهار', 'تابستان', 'پاییز', 'زمستان',
       ],
     },
     yaxis: {
@@ -730,417 +718,442 @@ function useDemoBarMulti3() {
 
 <template>
   <div>
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <BaseHeading as="h1" size="2xl">
+          مرکز عملیات انرژی
+        </BaseHeading><BaseParagraph class="text-muted-500 mt-2">
+          نمای یکپارچه تولید، ذخیره، مصرف و تبادل ریزشبکه دانشگاه
+        </BaseParagraph>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <BaseTag color="warning" variant="pastel">
+          تولید خورشیدی
+        </BaseTag><BaseTag color="success" variant="pastel">
+          ذخیره باتری
+        </BaseTag><BaseTag color="primary" variant="pastel">
+          مصرف ساختمان
+        </BaseTag><BaseTag color="info" variant="pastel">
+          تبادل انرژی
+        </BaseTag>
+      </div>
+    </header>
 
-    <div class="grid grid-cols-12 gap-6">
+    <BaseCard v-if="dashboardLoading" class="p-12 text-center">
+      <Icon name="svg-spinners:ring-resize" class="text-primary-500 mx-auto size-9" /><p class="mt-3">
+        در حال همگام‌سازی داده‌های انرژی…
+      </p>
+    </BaseCard>
+    <BaseMessage v-else-if="dashboardError" type="danger">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <span>{{ dashboardError }}</span><BaseButton size="sm" @click="initializeData">
+          تلاش دوباره
+        </BaseButton>
+      </div>
+    </BaseMessage>
+    <BaseCard v-else-if="dashboardEmpty" class="p-12 text-center">
+      <Icon name="ph:sun-horizon-duotone" class="text-warning-500 mx-auto size-14" /><BaseHeading class="mt-3">
+        داده انرژی هنوز آماده نیست
+      </BaseHeading><BaseParagraph class="text-muted-500 mt-2">
+        پس از ثبت ساختمان و سوابق مصرف، شاخص‌های عملیاتی اینجا نمایش داده می‌شوند.
+      </BaseParagraph><BaseButton
+        to="/profile/blocks"
+        color="primary"
+        class="mt-5"
+      >
+        ثبت منابع انرژی
+      </BaseButton>
+    </BaseCard>
 
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>درصد تبدیل (٪)</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/exchange-line.png"
-                alt=""
+    <template v-else>
+      <div class="grid grid-cols-12 gap-6">
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
+                <span>درصد تبدیل (٪)</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/exchange-line.png"
+                  alt=""
+                >
               <!--              <Icon name="ri:battery-saver-fill" class="size-6"/>-->
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>{{ cal8['conversion_per'] }}</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-success-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>{{ cal8['conversion_per'] }}</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-success-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>+7.8%</span>-->
             <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">since last month</span>-->
-          </div>
-        </BaseCard>
-      </div>
-      <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>انرژی ذخیره‌شده در باتری (وات/روز)</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/battery-saver-line.png"
-                alt=""
+            </div>
+          </BaseCard>
+        </div>
+        <!-- Stat tile -->
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+                <span>انرژی ذخیره‌شده در باتری (وات/روز)</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/battery-saver-line.png"
+                  alt=""
+                >
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>0</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-danger-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>0</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-danger-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>-2.7%</span>-->
             <!--            <Icon name="lucide:trending-down" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">going down</span>-->
-          </div>
-        </BaseCard>
-      </div>
-      <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>میانگین سالانه سرمایه‌گذاری و صرفه‌جویی (یورو)</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/wallet-3-line.png"
-                alt=""
+            </div>
+          </BaseCard>
+        </div>
+        <!-- Stat tile -->
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
+                <span>میانگین سالانه سرمایه‌گذاری و صرفه‌جویی (یورو)</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/wallet-3-line.png"
+                  alt=""
+                >
               <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>{{ cal8['investment'] }}</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-success-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>{{ cal8['investment'] }}</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-success-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>+4.5%</span>-->
             <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">going up</span>-->
-          </div>
-        </BaseCard>
-      </div>
-      <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>کاهش انتشار گازهای گلخانه‌ای (گرم CO2/کیلووات‌ساعت در روز)</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/battery-saver-line.png"
-                alt=""
+            </div>
+          </BaseCard>
+        </div>
+        <!-- Stat tile -->
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
+                <span>کاهش انتشار گازهای گلخانه‌ای (گرم CO2/کیلووات‌ساعت در روز)</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/battery-saver-line.png"
+                  alt=""
+                >
               <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>{{ cal8['gr_em_sa'] }}</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-success-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>{{ cal8['gr_em_sa'] }}</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-success-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>+4.5%</span>-->
             <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">going up</span>-->
-          </div>
-        </BaseCard>
-      </div>
-      <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>توان تقسیم‌شده بر AC-DC</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/supabase-fill.png"
-                alt=""
+            </div>
+          </BaseCard>
+        </div>
+        <!-- Stat tile -->
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
+                <span>توان تقسیم‌شده بر AC-DC</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/supabase-fill.png"
+                  alt=""
+                >
               <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>{{ cal8['power_divided_by_ac_dc'] }}</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-success-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>{{ cal8['power_divided_by_ac_dc'] }}</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-success-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>+4.5%</span>-->
             <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">going up</span>-->
-          </div>
-        </BaseCard>
-      </div>
-      <!-- Stat tile -->
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>بازده (٪)</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/speed-up-line.svg"
-                alt=""
+            </div>
+          </BaseCard>
+        </div>
+        <!-- Stat tile -->
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
-              <Icon name="ri:leaf-fill" class="size-6"/>
+                <span>بازده (٪)</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/speed-up-line.svg"
+                  alt=""
+                >
+                <Icon name="ri:leaf-fill" class="size-6" />
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>{{ cal8['efficiency'] }}%</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-success-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>{{ cal8['efficiency'] }}%</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-success-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>+4.5%</span>-->
             <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">going up</span>-->
-          </div>
-        </BaseCard>
-      </div>
+            </div>
+          </BaseCard>
+        </div>
 
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>تولید پنل خورشیدی (وات)</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/flashlight-line.png"
-                alt=""
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
+                <span>تولید پنل خورشیدی (وات)</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/flashlight-line.png"
+                  alt=""
+                >
               <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>{{ cal8['pv_gen'] }}</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-success-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>{{ cal8['pv_gen'] }}</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-success-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>+4.5%</span>-->
             <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">going up</span>-->
-          </div>
-        </BaseCard>
-      </div>
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
-        <BaseCard class="p-4">
-          <div class="mb-1 flex items-center justify-between">
-            <BaseHeading
-              as="h5"
-              size="sm"
-              weight="medium"
-              lead="tight"
-              class="text-muted-500 dark:text-muted-400"
-            >
-              <span>وضعیت شارژ (٪)</span>
-            </BaseHeading>
-            <BaseIconBox
-              size="xs"
-              class="bg-yellow-100 text-primary-500 dark:bg-yellow-100 dark:text-primary-400 dark:border-success-500 dark:border-2"
-              rounded="full"
-              color="none"
-            >
-              <img
-                class="size-10 h-7 w-8"
-                src="/img/database-line.png"
-                alt=""
+            </div>
+          </BaseCard>
+        </div>
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
+          <BaseCard class="p-4">
+            <div class="mb-1 flex items-center justify-between">
+              <BaseHeading
+                as="h5"
+                size="sm"
+                weight="medium"
+                lead="tight"
+                class="text-muted-500 dark:text-muted-400"
               >
+                <span>وضعیت شارژ (٪)</span>
+              </BaseHeading>
+              <BaseIconBox
+                size="xs"
+                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                rounded="full"
+                color="none"
+              >
+                <img
+                  class="size-10 h-7 w-8"
+                  src="/img/database-line.png"
+                  alt=""
+                >
               <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
 
               <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
-            </BaseIconBox>
-          </div>
-          <div class="mb-2">
-            <BaseHeading
-              as="h4"
-              size="3xl"
-              weight="bold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
+              </BaseIconBox>
+            </div>
+            <div class="mb-2">
+              <BaseHeading
+                as="h4"
+                size="3xl"
+                weight="bold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>{{ cal8['st_ca'] }}%</span>
+              </BaseHeading>
+            </div>
+            <div
+              class="text-success-500 flex items-center gap-1 font-sans text-sm"
             >
-              <span>{{ cal8['st_ca'] }}%</span>
-            </BaseHeading>
-          </div>
-          <div
-            class="text-success-500 flex items-center gap-1 font-sans text-sm"
-          >
             <!--            <span>+4.5%</span>-->
             <!--            <Icon name="lucide:trending-up" class="size-5"/>-->
             <!--            <span class="text-muted-400 text-xs">going up</span>-->
-          </div>
-        </BaseCard>
-      </div>
+            </div>
+          </BaseCard>
+        </div>
 
-
-      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-        <BaseCard class="p-6">
-          <!-- Title -->
-          <div class="mb-6">
-            <BaseHeading
-              as="h3"
-              size="md"
-              weight="semibold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
-            >
-              <span>مصرف روزانه</span>
-            </BaseHeading>
-          </div>
-          <AddonApexcharts v-bind="demoBarMulti"/>
-        </BaseCard>
-      </div>
-
-
-      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-        <div class="relative">
+        <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
           <BaseCard class="p-6">
             <!-- Title -->
             <div class="mb-6">
@@ -1151,115 +1164,97 @@ function useDemoBarMulti3() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>مصرف ماهانه (وات‌ساعت)</span>
+                <span>مصرف روزانه</span>
               </BaseHeading>
             </div>
-
-            <AddonApexcharts v-bind="demoAreaMulti"/>
-
-            <div class="border-muted-200 dark:border-muted-700 mt-6 flex justify-center border-t pt-6">
-              <form
-                method="POST"
-                class="w-full max-w-md"
-                @submit.prevent="fetchMonthly"
-                novalidate
-              >
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
-                  <!-- Year selection -->
-                  <BaseSelect
-                    v-model="selectedYear"
-                    shape="curved"
-                    label="سال"
-                    icon="ph:calendar-blank-duotone"
-                    class="flex-1"
-                  >
-                    <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}</option>
-                  </BaseSelect>
-
-                  <!-- Month selection -->
-                  <BaseSelect
-                    v-model="selectedMonth"
-                    shape="curved"
-                    label="ماه"
-                    icon="ph:calendar-check-duotone"
-                    class="flex-1"
-                  >
-                    <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
-                  </BaseSelect>
-
-                  <BaseButton
-                    type="submit"
-                    color="primary"
-                    shape="curved"
-                    :loading="isMonthlyLoading"
-                    class="h-12 sm:w-32"
-                  >
-                    <Icon name="ph:funnel-duotone" class="me-1 size-4"/>
-                    <span>{{ t("Show") }}</span>
-                  </BaseButton>
-                </div>
-              </form>
-            </div>
+            <AddonApexcharts v-bind="dailyConsumptionChart" />
           </BaseCard>
         </div>
-      </div>
 
+        <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+          <div class="relative">
+            <BaseCard class="p-6">
+              <!-- Title -->
+              <div class="mb-6">
+                <BaseHeading
+                  as="h3"
+                  size="md"
+                  weight="semibold"
+                  lead="tight"
+                  class="text-muted-800 dark:text-white"
+                >
+                  <span>مصرف ماهانه (وات‌ساعت)</span>
+                </BaseHeading>
+              </div>
 
-      <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
+              <AddonApexcharts v-bind="monthlyConsumptionChart" />
 
-        <DemoChartPie/>
+              <div class="border-muted-200 dark:border-muted-700 mt-6 flex justify-center border-t pt-6">
+                <form
+                  method="POST"
+                  class="w-full max-w-md"
+                  novalidate
+                  @submit.prevent="fetchMonthly"
+                >
+                  <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+                    <!-- Year selection -->
+                    <BaseSelect
+                      v-model="selectedYear"
+                      shape="curved"
+                      label="سال"
+                      icon="ph:calendar-blank-duotone"
+                      class="flex-1"
+                    >
+                      <option
+                        v-for="year in yearOptions"
+                        :key="year"
+                        :value="year"
+                      >
+                        {{ year }}
+                      </option>
+                    </BaseSelect>
 
-      </div>
-      <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
+                    <!-- Month selection -->
+                    <BaseSelect
+                      v-model="selectedMonth"
+                      shape="curved"
+                      label="ماه"
+                      icon="ph:calendar-check-duotone"
+                      class="flex-1"
+                    >
+                      <option
+                        v-for="m in monthOptions"
+                        :key="m.value"
+                        :value="m.value"
+                      >
+                        {{ m.label }}
+                      </option>
+                    </BaseSelect>
 
-        <BaseCard class="p-14 py-30" rounded="lg">
-          <!-- Title -->
-          <div class="mb-8 flex items-center justify-between">
-            <BaseHeading
-              as="h3"
-              size="md"
-              weight="semibold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
-            >
-              <span>حداکثر مصرف توان</span>
-            </BaseHeading>
-            <!--          <NuxtLink-->
-            <!--            to="#"-->
-            <!--            class="bg-muted-100 hover:bg-muted-200 dark:bg-muted-700 dark:hover:bg-muted-900 text-primary-500 rounded-lg px-4 py-2 font-sans text-sm font-medium underline-offset-4 transition-colors duration-300 hover:underline"-->
-            <!--          >-->
-            <!--            View All-->
-            <!--          </NuxtLink>-->
+                    <BaseButton
+                      type="submit"
+                      color="primary"
+                      shape="curved"
+                      :loading="isMonthlyLoading"
+                      class="h-12 sm:w-32"
+                    >
+                      <Icon name="ph:funnel-duotone" class="me-1 size-4" />
+                      <span>{{ t("Show") }}</span>
+                    </BaseButton>
+                  </div>
+                </form>
+              </div>
+            </BaseCard>
           </div>
-          <DemoTrendingSkills/>
-        </BaseCard>
+        </div>
 
-      </div>
-
-
-      <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-        <BaseCard class="p-6">
-          <!-- Title -->
-          <div class="mb-6">
-            <BaseHeading
-              as="h3"
-              size="md"
-              weight="semibold"
-              lead="tight"
-              class="text-muted-800 dark:text-white"
-            >
-              <span>مقایسه فصلی</span>
-            </BaseHeading>
-          </div>
-          <AddonApexcharts v-bind="demoBarMulti3"/>
-        </BaseCard>
-      </div>
-
-
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-        <form method="POST" action="" @submit.prevent="addPowerRecord" novalidate>
-          <BaseCard rounded="lg" class="p-6">
-            <div class="mb-6 flex items-center justify-between">
+        <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
+          <EnergySeasonSummary />
+        </div>
+        <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
+          <BaseCard class="py-30 p-14" rounded="lg">
+            <!-- Title -->
+            <div class="mb-8 flex items-center justify-between">
               <BaseHeading
                 as="h3"
                 size="md"
@@ -1267,201 +1262,276 @@ function useDemoBarMulti3() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>افزودن رکورد مصرف</span>
+                <span>حداکثر مصرف توان</span>
+              </BaseHeading>
+            <!--          <NuxtLink-->
+            <!--            to="#"-->
+            <!--            class="bg-muted-100 hover:bg-muted-200 dark:bg-muted-700 dark:hover:bg-muted-900 text-primary-500 rounded-lg px-4 py-2 font-sans text-sm font-medium underline-offset-4 transition-colors duration-300 hover:underline"-->
+            <!--          >-->
+            <!--            View All-->
+            <!--          </NuxtLink>-->
+            </div>
+            <div class="space-y-5">
+              <div class="flex items-center gap-3">
+                <Icon name="ri:time-fill" class="text-warning-500 size-6" /><div>
+                  <BaseHeading size="sm">
+                    ساعت اوج مصرف
+                  </BaseHeading><BaseParagraph class="text-muted-500">
+                    {{ peakHour || '—' }}
+                  </BaseParagraph>
+                </div>
+              </div><div class="flex items-center gap-3">
+                <Icon name="ri:flashlight-fill" class="text-primary-500 size-6" /><div>
+                  <BaseHeading size="sm">
+                    بیشینه توان مصرفی
+                  </BaseHeading><BaseParagraph class="text-muted-500">
+                    {{ peakPower || '—' }} وات
+                  </BaseParagraph>
+                </div>
+              </div>
+            </div>
+          </BaseCard>
+        </div>
+
+        <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
+          <BaseCard class="p-6">
+            <!-- Title -->
+            <div class="mb-6">
+              <BaseHeading
+                as="h3"
+                size="md"
+                weight="semibold"
+                lead="tight"
+                class="text-muted-800 dark:text-white"
+              >
+                <span>مقایسه فصلی</span>
               </BaseHeading>
             </div>
-            <!-- Single input for device selection -->
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="deviceId">
-              <BaseSelect
-                :model-value="field.value"
-                :error="errorMessage"
-                @update:model-value="handleChange"
-                @blur="handleBlur"
-                shape="curved"
-                placeholder="انتخاب دستگاه"
-                icon="ri:device-fill"
+            <AddonApexcharts v-bind="optimizationChart" />
+          </BaseCard>
+        </div>
+
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+          <form
+            method="POST"
+            action=""
+            novalidate
+            @submit.prevent="addPowerRecord"
+          >
+            <BaseCard rounded="lg" class="p-6">
+              <div class="mb-6 flex items-center justify-between">
+                <BaseHeading
+                  as="h3"
+                  size="md"
+                  weight="semibold"
+                  lead="tight"
+                  class="text-muted-800 dark:text-white"
+                >
+                  <span>افزودن رکورد مصرف</span>
+                </BaseHeading>
+              </div>
+              <!-- Single input for device selection -->
+              <Field
+                v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                class="mb-2"
+                name="deviceId"
               >
-                <!-- Options for device selection -->
-                <option v-for="device in app.getselectedDevice" :key="device.name" :value="device.name">{{
-                    device.name
-                  }}
-                </option>
-              </BaseSelect>
-            </Field>
-            <!-- Other input fields -->
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="start">
-              <BaseInput
-                :model-value="field.value"
-                :error="errorMessage"
-                @update:model-value="handleChange"
-                @blur="handleBlur"
-                type="datetime-local"
-                shape="curved"
-                placeholder="تاریخ شروع"
-                icon="ri:calendar-fill"
-              />
-            </Field>
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="end">
-              <BaseInput
-                :model-value="field.value"
-                :error="errorMessage"
-                @update:model-value="handleChange"
-                @blur="handleBlur"
-                type="datetime-local"
-                shape="curved"
-                placeholder="تاریخ پایان"
-                icon="ri:calendar-fill"
-              />
-            </Field>
-            <!--            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">-->
-            <!--              <BaseInput-->
-            <!--                :model-value="field.value"-->
-            <!--                :error="errorMessage"-->
-            <!--                @update:model-value="handleChange"-->
-            <!--                @blur="handleBlur"-->
-            <!--                shape="curved"-->
-            <!--                placeholder="Consumption"-->
-            <!--                icon="ri:lightbulb-flash-fill"-->
-            <!--              />-->
-            <!--            </Field>-->
-            <div class="flex items-center gap-1 mt-5">
-              <button type="submit" class="BaseButtonIcon" rounded="full" small>
-                <BaseButtonIcon rounded="full" small>
-                  <Icon name="ri:add-circle-fill"/>
-
-                </BaseButtonIcon>
-
-              </button>
+                <BaseSelect
+                  :model-value="field.value"
+                  :error="errorMessage"
+                  shape="curved"
+                  placeholder="انتخاب دستگاه"
+                  icon="ri:device-fill"
+                  @update:model-value="handleChange"
+                  @blur="handleBlur"
+                >
+                  <!-- Options for device selection -->
+                  <option
+                    v-for="device in app.getselectedDevice"
+                    :key="device.name"
+                    :value="device.name"
+                  >
+                    {{
+                      device.name
+                    }}
+                  </option>
+                </BaseSelect>
+              </Field>
+              <!-- Other input fields -->
+              <Field
+                v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                class="mb-2"
+                name="start"
+              >
+                <BaseInput
+                  :model-value="field.value"
+                  :error="errorMessage"
+                  type="datetime-local"
+                  shape="curved"
+                  placeholder="تاریخ شروع"
+                  icon="ri:calendar-fill"
+                  @update:model-value="handleChange"
+                  @blur="handleBlur"
+                />
+              </Field>
+              <Field
+                v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                class="mb-2"
+                name="end"
+              >
+                <BaseInput
+                  :model-value="field.value"
+                  :error="errorMessage"
+                  type="datetime-local"
+                  shape="curved"
+                  placeholder="تاریخ پایان"
+                  icon="ri:calendar-fill"
+                  @update:model-value="handleChange"
+                  @blur="handleBlur"
+                />
+              </Field>
+              <!--            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">-->
+              <!--              <BaseInput-->
+              <!--                :model-value="field.value"-->
+              <!--                :error="errorMessage"-->
+              <!--                @update:model-value="handleChange"-->
+              <!--                @blur="handleBlur"-->
+              <!--                shape="curved"-->
+              <!--                placeholder="Consumption"-->
+              <!--                icon="ri:lightbulb-flash-fill"-->
+              <!--              />-->
+              <!--            </Field>-->
+              <div class="mt-5 flex items-center gap-1">
+                <button
+                  type="submit"
+                  class="BaseButtonIcon"
+                  rounded="full"
+                  small
+                >
+                  <BaseButtonIcon rounded="full" small>
+                    <Icon name="ri:add-circle-fill" />
+                  </BaseButtonIcon>
+                </button>
               <!-- <button @click="deleteDevice" class="BaseButtonIcon" rounded="full" small>
                 <Icon name="ri:delete-bin-fill"/>
 
               </button> -->
-            </div>
-          </BaseCard>
-        </form>
-      </div>
-
-      <!-- Create a section to loop through devices -->
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-        <div class="mb-6 flex items-center justify-between">
-          <BaseHeading
-            as="h3"
-            size="md"
-            weight="semibold"
-            lead="tight"
-            class="text-muted-800 dark:text-white"
-          >
-            <span>دستگاه‌های انتخاب‌شده</span>
-          </BaseHeading>
+              </div>
+            </BaseCard>
+          </form>
         </div>
-        <!-- Loop through devices -->
-        <div v-for="device in app.getselectedDevice" :key="device.name">
-          <div class="ltablet:col-span-4 col-span-4 md:col-span-4 lg:col-span-4">
 
-            <BaseCard rounded="lg" class="p-6 mt-3">
-
-              <span> {{ device.name }}</span>
-              <button @click="deleteDevice(device.id)" class="BaseButtonIcon ms-5" rounded="full" small>
-                <Icon name="ri:delete-bin-fill"/>
-              </button>
+        <!-- Create a section to loop through devices -->
+        <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
+          <div class="mb-6 flex items-center justify-between">
+            <BaseHeading
+              as="h3"
+              size="md"
+              weight="semibold"
+              lead="tight"
+              class="text-muted-800 dark:text-white"
+            >
+              <span>دستگاه‌های انتخاب‌شده</span>
+            </BaseHeading>
+          </div>
+          <!-- Loop through devices -->
+          <div v-for="device in app.getselectedDevice" :key="device.name">
+            <div class="ltablet:col-span-4 col-span-4 md:col-span-4 lg:col-span-4">
+              <BaseCard rounded="lg" class="mt-3 p-6">
+                <span> {{ device.name }}</span>
+                <button
+                  class="BaseButtonIcon ms-5"
+                  rounded="full"
+                  small
+                  @click="deleteDevice(device.id)"
+                >
+                  <Icon name="ri:delete-bin-fill" />
+                </button>
 
               <!-- Button to delete device -->
-
-            </BaseCard>
+              </BaseCard>
+            </div>
           </div>
         </div>
       </div>
 
-
-    </div>
-
-
-    <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
-      <BaseHeading
-        as="h3"
-        size="md"
-        weight="semibold"
-        lead="tight"
-        class="text-muted-800 dark:text-white mt-10 my-5"
-      >
-        <span>آخرین سفارش</span>
-      </BaseHeading>
-      <div class="space-y-2 pt-6">
-        <TransitionGroup
-          enter-active-class="transform-gpu"
-          enter-from-class="opacity-0 -translate-x-full"
-          enter-to-class="opacity-100 translate-x-0"
-          leave-active-class="absolute transform-gpu"
-          leave-from-class="opacity-100 translate-x-0"
-          leave-to-class="opacity-0 -translate-x-full"
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
+        <BaseHeading
+          as="h3"
+          size="md"
+          weight="semibold"
+          lead="tight"
+          class="text-muted-800 my-5 mt-10 dark:text-white"
         >
-
-          <DemoFlexTableRow
-            v-for="(item, index) in orders"
-            :key="index"
-            rounded="sm"
+          <span>آخرین سفارش</span>
+        </BaseHeading>
+        <div class="space-y-2 pt-6">
+          <TransitionGroup
+            enter-active-class="transform-gpu"
+            enter-from-class="opacity-0 -translate-x-full"
+            enter-to-class="opacity-100 translate-x-0"
+            leave-active-class="absolute transform-gpu"
+            leave-from-class="opacity-100 translate-x-0"
+            leave-to-class="opacity-0 -translate-x-full"
           >
-            <template #start>
-              <DemoFlexTableStart
-                label="خریدار"
-                :hide-label="index > 0"
-                :title="item.user_id"
-              />
-              <DemoFlexTableStart
-                label="مقدار"
-                :hide-label="index > 0"
-                :title="item.amount"
-                class="ms-20"
+            <DemoFlexTableRow
+              v-for="(item, index) in orders"
+              :key="index"
+              rounded="sm"
+            >
+              <template #start>
+                <DemoFlexTableStart
+                  label="خریدار"
+                  :hide-label="index > 0"
+                  :title="item.user_id"
+                />
+                <DemoFlexTableStart
+                  label="مقدار"
+                  :hide-label="index > 0"
+                  :title="item.amount"
+                  class="ms-20"
+                />
+                <DemoFlexTableStart
+                  label="کارمزد"
+                  :hide-label="index > 0"
+                  :title="item.fee"
+                  class="ms-20"
+                />
+              </template>
 
-              />
-              <DemoFlexTableStart
-                label="کارمزد"
-                :hide-label="index > 0"
-                :title="item.fee"
-                class="ms-20"
-
-              />
-            </template>
-
-            <template #end>
-              <DemoFlexTableCell
-                label="تاریخ"
-                :hide-label="index > 0"
-                tablet-hidden
-                class="w-full sm:w-36"
-              >
+              <template #end>
+                <DemoFlexTableCell
+                  label="تاریخ"
+                  :hide-label="index > 0"
+                  tablet-hidden
+                  class="w-full sm:w-36"
+                >
                   <span
                     class="text-muted-500 dark:text-muted-400 font-sans text-sm"
                   >
                     {{ item.created_at }}
                   </span>
-              </DemoFlexTableCell>
-              <DemoFlexTableCell
-                label="قیمت"
-                :hide-label="index > 0"
-                class="w-full sm:w-32"
-              >
-                <div
-                  class="flex w-full items-center justify-end gap-1 sm:justify-center"
+                </DemoFlexTableCell>
+                <DemoFlexTableCell
+                  label="قیمت"
+                  :hide-label="index > 0"
+                  class="w-full sm:w-32"
                 >
-
+                  <div
+                    class="flex w-full items-center justify-end gap-1 sm:justify-center"
+                  >
                     <span
                       class="text-muted-500 dark:text-muted-400 font-sans text-sm"
                     >
                       20
                     </span>
-                </div>
-              </DemoFlexTableCell>
-
-            </template>
-          </DemoFlexTableRow>
-        </TransitionGroup>
-
-
+                  </div>
+                </DemoFlexTableCell>
+              </template>
+            </DemoFlexTableRow>
+          </TransitionGroup>
+        </div>
       </div>
-
-    </div>
-
-
+    </template>
   </div>
 </template>

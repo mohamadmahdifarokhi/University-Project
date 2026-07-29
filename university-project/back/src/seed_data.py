@@ -1,7 +1,8 @@
-"""Seed realistic demo data for the dashboard of a given user.
+"""Seed realistic demo data for the complete university application.
 
 Usage (inside backend container):
     python -m src.seed_data user@pardis.ac.ir
+    python -m src.seed_data --all
 """
 import sys
 import random
@@ -85,12 +86,11 @@ def ensure_block(user_id, apartment_id):
 
 
 def ensure_devices(user_id):
-    # remove any previously seeded devices so names stay consistent (Persian)
-    db["device"].delete_many({})
     device_ids = []
     for d in DEVICES:
         existing = db["device"].find_one({"name": d["name"]})
         if existing:
+            db["device"].update_one({"_id": existing["_id"]}, {"$set": d})
             device_ids.append(existing["_id"])
         else:
             device_ids.append(db["device"].insert_one(dict(d)).inserted_id)
@@ -104,12 +104,21 @@ def ensure_devices(user_id):
 
 
 def ensure_battery(user_id):
-    if db["battery"].find_one({"user_id": str(user_id)}):
-        print("battery exists")
-        return
-    sp_id = db["solar_panels"].insert_one({"user_id": str(user_id), "fee": 0}).inserted_id
     user = db["users"].find_one({"_id": ObjectId(user_id)})
-    db["battery"].insert_one({
+    existing = db["battery"].find_one({"user_id": str(user_id)})
+    if existing:
+        db["battery"].update_one({"_id": existing["_id"]}, {"$set": {
+            "status": "available",
+            "email": user["email"],
+            "fee": 50,
+        }})
+        print("battery updated")
+        return existing["_id"]
+    solar = db["solar_panels"].find_one({"user_id": str(user_id)})
+    sp_id = solar["_id"] if solar else db["solar_panels"].insert_one(
+        {"user_id": str(user_id), "fee": 0}
+    ).inserted_id
+    battery_id = db["battery"].insert_one({
         "user_id": str(user_id),
         "solar_panel_id": str(sp_id),
         "saved_energy": 12000,
@@ -118,8 +127,9 @@ def ensure_battery(user_id):
         "email": user["email"],
         "fee": 50,
         "created_at": datetime.now() - timedelta(days=120),
-    })
+    }).inserted_id
     print("battery + solar panel created")
+    return battery_id
 
 
 def seed_power_records(user_id):
@@ -219,22 +229,57 @@ def seed_shop():
     print(f"{len(categories)} categories, {len(products)} products ready")
 
 
-def main():
-    email = sys.argv[1] if len(sys.argv) > 1 else "user@pardis.ac.ir"
-    user = db["users"].find_one({"email": email})
-    if not user:
-        print(f"User not found: {email}")
+def seed_orders(users):
+    """Create deterministic buy/sell history between demo users."""
+    if len(users) < 2:
+        print("orders skipped: at least two users are required")
         return
-    user_id = user["_id"]
-    print(f"Seeding data for {email} ({user_id})")
+    db["orders"].delete_many({"mock": True})
+    orders = []
+    for index in range(8):
+        buyer = users[index % len(users)]
+        seller = users[(index + 1) % len(users)]
+        battery = db["battery"].find_one({"user_id": str(seller["_id"])})
+        if not battery:
+            continue
+        amount = 100 + index * 25
+        orders.append({
+            "user_id": str(buyer["_id"]),
+            "battery_id": str(battery["_id"]),
+            "seller_id": str(seller["_id"]),
+            "amount": amount,
+            "fee": amount * int(battery.get("fee", 50)),
+            "created_at": datetime.now() - timedelta(days=index * 3 + 1),
+            "mock": True,
+        })
+    if orders:
+        db["orders"].insert_many(orders)
+    print(f"{len(orders)} mock orders created")
 
+
+def main():
     ensure_pricing()
     apt_id = ensure_apartment()
-    ensure_block(user_id, apt_id)
-    ensure_devices(user_id)
-    ensure_battery(user_id)
-    seed_power_records(user_id)
+    target = sys.argv[1] if len(sys.argv) > 1 else "--all"
+    users = list(db["users"].find()) if target == "--all" else list(
+        db["users"].find({"email": target})
+    )
+    if not users:
+        print(f"No users found for target: {target}")
+        return
+    for unit, user in enumerate(users, start=1):
+        user_id = user["_id"]
+        print(f"Seeding data for {user['email']} ({user_id})")
+        ensure_block(user_id, apt_id)
+        ensure_devices(user_id)
+        ensure_battery(user_id)
+        seed_power_records(user_id)
+        db["blocks"].update_one(
+            {"user_id": str(user_id)},
+            {"$set": {"unit": unit, "area": str(AREA)}},
+        )
     seed_shop()
+    seed_orders(users)
     print("DONE")
 
 

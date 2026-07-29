@@ -15,7 +15,7 @@
     "layers/*"
   ],
   "scripts": {
-    "dev": "nuxi dev .app --open",
+    "dev": "nuxi dev .app --host 0.0.0.0",
     "build": "nuxi build .app",
     "generate": "nuxi generate .app",
     "demo:dev": "nuxi dev .demo --open",

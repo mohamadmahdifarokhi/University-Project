@@ -2,6 +2,7 @@ import {defineStore} from 'pinia';
 import axios from 'axios';
 
 const apiUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL}`;
+const uiText = (fa, en) => import.meta.client && document.documentElement.lang.startsWith('en') ? en : fa;
 
 export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = ref(false);
@@ -47,7 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
         },
       });
       if (response.status === 200) {
-        document.cookie = `access_token=${response.data.access_token}; path=/`;
+        setCookie('access_token', response.data.access_token);
         this.setAuthenticated(true);
 
         if (response.data.scopes.includes('admin')) {
@@ -90,9 +91,9 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('access_token', response.data.access_token);
         localStorage.setItem('email', response.data.email);
         // Set cookies
-        document.cookie = `refresh_token=${response.data.refresh_token}; path=/`;
-        document.cookie = `access_token=${response.data.access_token}; path=/`;
-        document.cookie = `email=${response.data.email}; path=/`;
+        setCookie('refresh_token', response.data.refresh_token);
+        setCookie('access_token', response.data.access_token);
+        setCookie('email', response.data.email);
 
         this.addToOrderFromSession(response.data.access_token)
 
@@ -114,8 +115,8 @@ export const useAuthStore = defineStore('auth', () => {
 
         toaster.clearAll();
         toaster.show({
-          title: 'Success',
-          message: 'Welcome back!',
+          title: uiText('ورود موفق', 'Signed in'),
+          message: uiText('خوش آمدید؛ نشست شما با موفقیت آغاز شد.', 'Welcome back!'),
           color: 'success',
           icon: 'ph:user-circle-fill',
           closable: true,
@@ -125,8 +126,8 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         // Other client-side errors
         toaster.show({
-          title: 'Error',
-          message: 'Failed to login. Please try again later.',
+          title: uiText('خطای ورود', 'Sign-in error'),
+          message: uiText('ورود انجام نشد. دوباره تلاش کنید.', 'Sign-in failed. Please try again.'),
           color: 'danger',
           icon: 'ph:x-circle-fill',
           closable: true,
@@ -139,8 +140,8 @@ export const useAuthStore = defineStore('auth', () => {
         if (error.response.status === 400) {
           // Incorrect credentials
           toaster.show({
-            title: 'Error',
-            message: 'Incorrect credentials',
+            title: uiText('خطای ورود', 'Sign-in error'),
+            message: uiText('ایمیل یا رمز عبور صحیح نیست.', 'Incorrect email or password.'),
             color: 'danger',
             icon: 'ph:x-circle-fill',
             closable: true,
@@ -148,8 +149,8 @@ export const useAuthStore = defineStore('auth', () => {
         } else {
           // Other client-side errors
           toaster.show({
-            title: 'Error',
-            message: 'Failed to login. Please try again later.',
+            title: uiText('خطای ورود', 'Sign-in error'),
+            message: uiText('ورود انجام نشد. دوباره تلاش کنید.', 'Sign-in failed. Please try again.'),
             color: 'danger',
             icon: 'ph:x-circle-fill',
             closable: true,
@@ -158,8 +159,8 @@ export const useAuthStore = defineStore('auth', () => {
       } else if (error.request) {
         // The request was made but no response was received
         toaster.show({
-          title: 'Error',
-          message: 'No response from the server. Please try again later.',
+          title: uiText('سرور در دسترس نیست', 'Server unavailable'),
+          message: uiText('پاسخی از سرور دریافت نشد.', 'No response was received from the server.'),
           color: 'error',
           icon: 'ph:x-circle-fill',
           closable: true,
@@ -167,8 +168,8 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         // Something happened in setting up the request that triggered an Error
         toaster.show({
-          title: 'Error',
-          message: 'An unexpected error occurred. Please try again later.',
+          title: uiText('خطای پیش‌بینی‌نشده', 'Unexpected error'),
+          message: uiText('خطایی رخ داد. دوباره تلاش کنید.', 'An unexpected error occurred.'),
           color: 'error',
           icon: 'ph:x-circle-fill',
           closable: true,
@@ -238,7 +239,6 @@ export const useAuthStore = defineStore('auth', () => {
           console.error('cart_items is missing or not an array in the cart.');
         }
       } else {
-        console.log('No cart found in localStorage.');
       }
     } catch (error) {
       console.error('Error adding orders from localStorage:', error);
@@ -337,8 +337,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.status === 200) {
         toaster.clearAll();
         toaster.show({
-          title: 'Success',
-          message: 'Your profile has been updated!',
+          title: uiText('انجام شد', 'Completed'),
+          message: uiText('رمز عبور با موفقیت تغییر کرد.', 'Your password was updated.'),
           color: 'success',
           icon: 'ph:check',
           closable: true,
@@ -353,7 +353,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function changePassword({currentPassword, newPassword}) {
     const toaster = useToaster();
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = useCookie('access_token').value;
 
     try {
       const response = await axios.post(`${apiUrl}/users/password?password=${currentPassword}&new_password=${newPassword}`, {}, {
@@ -366,8 +366,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.status === 200) {
         toaster.clearAll();
         toaster.show({
-          title: 'Success',
-          message: 'Your profile has been updated!',
+          title: uiText('انجام شد', 'Completed'),
+          message: uiText('رمز عبور با موفقیت تغییر کرد.', 'Your password was updated.'),
           color: 'success',
           icon: 'ph:check',
           closable: true,
@@ -380,8 +380,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function setCookie(name, value) {
+    useCookie(name, {path: '/'}).value = value;
+  }
+
   function deleteCookie(name) {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    useCookie(name, {path: '/'}).value = null;
   }
 
   function $reset() {

@@ -44,7 +44,7 @@ const showNavBurger = computed(() => {
     >
 
       <NuxtLink to="/dashboard" class="text-muted-800 dark:text-white flex items-center">
-          <span class="text-muted-800 dark:text-white items-center">DASHBOARD</span>
+          <span class="text-muted-800 dark:text-white items-center">داشبورد</span>
       </NuxtLink>
 
 

@@ -16,24 +16,16 @@ const router = useRouter();
 
 definePageMeta({
   layout: 'empty',
-  title: 'Signup',
+  title: 'ثبت‌نام در سامانه انرژی',
   middleware: ['no-authenticated', 'redirect'],
-  preview: {
-    title: 'Signup 1',
-    description: 'For authentication and sign up',
-    categories: ['layouts', 'authentication'],
-    src: '/img/screens/auth-signup-1.png',
-    srcDark: '/img/screens/auth-signup-1-dark.png',
-    order: 100,
-  },
 });
 const {locale, locales} = useI18n()
 
 const VALIDATION_TEXT = {
-  EMAIL_REQUIRED: 'A valid email is required',
-  PASSWORD_LENGTH: 'Password must be at least 8 characters',
-  PASSWORD_CONTAINS_EMAIL: 'Password cannot contain your email',
-  PASSWORD_MATCH: 'Passwords do not match',
+  EMAIL_REQUIRED: 'یک ایمیل معتبر وارد کنید',
+  PASSWORD_LENGTH: 'رمز عبور باید حداقل ۸ نویسه باشد',
+  PASSWORD_CONTAINS_EMAIL: 'رمز عبور نباید شامل ایمیل باشد',
+  PASSWORD_MATCH: 'تکرار رمز عبور مطابقت ندارد',
 };
 
 const zodSchema = z
@@ -106,7 +98,7 @@ const submitOTP = handleSubmit(async (values) => {
   <video autoplay muted loop class="absolute inset-0 z-0 object-cover w-full h-full">
     <source src="/auth.mp4" type="video/mp4">
     <!-- Add additional <source> elements for other video formats -->
-    Your browser does not support the video tag.
+    مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
   </video>
   <div class="h-screen md:flex dark:bg-muted-900">
 
@@ -119,13 +111,13 @@ const submitOTP = handleSubmit(async (values) => {
         >
         <div class="text-start mb-20">
           <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
-            MICRO GRID ENERGEY
+            سامانه مدیریت
           </BaseHeading>
           <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
-            MANAGEMENT
+            ریزشبکه انرژی
           </BaseHeading>
           <BaseHeading as="h2" size="3xl" weight="medium" class="text-white">
-            SYSTEM
+            دانشگاه پردیس
           </BaseHeading>
         </div>
 
@@ -141,7 +133,7 @@ const submitOTP = handleSubmit(async (values) => {
       <div class="mx-auto flex w-full max-w-xs items-center justify-between">
         <NuxtLink to="/"
                   class="text-muted-400 hover:text-primary-500 dark:text-muted-700 dark:hover:text-primary-500 transition-colors duration-300">
-          <span class="text-muted-800 items-center">Personal Dashboard</span>
+          <span class="text-muted-800 items-center">داشبورد انرژی دانشگاه</span>
 
         </NuxtLink>
         <div>
@@ -154,12 +146,12 @@ const submitOTP = handleSubmit(async (values) => {
         <BaseHeading as="h2" size="3xl" weight="medium">
           <NuxtLink
             to="/"
-            aria-label="Go to homepage"
+            aria-label="صفحه اصلی"
           >
             <!--          <TairoLogoText-->
             <!--            class="text-primary-500 group-[&.scrolled]/landing:h-6 group-[&:not(.scrolled)]/landing:h-7 motion-safe:transition-all motion-safe:duration-200"-->
             <!--          />-->
-            <span class="text-muted-800 items-center">Personal Dashboard</span>
+            <span class="text-muted-800 items-center">ایجاد حساب سامانه انرژی</span>
 
 
           </NuxtLink>

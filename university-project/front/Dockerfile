@@ -13,7 +13,7 @@ COPY .demo/package.json .demo/
 RUN command -v pnpm || npm install -g pnpm
 COPY . .
 RUN pnpm install
-RUN pnpm build
-CMD ["node", ".app/.output/server/index.mjs"]
-#RUN node .app/.output/server/index.mjs
 
+# Development is the default for this university project. The source directory
+# is bind-mounted by Docker Compose, so Nuxt/Vite can hot-reload every edit.
+CMD ["pnpm", "exec", "nuxi", "dev", ".app", "--host", "0.0.0.0", "--port", "3000"]

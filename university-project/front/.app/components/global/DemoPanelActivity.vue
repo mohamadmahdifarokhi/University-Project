@@ -42,7 +42,6 @@ const removeItem = async (itemToRemove) => {
       <div class=" dark:bg-muted-800 flex flex-col gap-6 rounded-2xl p-6">
         <div>
           <BaseHeading tag="h3" size="xl" weight="medium" class="text-muted-800 dark:text-muted-100 flex items-center justify-between ">
-            <span>{{ t('Order') }}</span>
                 <button
         type="button"
         class="text-muted-400 hover:bg-muted-100 hover:text-muted-600 dark:hover:bg-muted-700 flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300 dark:hover:text-white"

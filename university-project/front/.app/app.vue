@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const route = useRoute()
 const app = useAppConfig()
+const { locale, locales } = useI18n()
+const localeInfo = computed(() => locales.value.find((item: any) => item.code === locale.value))
 
 /**
  * Global head configuration
@@ -15,8 +17,8 @@ useHead({
       : `${app.tairo?.title}`
   },
   htmlAttrs: {
-    lang: 'fa',
-    dir: 'rtl',
+    lang: () => localeInfo.value?.iso || locale.value,
+    dir: () => localeInfo.value?.dir || (locale.value === 'fa' ? 'rtl' : 'ltr'),
   },
   link: [
     {
@@ -31,15 +33,11 @@ useHead({
       name: 'description',
       content: () =>
         route.meta.description
-        ?? 'The most advanced Nuxt and Tailwind CSS dashboard template',
+        ?? 'سامانه دانشگاهی مدیریت تولید، ذخیره و تبادل انرژی',
     },
     {
       name: 'twitter:card',
       content: 'summary_large_image',
-    },
-    {
-      name: 'twitter:site',
-      content: '@cssninjaStudio',
     },
     {
       name: 'og:image:type',
@@ -53,21 +51,7 @@ useHead({
       name: 'og:image:height',
       content: '630',
     },
-    {
-      name: 'og:image',
-      content: `https://media.cssninja.io/embed/marketplace/product/wide.png?headline=${encodeURIComponent(
-        route.meta.description
-        || (route.meta.preview
-            ? `${route.meta.preview?.title} - ${route.meta.preview?.description}`
-            : 'Nuxt & Tailwind CSS dashboard system'),
-      )}&url=${encodeURIComponent(
-        'https://media.cssninja.io/content/products/logos/tairo-text-white.svg',
-      )}&previewUrl=${encodeURIComponent(
-        `https://tairo.cssninja.io${
-          route.meta.preview?.src || '/img/screens/documentation-hub.png'
-        }`,
-      )}`,
-    },
+    { name: 'og:image', content: '/img/azad-pardis-logo.png' },
   ],
 })
 </script>
@@ -78,12 +62,10 @@ useHead({
       Global app search modal
       @see .demo/components/DemoAppSearch.vue
     -->
-    <DemoAppSearch />
     <!--
       Global app layout switcher
       @see .demo/components/DemoAppLayoutSwitcher.vue
     -->
-    <DemoAppLayoutSwitcher />
 
     <!--
       Vue Axe Popup
