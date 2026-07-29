@@ -90,7 +90,7 @@ function createBattery() {
         lead="tight"
         class="text-muted-800 dark:text-white"
       >
-        <span>Battery Status (kw/h)</span>
+        <span>وضعیت باتری (کیلووات‌ساعت)</span>
       </BaseHeading>
     </div>
     <div>
@@ -101,7 +101,7 @@ function createBattery() {
               <span
                 class="text-muted-500 dark:text-muted-400 group-hover:text-primary-500 transition-colors duration-300"
               >
-                Saved Energy
+                انرژی ذخیره‌شده
               </span>
             </BaseParagraph>
             <div
@@ -117,7 +117,7 @@ function createBattery() {
               <span
                 class="text-muted-500 dark:text-muted-400 group-hover:text-primary-500 transition-colors duration-300"
               >
-                Sold Energy
+                انرژی فروخته‌شده
               </span>
             </BaseParagraph>
             <div
@@ -129,7 +129,7 @@ function createBattery() {
         </li>
       </ul>
       <div v-else>
-        <button @click="createBattery" class="btn btn-primary">Create Battery</button>
+        <button @click="createBattery" class="btn btn-primary">ایجاد باتری</button>
       </div>
     </div>
   </div>

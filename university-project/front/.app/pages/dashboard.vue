@@ -1359,35 +1359,27 @@ function useOptimizationChart() {
               </Field>
               <!-- Other input fields -->
               <Field
-                v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                v-slot="{ field, errorMessage, handleChange }"
                 class="mb-2"
                 name="start"
               >
-                <BaseInput
+                <JalaliDateTimePicker
                   :model-value="field.value"
                   :error="errorMessage"
-                  type="datetime-local"
-                  shape="curved"
-                  placeholder="تاریخ شروع"
-                  icon="ri:calendar-fill"
+                  placeholder="تاریخ و زمان شروع"
                   @update:model-value="handleChange"
-                  @blur="handleBlur"
                 />
               </Field>
               <Field
-                v-slot="{ field, errorMessage, handleChange, handleBlur }"
+                v-slot="{ field, errorMessage, handleChange }"
                 class="mb-2"
                 name="end"
               >
-                <BaseInput
+                <JalaliDateTimePicker
                   :model-value="field.value"
                   :error="errorMessage"
-                  type="datetime-local"
-                  shape="curved"
-                  placeholder="تاریخ پایان"
-                  icon="ri:calendar-fill"
+                  placeholder="تاریخ و زمان پایان"
                   @update:model-value="handleChange"
-                  @blur="handleBlur"
                 />
               </Field>
               <!--            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" class="mb-2" name="consumption">-->

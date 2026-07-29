@@ -122,13 +122,11 @@ def service_battery_by_user_id(
 
         total_daylight_saving = 0
         for period in periods:
-            print(period)
             season = period['season']
             start = period['start']
             end = period['end']
             num_days = (end - start).days + 1
             daylight = daylights.get(season, 0)  # Default to 0 if the season is not found
-            print(num_days, daylight)
             total_daylight_saving += (num_days * daylight) * 50
 
         update_result = db["battery"].update_one(
@@ -184,7 +182,6 @@ def divide_into_periods(created_at, current_date):
         periods[-1]['end'] = current_date
 
     return periods
-
 
 
 

@@ -29,7 +29,6 @@ class SolarPanelService:
     def get_solar_panel(self, panel_id: str) -> Optional[SolarPanelOut]:
         panel = self.db.solar_panels.find_one({"_id": ObjectId(panel_id)})
         user = self.db.users.find_one({"_id": ObjectId(panel['user_id'])})
-        print(user)
         panel["_id"] = str(panel["_id"])
         panel["email"] = str(user["email"])
         panel["status"] = 'available'

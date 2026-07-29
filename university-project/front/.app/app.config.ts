@@ -14,11 +14,8 @@ export default defineAppConfig({
     title: 'دانشگاه آزاد اسلامی واحد پردیس',
     sidebar: {
       toolbar: {
-        showNavBurger: true,
+        showNavBurger: false,
         tools: [
-          {
-            component: 'DemoToolbarActivity',
-          },
           {
             component: 'DemoThemeToggle',
             props: {
@@ -37,9 +34,6 @@ export default defineAppConfig({
           },
         ],
         landing: [
-          {
-            component: 'DemoToolbarActivity',
-          },
           {
             component: 'DemoThemeToggle',
             props: {
@@ -72,9 +66,6 @@ export default defineAppConfig({
               disableTransitions: true,
               inverted: true,
             },
-          },
-          {
-            component: 'DemoCircularMenuActivity',
           },
           // {
           //   component: 'DemoCircularMenuNotifications',
@@ -140,11 +131,8 @@ export default defineAppConfig({
       toolbar: {
         enabled: true,
         showTitle: true,
-        showNavBurger: true,
+        showNavBurger: false,
         tools: [
-          {
-            component: 'DemoToolbarActivity',
-          },
           {
             component: 'DemoThemeToggle',
           },
@@ -175,9 +163,6 @@ export default defineAppConfig({
           // },
           {
             component: 'DemoCircularMenuNotifications',
-          },
-          {
-            component: 'DemoCircularMenuActivity',
           },
         ],
       },
@@ -439,9 +424,6 @@ export default defineAppConfig({
           {
             component: 'DemoCircularMenuNotifications',
           },
-          {
-            component: 'DemoCircularMenuActivity',
-          },
         ],
       },
       toolbar: {
@@ -518,11 +500,6 @@ export default defineAppConfig({
         name: 'language',
         position: 'right',
         component: 'DemoPanelLanguage',
-      },
-      {
-        name: 'activity',
-        position: 'right',
-        component: 'DemoPanelActivity',
       },
       {
         name: 'search',

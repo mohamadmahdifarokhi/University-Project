@@ -154,8 +154,7 @@ def service_show_seasonal_records_on_chart_super_admin(user_id, season, year):
     try:
         result = list(db["power_records"].aggregate(pipeline))
         return result
-    except Exception as e:
-        print("An error occurred:", e)
+    except Exception:
         return []
 
 
@@ -431,10 +430,8 @@ def service_cal_graph4_super_admin(
 
 def service_get_all_user(user_id):
     users = db["users"].find({})
-    print(users, "wefpkweof")
     all_users = []
     for user in users:
-        print("qweqwd")
         update_user = {}
         user_devices = []
         profile = db["profiles"].find_one({"user_id": str(user['_id'])})
@@ -452,20 +449,16 @@ def service_get_all_user(user_id):
 
             if 'devices' in user.keys():
                 for device_id in user["devices"]:
-                    print(device_id)
                     device = db["device"].find_one({"_id": ObjectId(device_id)})
-                    print(device)
                     if device:
                         user_devices.append(device["name"])
 
             update_user["devices"] = user_devices
-            print("qwwwwwwwwwwwwweqwd")
 
             if block:
                 update_user["apartment_number"] = apartment_no
                 update_user["area"] = block["area"]
                 update_user["unit"] = block["unit"]
-            print("rrrrrrrrrrrrrrrrrrrrrrrr")
             
             update_user["profile"] = profile['photo']
             user["id"] = str(user["_id"])
@@ -473,10 +466,8 @@ def service_get_all_user(user_id):
             del user["permissions"]
             del user["password"]
             update_user["user"] = user
-            print("bbbbbbbbbbbbbbbbbbbbbbbbb")
 
             all_users.append(update_user)
-    print(all_users,"owpekd")
     return all_users
 
 
@@ -610,7 +601,6 @@ def service_show_seasonal_records_on_chart_block_admin(admin_user_id, season, ye
     apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})
     
     if not apartment:
-        print("Apartment not found")
         return []
 
     # Find all blocks associated with the apartment
@@ -659,8 +649,7 @@ def service_show_seasonal_records_on_chart_block_admin(admin_user_id, season, ye
 
         return formatted_output
 
-    except Exception as e:
-        print("An error occurred:", e)
+    except Exception:
         return []
 
 

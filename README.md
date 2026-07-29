@@ -73,7 +73,6 @@ University-Project/
     │       ├── apartment/      # آپارتمان‌ها
     │       ├── block/          # بلوک‌ها
     │       ├── power_record/   # رکوردهای مصرف برق
-    │       ├── power_source/   # منابع برق
     │       ├── pricing/        # قیمت‌گذاری
     │       ├── order/          # سفارش‌ها و پرداخت
     │       ├── profile/        # پروفایل کاربران
@@ -122,6 +121,29 @@ http://localhost:8002/startup
 ```
 
 </div>
+
+۴. برای ساخت داده‌های نمایشی داشبورد، فروشگاه، باتری و سفارش‌ها، دستور زیر را اجرا کنید:
+
+<div dir="ltr">
+
+```bash
+docker compose exec university-project python -m src.seed_data
+```
+
+</div>
+
+حساب نمایشی ساخته‌شده توسط seed:
+
+<div dir="ltr">
+
+```text
+Email: user@pardis.ac.ir
+Password: Demo@12345
+```
+
+</div>
+
+اسکریپت seed قابل اجرای مجدد است و داده‌های نمایشی تکراری یا خراب تولید نمی‌کند.
 
 ## پشتیبان‌گیری و بازیابی دیتابیس
 
@@ -187,6 +209,8 @@ docker exec -i university-project-mongo mongorestore \
 ## نکات امنیتی
 
 > ⚠️ فایل `.env.example` صرفاً نمونه است. **هرگز** کلیدها و رمزهای واقعی را در مخزن گیت قرار ندهید. پیش از استقرار در محیط واقعی، تمام مقادیر حساس (مانند `SECRET_KEY`، رمز SMTP، کلیدهای پرداخت و کلیدهای S3) را با مقادیر جدید و امن جایگزین کنید.
+
+رمزهای پیش‌فرض MongoDB در `docker-compose.yml` فقط برای محیط توسعه و دموی دانشگاهی نگه داشته شده‌اند.
 
 ---
 

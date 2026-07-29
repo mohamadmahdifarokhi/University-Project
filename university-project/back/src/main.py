@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-from pymongo import MongoClient
+from pymongo.errors import CollectionInvalid
 from starlette.middleware.cors import CORSMiddleware
 
-from src.auth.services import OTPService, UserService
+from src.auth.secures import get_password_hash
 from src.logger import logger
 from src.order.api import router as order_router
 from src.battery.api import router as battery_router
@@ -16,15 +16,11 @@ from src.pricing.api import router as pricing_router
 from src.solar_panel.routers import router as solar_panel_router
 from src.admins.api import router as admin_router
 from src.shop.api import catalog_router, cart_router
-import os
 from dotenv import load_dotenv
-from src.db import db
+from src.db.db import db
 load_dotenv()
 
 app = FastAPI(title="دانشگاه آزاد اسلامی واحد پردیس")
-client = MongoClient(os.environ.get("DATABASE_URL"))
-# Access your database
-db = client["university"]
 # Configure CORS
 origins = [
     "http://localhost",
@@ -71,11 +67,11 @@ async def on_startup():
     """
     Create collections on application startup.
     """
-    # Define your MongoDB collections here
-    db.create_collection('users')
-    db.create_collection('permissions')
-    db.create_collection('profiles')
-    db.create_collection('carts')
+    for collection_name in ("users", "permissions", "profiles", "carts"):
+        try:
+            db.create_collection(collection_name)
+        except CollectionInvalid:
+            pass
 
 
 # Define functions for creating permissions and admin user
@@ -108,12 +104,15 @@ def create_admin():
     Create an admin user in the database.
     """
     try:
-        otp = OTPService().insert({"email": "admin@gmail.com"})
-        UserService().insert(req={
+        if db.users.find_one({"email": "admin@gmail.com"}):
+            return
+        permissions = [p for p in db.permissions.find({"name": {"$in": ["user", "admin"]}})]
+        db.users.insert_one({
             "email": "admin@gmail.com",
-            "password": "admin",
-            "otp_code": otp['otp_code'],
-        }, admin=True)
+            "password": get_password_hash("admin"),
+            "provider": "local",
+            "permissions": permissions,
+        })
     except Exception as e:
         logger.error(f"Error creating admin user: {e}")
 

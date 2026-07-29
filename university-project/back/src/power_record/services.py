@@ -54,9 +54,62 @@ def get_season(date):
     elif 6 <= month <= 8:
         return "summer"
     elif 9 <= month <= 11:
-        return "summer"
+        return "fall"
     else:
         return "winter"
+
+
+# ---------------------------------------------------------------------------
+# Iranian residential electricity tariff (تعرفه برق خانگی پلکانی)
+# ---------------------------------------------------------------------------
+# Iran prices residential power with a tiered ("پلکانی") structure based on the
+# monthly consumption pattern (الگوی مصرف): low-consumption ("کم‌مصرف")
+# subscribers pay a heavily subsidised lifeline rate, while high-consumption
+# ("پرمصرف") subscribers pay progressively higher rates. This matches the model
+# confirmed by multiple sources (Tavanir / Ministry of Energy; the residential
+# sector is >60% of national use, and low-use households get bill discounts).
+#
+# IMPORTANT / صداقت داده‌ای: The per-tier rates below are in Toman per kWh and
+# are REALISTIC APPROXIMATIONS of the 1404 (2025) non-tropical residential
+# schedule, anchored to the commonly cited reference of ~1000 Toman/kWh for an
+# average household (e.g. Technolife 1404). The exact official Tavanir rial
+# figures change periodically and were not machine-retrievable at build time.
+# To use the official numbers, just replace the values in TARIFF_TIERS_TOMAN.
+TARIFF_TIERS_TOMAN = [
+    (100, 500),    # تا ۱۰۰ کیلووات‌ساعت در ماه — کم‌مصرف/یارانه‌ای
+    (200, 1000),   # ۱۰۱ تا ۲۰۰ — حدود نرخ مرجع متوسط (~۱۰۰۰ تومان)
+    (300, 1500),   # ۲۰۱ تا ۳۰۰ — نزدیک سقف الگوی مصرف
+    (400, 2500),   # ۳۰۱ تا ۴۰۰ — پرمصرف
+    (500, 3500),   # ۴۰۱ تا ۵۰۰
+    (float("inf"), 5000),  # بالای ۵۰۰ — پرمصرف شدید (بدون یارانه)
+]
+
+# Summer (peak season) carries a surcharge in Iran's tariff schedule.
+SUMMER_SURCHARGE = 1.15
+
+
+def tiered_cost_toman(monthly_kwh, season=None):
+    """Return the monthly bill in Toman for a given consumption using Iran's
+    tiered residential tariff. Consumption is billed cumulatively across tiers.
+    """
+    if monthly_kwh <= 0:
+        return 0.0
+    remaining = monthly_kwh
+    cost = 0.0
+    prev_cap = 0
+    for cap, rate in TARIFF_TIERS_TOMAN:
+        tier_kwh = min(remaining, cap - prev_cap)
+        if tier_kwh <= 0:
+            break
+        cost += tier_kwh * rate
+        remaining -= tier_kwh
+        prev_cap = cap
+        if remaining <= 0:
+            break
+    if season == "summer":
+        cost *= SUMMER_SURCHARGE
+    return cost
+
 
 
 def service_cal_graph4(
@@ -181,7 +234,10 @@ def service_cal_graph4(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.95 / 1000)
+            unoptimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
+            # Bill the grid energy with the tiered tariff (monthly basis x3 months).
+            monthly_kwh = unoptimized_grid_kwh / 3
+            unoptimized = tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3 / 1000
             unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
 
         pipeline = [
@@ -258,14 +314,10 @@ def service_cal_graph4(
                     "adjustedConsumption": {
                         "$cond": {
                             "if": {
-                                "$or": [
-                                    {"$eq": ["$device", "air conditioner(small)"]},
-                                    {"$eq": ["$device", "air conditioner(medium)"]},
-                                    {"$eq": ["$device", "air conditioner(large)"]},
-                                    {"$eq": ["$device", "heater (small)"]},
-                                    {"$eq": ["$device", "heater (medium)"]},
-                                    {"$eq": ["$device", "heater (large)"]},
-                                ]
+                                "$regexMatch": {
+                                    "input": "$device_name",
+                                    "regex": "کولر|بخاری|air conditioner|heater"
+                                }
                             },
                             "then": {"$multiply": ["$consumption", 0.33]},
                             "else": "$consumption"
@@ -298,7 +350,9 @@ def service_cal_graph4(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.55 / 1000)
+            optimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
+            monthly_kwh = optimized_grid_kwh / 3
+            optimized = tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3 / 1000
             optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
         seasons_order = ["spring", "summer", "fall", "winter"]
         unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
@@ -316,26 +370,13 @@ def service_add_power_records(
 ):
     # calculate consumption due to power of the device
     device = db["device"].find_one({"name": power_record.device_name})
-    if device and 'DC_power_consumption' in device:
-        dc_power = device['DC_power_consumption']
+    if not device or 'DC_power_consumption' not in device:
+        raise HTTPException(status_code=404, detail="Device not found.")
+    dc_power = device['DC_power_consumption']
     time_difference = (power_record.end_time - power_record.start_time).total_seconds() / 3600
     consumption = dc_power * time_difference
     if device.get('kind') == 'lamp' or 'لامپ' in device['name'] or device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
         consumption = consumption * 6
-    #
-    # #calculate fee due to the season and time
-    # record_season = get_season(power_record.start_time)
-    # pricing_unit = db["pricing"].find_one({"season_name": record_season})
-    #
-
-    # if start time is before peak time and duration does not exeed the peak start time
-    # if power_record.start_time.time() < pricing_unit["peak_start_time"] and\
-    #       (power_record.end_time - power_record.start_time) < (pricing_unit["peak_start_time"] - power_record.start_time.time()):
-    #     total_consumption_fee = (power_record.end_time.time() - power_record.start_time.time()) * pricing_unit["general_price"]
-
-    # # 
-    # elif power_record.start_time.time() > pricing_unit["peak_start_time"] and power_record.start_time.time() < pricing_unit["peak_end_time"]:
-    #     peak_period = (pricing_unit["peak_end_time"] - power_record.start_time.time()).total_seconds() / 3600
     base_power_record = PowerRecordSchema(
         user_id=str(user_id),
         device_name=power_record.device_name,
@@ -692,3 +733,55 @@ def service_show_seasonal_records_on_chart(user_id, season, year):
         return result
     except Exception as e:
         return []
+
+
+def _season_of_date(d):
+    """Map a date to (season, season_year) using the SAME day-accurate
+    boundaries as get_season_dates so availability matches the chart query."""
+    md = (d.month, d.day)
+    if (3, 21) <= md <= (6, 20):
+        return "Spring", d.year
+    elif (6, 21) <= md <= (9, 22):
+        return "Summer", d.year
+    elif (9, 23) <= md <= (12, 20):
+        return "Fall", d.year
+    elif md >= (12, 21):
+        return "Winter", d.year
+    else:  # md <= (3, 20)  -> belongs to previous year's Winter
+        return "Winter", d.year - 1
+
+
+def service_available_periods(user_id):
+    """Return the distinct (year, month) and (year, season) combos that
+    actually have power records for this user, so the dashboard selectors
+    only offer filters that contain data."""
+    pipeline = [
+        {'$match': {'user_id': ObjectId(str(user_id))}},
+        {
+            '$group': {
+                '_id': {
+                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$start_time'}}
+                }
+            }
+        },
+    ]
+    rows = list(db["power_records"].aggregate(pipeline))
+    days = [datetime.strptime(r['_id']['day'], '%Y-%m-%d') for r in rows]
+
+    month_set = {(d.year, d.month) for d in days}
+    months = sorted(month_set, key=lambda x: (x[0], x[1]))
+
+    # Seasonal availability derived from actual record dates (day-accurate).
+    season_set = {_season_of_date(d) for d in days}
+    season_order = {"Spring": 0, "Summer": 1, "Fall": 2, "Winter": 3}
+    seasons = sorted(season_set, key=lambda x: (x[1], season_order[x[0]]))
+
+    years = sorted({y for y, _ in months})
+
+    return {
+        "years": years,
+        "months": [{"year": y, "month": m} for y, m in months],
+        "seasons": [{"year": y, "season": s} for s, y in seasons],
+    }
+
+

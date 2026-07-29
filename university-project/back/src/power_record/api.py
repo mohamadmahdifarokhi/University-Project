@@ -56,9 +56,7 @@ async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(g
         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
 
     records = df.to_dict('records')
-    print(user,"wwwwwwwee")
     for record in records:
-        print(record)
         record["user_id"] = user['_id']
         record["start_time"] = pd.to_datetime(record["start_time"])
         record["end_time"] = pd.to_datetime(record["end_time"])
@@ -144,5 +142,14 @@ def power_record_seasonal(
     return service_show_seasonal_records_on_chart(
         year=year,
         season=season,
+        user_id=user["_id"]
+    )
+
+
+@router.get("/available-periods", summary="years/months/seasons that have data for the user")
+def power_record_available_periods(
+    user: User = Depends(get_current_user),
+):
+    return service_available_periods(
         user_id=user["_id"]
     )

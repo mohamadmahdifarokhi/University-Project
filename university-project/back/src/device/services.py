@@ -75,7 +75,6 @@ def service_list_device_user(
     try:
         devices = db["users"].find_one({"_id": ObjectId(user_id)})["devices"]
         results = []
-        print(devices, "loplop")
         for device_id in devices:
             device = db["device"].find_one({"_id": ObjectId(device_id)})
             if device:
