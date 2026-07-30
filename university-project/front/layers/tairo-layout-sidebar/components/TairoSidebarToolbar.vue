@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {useSidebar} from '../composables/sidebar'
+import PresentationTour from '~/components/PresentationTour.vue'
 
 const localPath = useLocalePath();
 const {locale, locales} = useI18n()
@@ -50,6 +51,7 @@ const showNavBurger = computed(() => {
 
     </BaseHeading>
 
+    <PresentationTour />
 
     <div class="ms-auto"></div>
     <TairoSidebarTools class="h-16"/>

@@ -9,28 +9,86 @@ definePageMeta({ title: 'ساختمان و منابع انرژی', middleware: '
 useSeoMeta({ description: 'مدیریت مشخصات ساختمان و تجهیزات مصرف‌کننده انرژی' })
 
 const app = useAppStore()
-const { apartments, selectedDevice } = storeToRefs(app)
+const { apartments, availableApartments, selectedDevice } = storeToRefs(app)
 const loading = ref(true)
 const loadError = ref('')
 const submitError = ref('')
 const successMessage = ref('')
 const deletingId = ref<string | null>(null)
+const devicePage = ref(1)
+const apartmentPage = ref(1)
+const devicePerPage = 4
+const apartmentPerPage = 4
+const visibleDevices = computed(() => selectedDevice.value.slice(
+  (devicePage.value - 1) * devicePerPage,
+  devicePage.value * devicePerPage,
+))
+const visibleApartments = computed(() => apartments.value.slice(
+  (apartmentPage.value - 1) * apartmentPerPage,
+  apartmentPage.value * apartmentPerPage,
+))
+
+const backendErrorTranslations: Record<string, string> = {
+  'apartment not found': 'ساختمان انتخاب‌شده در سامانه پیدا نشد.',
+  'unit number is not acceptable': 'شماره واحد از تعداد واحدهای تعریف‌شده برای این ساختمان بیشتر است.',
+  'this block is not available': 'این شماره واحد قبلاً به کاربر دیگری اختصاص داده شده است.',
+}
+
+function getSubmitErrorMessage(error: any) {
+  if (!error?.response) {
+    return 'ارتباط با سرور برقرار نشد. اتصال شبکه و فعال‌بودن بک‌اند را بررسی کنید.'
+  }
+
+  const status = Number(error.response.status)
+  const detail = error.response.data?.detail
+
+  if (Array.isArray(detail)) {
+    const fieldNames: Record<string, string> = {
+      apartment_no: 'شماره ساختمان',
+      unit: 'شماره واحد',
+      area: 'مساحت مفید',
+    }
+    const issues = detail.map((issue: any) => {
+      const field = fieldNames[String(issue?.loc?.at(-1))] || 'اطلاعات فرم'
+      const type = String(issue?.type || '')
+      if (type.includes('int')) return `${field} باید عدد صحیح باشد.`
+      if (type.includes('string')) return `${field} باید به‌صورت مقدار متنی معتبر ارسال شود.`
+      if (type.includes('float') || type.includes('number')) return `${field} باید عدد معتبر باشد.`
+      if (type.includes('missing')) return `${field} الزامی است.`
+      return `${field}: مقدار واردشده معتبر نیست.`
+    })
+    return `اطلاعات فرم معتبر نیست: ${issues.join(' ')}`
+  }
+
+  if (typeof detail === 'string') {
+    return backendErrorTranslations[detail] || `خطای سرور: ${detail}`
+  }
+
+  if (status === 401) return 'نشست ورود منقضی شده است؛ دوباره وارد حساب شوید.'
+  if (status === 403) return 'حساب شما اجازه ثبت ساختمان را ندارد.'
+  if (status >= 500) return `سرور هنگام ثبت ساختمان دچار خطای داخلی شد (کد ${status}).`
+  return `ثبت ساختمان ناموفق بود (کد پاسخ ${status}).`
+}
 
 const schema = toTypedSchema(z.object({
-  apartment: z.coerce.number().int('شماره واحد باید عدد صحیح باشد').positive('شماره واحد الزامی است'),
+  apartment: z.coerce.number().int('شماره ساختمان باید عدد صحیح باشد').positive('شماره ساختمان الزامی است'),
   area: z.coerce.number().positive('مساحت باید بیشتر از صفر باشد'),
-  unit: z.string().min(1, 'نام یا شماره بلوک الزامی است'),
+  unit: z.coerce.number().int('شماره واحد باید عدد صحیح باشد').positive('شماره واحد الزامی است'),
 }))
 const { handleSubmit, isSubmitting, resetForm } = useForm({
   validationSchema: schema,
-  initialValues: { apartment: undefined, area: undefined, unit: '' },
+  initialValues: { apartment: undefined, area: undefined, unit: undefined },
 })
 
 async function loadResources() {
   loading.value = true
   loadError.value = ''
   try {
-    await Promise.all([app.fetchApartment(), app.fetchselectedDevice()])
+    await Promise.all([
+      app.fetchApartment(),
+      app.fetchAvailableApartments(),
+      app.fetchselectedDevice(),
+    ])
   }
   catch {
     loadError.value = 'اطلاعات ساختمان و تجهیزات دریافت نشد. اتصال سرور را بررسی کنید.'
@@ -49,8 +107,8 @@ const addBlock = handleSubmit(async (values) => {
     resetForm()
     await loadResources()
   }
-  catch {
-    submitError.value = 'ثبت ساختمان انجام نشد. اطلاعات را بررسی و دوباره تلاش کنید.'
+  catch (error) {
+    submitError.value = getSubmitErrorMessage(error)
   }
 })
 
@@ -77,7 +135,7 @@ onMounted(loadResources)
 
 <template>
   <section>
-    <header class="mb-6">
+    <header class="mb-6" data-tour="building-resources">
       <BaseHeading as="h1" size="xl">
         ساختمان و منابع انرژی
       </BaseHeading>
@@ -118,7 +176,7 @@ onMounted(loadResources)
       </BaseMessage>
 
       <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div>
+        <div data-tour="active-devices">
           <div class="mb-4 flex items-end justify-between gap-3">
             <div>
               <BaseHeading size="md">
@@ -149,7 +207,7 @@ onMounted(loadResources)
           </BaseCard>
           <div v-else class="grid gap-3 sm:grid-cols-2">
             <BaseCard
-              v-for="device in selectedDevice"
+              v-for="device in visibleDevices"
               :key="device.id || device._id"
               class="border-success-500 border-s-4 p-4"
             >
@@ -174,6 +232,16 @@ onMounted(loadResources)
               </div>
             </BaseCard>
           </div>
+          <BasePagination
+            previous-icon="lucide:chevron-right"
+            next-icon="lucide:chevron-left"
+            v-if="selectedDevice.length > devicePerPage"
+            class="mt-5"
+            :total-items="selectedDevice.length"
+            :item-per-page="devicePerPage"
+            :current-page="devicePage"
+            @update:current-page="devicePage = $event"
+          />
 
           <div class="mt-7">
             <BaseHeading size="md">
@@ -187,7 +255,7 @@ onMounted(loadResources)
           </BaseCard>
           <div v-else class="mt-4 space-y-3">
             <BaseCard
-              v-for="item in apartments"
+              v-for="item in visibleApartments"
               :key="item.id || item._id || item.apartment_no"
               class="p-4"
             >
@@ -196,6 +264,16 @@ onMounted(loadResources)
               </div>
             </BaseCard>
           </div>
+          <BasePagination
+            previous-icon="lucide:chevron-right"
+            next-icon="lucide:chevron-left"
+            v-if="apartments.length > apartmentPerPage"
+            class="mt-5"
+            :total-items="apartments.length"
+            :item-per-page="apartmentPerPage"
+            :current-page="apartmentPage"
+            @update:current-page="apartmentPage = $event"
+          />
         </div>
 
         <BaseCard class="h-fit p-5">
@@ -214,17 +292,6 @@ onMounted(loadResources)
               <BaseInput
                 :model-value="field.value"
                 :error="errorMessage"
-                label="نام یا شماره بلوک"
-                placeholder="برای نمونه: بلوک A"
-                :disabled="isSubmitting"
-                @update:model-value="handleChange"
-                @blur="handleBlur"
-              />
-            </Field>
-            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" name="apartment">
-              <BaseInput
-                :model-value="field.value"
-                :error="errorMessage"
                 type="number"
                 min="1"
                 label="شماره واحد"
@@ -233,6 +300,27 @@ onMounted(loadResources)
                 @update:model-value="handleChange"
                 @blur="handleBlur"
               />
+            </Field>
+            <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" name="apartment">
+              <BaseSelect
+                :model-value="field.value"
+                :error="errorMessage"
+                label="شماره ساختمان"
+                :disabled="isSubmitting"
+                @update:model-value="handleChange"
+                @blur="handleBlur"
+              >
+                <option value="" disabled>
+                  یک ساختمان را انتخاب کنید
+                </option>
+                <option
+                  v-for="building in availableApartments"
+                  :key="building.id"
+                  :value="building.apartment_no"
+                >
+                  ساختمان {{ building.apartment_no }} (حداکثر {{ building.block_no }} واحد)
+                </option>
+              </BaseSelect>
             </Field>
             <Field v-slot="{ field, errorMessage, handleChange, handleBlur }" name="area">
               <BaseInput

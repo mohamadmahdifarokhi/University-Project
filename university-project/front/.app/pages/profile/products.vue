@@ -9,6 +9,9 @@ const { devices } = storeToRefs(app)
 const loading = ref(true)
 const errorMessage = ref('')
 const adding = ref<string | null>(null)
+const page = ref(1)
+const perPage = 6
+const visibleDevices = computed(() => devices.value.slice((page.value - 1) * perPage, page.value * perPage))
 
 async function load() {
   loading.value = true
@@ -40,7 +43,7 @@ async function add(device: any) {
 onMounted(load)
 </script>
 <template>
-  <section>
+  <section data-tour="selectable-devices">
     <div class="mb-6">
       <BaseHeading as="h1" size="xl">
         تجهیزات قابل انتخاب
@@ -57,7 +60,7 @@ onMounted(load)
       تجهیز فعالی در سامانه تعریف نشده است.
     </BaseCard><div v-else class="space-y-3">
       <BaseCard
-        v-for="x in devices"
+        v-for="x in visibleDevices"
         :key="x.id"
         class="p-4"
       >
@@ -66,7 +69,7 @@ onMounted(load)
             <BaseHeading size="sm">
               {{ x.name }}
             </BaseHeading><BaseParagraph class="text-muted-500 mt-1">
-              توان نامی: {{ x.power||x.consumption||'—' }} وات
+              توان نامی: {{ x.DC_power_consumption || x.AC_power_consumption || x.power || x.consumption || '—' }} وات
             </BaseParagraph>
           </div><BaseButton
             color="primary"
@@ -79,5 +82,15 @@ onMounted(load)
         </div>
       </BaseCard>
     </div>
+    <BasePagination
+      previous-icon="lucide:chevron-right"
+      next-icon="lucide:chevron-left"
+      v-if="devices.length > perPage"
+      class="mt-6"
+      :total-items="devices.length"
+      :item-per-page="perPage"
+      :current-page="page"
+      @update:current-page="page = $event"
+    />
   </section>
 </template>

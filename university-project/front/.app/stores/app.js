@@ -48,6 +48,7 @@ export const useAppStore = defineStore('app', {
     graph4op: [],
     graph4Unop: [],
     apartments: [],
+    availableApartments: [],
     email: '',
     photo: ref(''),
     flag: ref(''),
@@ -482,6 +483,23 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
+    async updateBatteryOffer(active) {
+      const accessToken = useCookie('access_token').value;
+      const response = await axios.patch(`${apiUrl}/battery/offer`, {active}, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      if (this.battery) {
+        this.battery.status = response.data.status;
+      }
+      this.showSuccessToast(uiText(
+        active ? 'عرضه انرژی در بازار فعال شد.' : 'عرضه انرژی متوقف شد.',
+        active ? 'Energy offer activated.' : 'Energy offer paused.',
+      ));
+      return response.data;
+    },
     async fetchAllBattery() {
       const accessToken = useCookie('access_token').value;
 
@@ -685,11 +703,39 @@ export const useAppStore = defineStore('app', {
           // },
         });
 
-        this.allUsers = response.data;
+        this.allUsers = (response.data || []).map((item) => {
+          const user = item.user || {};
+          return {
+            ...item,
+            ...user,
+            id: user.id || item.id,
+            email: user.email || item.email,
+            role: (user.permissions || []).some(permission => permission.name === 'admin')
+              ? 'مدیر'
+              : 'کاربر',
+            devices: (item.devices || []).map(device =>
+              typeof device === 'string' ? { name: device } : device,
+            ),
+          };
+        });
 
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
+    },
+    async createManagedUser({ email, password, is_admin = false }) {
+      const accessToken = useCookie('access_token').value;
+      const response = await axios.post(`${apiUrl}/admins/users`, {
+        email,
+        password,
+        is_admin,
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.data;
     },
     async fetchusersMng() {
       try {
@@ -825,7 +871,7 @@ export const useAppStore = defineStore('app', {
         const recordData = {
           apartment_no: apartment_no,
           unit: unit,
-          area: area,
+          area: String(area),
         };
         const accessToken = useCookie('access_token').value;
         const response = await axios.post(`${apiUrl}/blocks/blocks`, recordData, {
@@ -885,7 +931,7 @@ export const useAppStore = defineStore('app', {
         });
         if (response.status === 200) {
           this.showSuccessToast(uiText('سفارش انرژی ثبت شد.', 'Energy order placed.'));
-          return true;
+          return response.data;
         }
       } catch (error) {
         console.error('Error adding order:', error);
@@ -1017,6 +1063,23 @@ export const useAppStore = defineStore('app', {
         }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        throw error;
+      }
+    },
+
+    async fetchAvailableApartments() {
+      try {
+        const accessToken = useCookie('access_token').value;
+        const response = await axios.get(`${apiUrl}/apartment/available`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        });
+        if (response.status === 200) {
+          this.availableApartments = response.data;
+        }
+      } catch (error) {
+        console.error('Error fetching available apartments:', error);
         throw error;
       }
     },

@@ -23,8 +23,6 @@ function currentSeason(d = now) {
 const selectedYear = ref<number>(now.getFullYear());
 const selectedSeason = ref<string>(currentSeason());
 
-const { availablePeriods } = storeToRefs(app);
-
 const SEASON_LABELS = {
   Spring: 'بهار',
   Summer: 'تابستان',
@@ -32,20 +30,16 @@ const SEASON_LABELS = {
   Winter: 'زمستان',
 };
 
-// Only offer years/seasons that actually have data.
-const yearOptions = computed(() => {
-  const years = [...new Set((availablePeriods.value?.seasons ?? []).map((s) => s.year))];
-  return years.sort((a, b) => a - b).map((y) => ({
-    value: y,
-    label: gregorianYearToJalaliLabel(y),
-  }));
-});
+const yearOptions = computed(() =>
+  Array.from({ length: 7 }, (_, index) => now.getFullYear() - 5 + index).map(year => ({
+    value: year,
+    label: gregorianYearToJalaliLabel(year),
+  })),
+);
 
-const seasonOptions = computed(() => {
-  return (availablePeriods.value?.seasons ?? [])
-    .filter((s) => s.year === selectedYear.value)
-    .map((s) => ({ value: s.season, label: SEASON_LABELS[s.season] ?? s.season }));
-});
+const seasonOptions = computed(() =>
+  Object.entries(SEASON_LABELS).map(([value, label]) => ({ value, label })),
+);
 
 async function loadSeasonal() {
   if (authStore.isAdmin) {
@@ -59,25 +53,7 @@ async function loadSeasonal() {
 
 // Initial load on mount.
 onMounted(async () => {
-  if (!app.availablePeriods?.seasons?.length) {
-    await app.fetchAvailablePeriods();
-  }
-  // Default to the most recent season that has data.
-  const seasons = app.availablePeriods?.seasons ?? [];
-  if (seasons.length) {
-    const last = seasons[seasons.length - 1];
-    selectedYear.value = last.year;
-    selectedSeason.value = last.season;
-  }
   await loadSeasonal();
-});
-
-// When the year changes, ensure the selected season is valid for it.
-watch(selectedYear, () => {
-  const seasons = seasonOptions.value;
-  if (seasons.length && !seasons.some((s) => s.value === selectedSeason.value)) {
-    selectedSeason.value = seasons[seasons.length - 1].value;
-  }
 });
 
 // Any change in the year or season selectors instantly refreshes the chart

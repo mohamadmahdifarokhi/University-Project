@@ -9,14 +9,14 @@ from fastapi import APIRouter, Depends, HTTPException, Security, Form, Request
 from sqlalchemy.orm import Session
 
 from .schemas import (OtpReq, OtpRes, TokenRes, VerifyOtpReq, UserRes, TokenReq, VerifyTokenReq, TokenPasswordReq,
-                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq, UserUpdate, UserOut, UserCreate,
+                      UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq, UserUpdate, UserOut, UserCreate, AdminUserCreate,
                       OTPUpdate, OTPOut, OTPCreate, TokenUpdate, TokenCreate, TokenOut, PermissionUpdate,
                       PermissionCreate, PermissionOut)
 from ..core.utils import redis_instance, EmailSender
 from ..db.db import db
 from .models import User
 from .services import UserService, TokenService, OTPService, PermissionService
-from .secures import get_current_user, authenticate, ACCESS_TOKEN_EXPIRE_MINUTES, sso, create_token, \
+from .secures import get_current_user, authenticate, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES, sso, create_token, \
     REFRESH_TOKEN_EXPIRE_DAYS, get_admin_user
 from ..logger import logger
 from ..profile.models import Profile
@@ -331,6 +331,31 @@ async def create_user(user: UserCreate):
     Create a new user.
     """
     return UserService().create_user(user)
+
+
+@router.post("/admins/users", status_code=201)
+async def create_user_from_admin_panel(
+        user: AdminUserCreate,
+        admin: User = Depends(get_admin_user),
+):
+    """Create a login-ready local account from the administrator panel."""
+    email = user.email.lower()
+    if db.users.find_one({"email": email}):
+        raise HTTPException(status_code=409, detail="این ایمیل قبلاً در سامانه ثبت شده است.")
+
+    permission_names = ["user", "admin"] if user.is_admin else ["user"]
+    permissions = list(db.permissions.find({"name": {"$in": permission_names}}))
+    if len(permissions) != len(permission_names):
+        raise HTTPException(status_code=500, detail="دسترسی‌های پایه سامانه آماده نیستند.")
+
+    result = db.users.insert_one({
+        "email": email,
+        "password": get_password_hash(user.password),
+        "provider": "local",
+        "permissions": permissions,
+    })
+    db.profiles.insert_one({"user_id": str(result.inserted_id), "photo": random.randint(1, 26)})
+    return {"id": str(result.inserted_id), "email": email, "is_admin": user.is_admin}
 
 
 @router.get("/users/reads")

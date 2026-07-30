@@ -49,10 +49,10 @@ async function initializeData() {
   dashboardError.value = ''
   try {
     if (authStore.isAdmin) {
-      await Promise.all([fetch24RecordsAdmin(), fetchMonthRecordsAdmin(), fetchGraph4Admin()])
+      await Promise.all([fetch24RecordsAdmin(), fetchMonthRecordsAdmin(), fetchGraph4Admin(), powerConsumption()])
     }
     else if (authStore.isMng) {
-      await Promise.all([fetch24RecordsMng(), fetchMonthRecordsMng(), fetchGraph4Mng()])
+      await Promise.all([fetch24RecordsMng(), fetchMonthRecordsMng(), fetchGraph4Mng(), powerConsumption()])
     }
     else {
       await Promise.all([fetch24Records(), fetchMonthRecords(), fetchselectedDevice(), fetchOrders(1, 5), fetch8(), fetchGraph4(), powerConsumption()])
@@ -141,12 +141,24 @@ const addPowerRecord = handleSubmit(async (values) => {
 const fetchMonthly = async () => {
   isMonthlyLoading.value = true
   try {
-    await app.fetchMonthRecords(selectedYear.value, selectedMonth.value)
+    if (authStore.isAdmin) {
+      await app.fetchMonthRecordsAdmin(selectedYear.value, selectedMonth.value)
+    }
+    else if (authStore.isMng) {
+      await app.fetchMonthRecordsMng(selectedYear.value, selectedMonth.value)
+    }
+    else {
+      await app.fetchMonthRecords(selectedYear.value, selectedMonth.value)
+    }
   }
   finally {
     isMonthlyLoading.value = false
   }
 }
+
+watch([selectedYear, selectedMonth], () => {
+  void fetchMonthly()
+})
 
 function deleteDevice(deviceId) {
   app.deleteDevice(deviceId)
@@ -718,7 +730,7 @@ function useOptimizationChart() {
 
 <template>
   <div>
-    <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <header class="mb-6 flex flex-wrap items-end justify-between gap-4" data-tour="dashboard-overview">
       <div>
         <BaseHeading as="h1" size="2xl">
           مرکز عملیات انرژی
@@ -1154,7 +1166,7 @@ function useOptimizationChart() {
         </div>
 
         <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-          <BaseCard class="p-6">
+          <BaseCard class="p-6" data-tour="daily-chart">
             <!-- Title -->
             <div class="mb-6">
               <BaseHeading
@@ -1173,7 +1185,7 @@ function useOptimizationChart() {
 
         <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
           <div class="relative">
-            <BaseCard class="p-6">
+            <BaseCard class="p-6" data-tour="monthly-chart">
               <!-- Title -->
               <div class="mb-6">
                 <BaseHeading
@@ -1190,12 +1202,7 @@ function useOptimizationChart() {
               <AddonApexcharts v-bind="monthlyConsumptionChart" />
 
               <div class="border-muted-200 dark:border-muted-700 mt-6 flex justify-center border-t pt-6">
-                <form
-                  method="POST"
-                  class="w-full max-w-md"
-                  novalidate
-                  @submit.prevent="fetchMonthly"
-                >
+                <div class="w-full max-w-md">
                   <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
                     <!-- Year selection -->
                     <BaseSelect
@@ -1231,18 +1238,13 @@ function useOptimizationChart() {
                       </option>
                     </BaseSelect>
 
-                    <BaseButton
-                      type="submit"
-                      color="primary"
-                      shape="curved"
-                      :loading="isMonthlyLoading"
-                      class="h-12 sm:w-32"
-                    >
-                      <Icon name="ph:funnel-duotone" class="me-1 size-4" />
-                      <span>{{ t("Show") }}</span>
-                    </BaseButton>
                   </div>
-                </form>
+                  <BaseProgress
+                    v-if="isMonthlyLoading"
+                    size="xs"
+                    class="mt-3"
+                  />
+                </div>
               </div>
             </BaseCard>
           </div>
@@ -1252,7 +1254,7 @@ function useOptimizationChart() {
           <EnergySeasonSummary />
         </div>
         <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
-          <BaseCard class="py-30 p-14" rounded="lg">
+          <BaseCard class="py-30 p-14" rounded="lg" data-tour="peak-power">
             <!-- Title -->
             <div class="mb-8 flex items-center justify-between">
               <BaseHeading
@@ -1294,7 +1296,7 @@ function useOptimizationChart() {
         </div>
 
         <div class="ltablet:col-span-12 col-span-12 lg:col-span-12">
-          <BaseCard class="p-6">
+          <BaseCard class="p-6" data-tour="season-comparison">
             <!-- Title -->
             <div class="mb-6">
               <BaseHeading

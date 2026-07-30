@@ -34,6 +34,13 @@ def device_add(
         device
     )
 
+@router.patch("/select", summary="select device")
+async def select_device(
+    device_id: str,
+    user: User = Depends(get_user)
+):
+    return service_select_device(device_id, user)
+
 @router.delete("/{device_id}/delete", summary="deletes a device")
 def device_delete(
     device_id: str,
@@ -55,13 +62,3 @@ def device_get(
 @router.patch("/{device_id}", response_model=DeviceSchema, summary="updates a device")
 def device_update(device_id: str, payload: DeviceUpdateSchema):
     return service_update_device(device_id, payload)
-
-@router.patch("/select", summary="select device")
-async def select_device(
-    device_id: str,
-    user: User = Depends(get_user)
-
-):
-    return service_select_device(
-        device_id, user
-    )

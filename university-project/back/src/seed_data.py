@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 
 from src.db.db import db
+from src.auth.secures import get_password_hash
 
 AREA = 100  # valid values used by the calculations: 80, 100, 120
 
@@ -37,6 +38,28 @@ PRICING = [
     {"season_name": "fall",   "general_price": 1200, "peak_price": 2400, "day_light": 11},
     {"season_name": "winter", "general_price": 1000, "peak_price": 2000, "day_light": 10},
 ]
+
+
+def ensure_demo_user():
+    """Keep the documented demo login available for end-to-end UI tests."""
+    user = db["users"].find_one({"email": "user@pardis.ac.ir"})
+    if user:
+        return user["_id"]
+    permission = db["permissions"].find_one({"name": "user"})
+    if not permission:
+        permission_id = db["permissions"].insert_one(
+            {"name": "user", "description": "user"}
+        ).inserted_id
+        permission = db["permissions"].find_one({"_id": permission_id})
+    user_id = db["users"].insert_one({
+        "email": "user@pardis.ac.ir",
+        "password": get_password_hash("Demo@12345"),
+        "permissions": [permission],
+        "devices": [],
+        "is_active": True,
+    }).inserted_id
+    print(f"demo user created: {user_id}")
+    return user_id
 
 
 def ensure_pricing():
@@ -83,6 +106,15 @@ def ensure_block(user_id, apartment_id):
     else:
         db["blocks"].update_one({"_id": block["_id"]}, {"$set": {"area": str(AREA)}})
         print("block updated")
+
+
+def ensure_profile(user_id):
+    profile = db["profiles"].find_one({"user_id": str(user_id)})
+    if not profile:
+        db["profiles"].insert_one({"user_id": str(user_id), "photo": 1})
+        print("profile created")
+    else:
+        print("profile exists")
 
 
 def ensure_devices(user_id):
@@ -137,8 +169,8 @@ def seed_power_records(user_id):
     db["power_records"].delete_many({"user_id": ObjectId(str(user_id))})
     records = []
     now = datetime.now()
-    # 60 days of records, a few device sessions per day
-    for day in range(60):
+    # One complete year keeps every seasonal dashboard comparison populated.
+    for day in range(365):
         day_start = now - timedelta(days=day)
         for d in DEVICES:
             sessions = random.randint(1, 3)
@@ -260,6 +292,7 @@ def seed_orders(users):
 def main():
     ensure_pricing()
     apt_id = ensure_apartment()
+    ensure_demo_user()
     target = sys.argv[1] if len(sys.argv) > 1 else "--all"
     users = list(db["users"].find()) if target == "--all" else list(
         db["users"].find({"email": target})
@@ -270,6 +303,7 @@ def main():
     for unit, user in enumerate(users, start=1):
         user_id = user["_id"]
         print(f"Seeding data for {user['email']} ({user_id})")
+        ensure_profile(user_id)
         ensure_block(user_id, apt_id)
         ensure_devices(user_id)
         ensure_battery(user_id)

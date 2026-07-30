@@ -19,3 +19,6 @@ class BatteryAddSchema(BaseModel):
     saved_energy: int
     sold_energy: int
 
+
+class BatteryOfferSchema(BaseModel):
+    active: bool

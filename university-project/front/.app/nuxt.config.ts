@@ -1,8 +1,4 @@
-import {
-  demoRules,
-  documentationRules,
-  landingRules,
-} from './config/routes-rules'
+import { landingRules } from './config/routes-rules'
 
 export default defineNuxtConfig({
   // The dashboard authentication flow relies on browser cookies/localStorage.
@@ -15,9 +11,6 @@ export default defineNuxtConfig({
      * - landing: contains landing pages
      * - documentation: contains all /documentation pages
      */
-    '../layers/landing',
-    import.meta.env.ENABLE_DOCUMENTATION && '../layers/documentation',
-
     /**
      * This extends the base Tairo layer.
      *
@@ -33,8 +26,6 @@ export default defineNuxtConfig({
      * with only your source code and no demo.
      */
     '../layers/tairo-layout-sidebar',
-    '../layers/tairo-layout-collapse',
-    '../layers/tairo-layout-topnav',
     '../layers/tairo',
     '@shuriken-ui/nuxt'
   ],
@@ -126,9 +117,7 @@ export default defineNuxtConfig({
         'cache-control': 'public, max-age=31536000, immutable',
       },
     },
-    ...demoRules,
     ...landingRules,
-    ...(import.meta.env.ENABLE_DOCUMENTATION ? documentationRules : {}),
   },
 
   // nuxt build configuration
@@ -179,7 +168,6 @@ export default defineNuxtConfig({
         'remark-rehype',
         'unified',
         // useMultiStepForm
-        'fast-copy',
         'vue3-smooth-dnd',
         'splitpanes',
         'mapbox-gl',

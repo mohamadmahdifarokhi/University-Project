@@ -121,7 +121,6 @@ export default defineI18nConfig(() => ({
       },
       "Accounts": "Accounts",
       "GPT-4": "GPT-4",
-      "Fast Delivery": "Fast Delivery",
       "Introduction": {
         "paragraph": "Since Shahrivar 1402 (September 2023), the idea of creating a website for selling accounts of various platforms came to our minds. With time, we plan to add different options to it.",
       },
@@ -248,7 +247,6 @@ export default defineI18nConfig(() => ({
       },
       "Accounts": "اکانت ها",
       "GPT-4": "جی پی تی 4",
-      "Fast Delivery": "تحویل سریع",
       "Introduction": {
         "paragraph": "از شهریور ۱۴۰۲ (سپتامبر ۲۰۲۳)، ایده ایجاد یک وب‌سایت برای فروش حساب‌های مختلف پلتفرم‌ها به ذهنمان رسید. با گذشت زمان، ما قصد داریم گزینه‌های مختلفی به آن اضافه کنیم.",
       },

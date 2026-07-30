@@ -21,8 +21,10 @@ def battery_list_all_by_user(
 
 @router.get("/all", summary="Get all battery")
 def battery_list_all(
+    user: User = Depends(get_current_user)
 ):
     return service_list_battery_all(
+        user["_id"]
     )
 
 @router.post("/", summary="adds a battery")
@@ -34,6 +36,13 @@ def device_add(
         battery,
         user["_id"]
     )
+
+@router.patch("/offer", summary="Activate or deactivate the current user's energy offer")
+def battery_offer_update(
+    offer: BatteryOfferSchema,
+    user: User = Depends(get_current_user)
+):
+    return service_update_battery_offer(user["_id"], offer.active)
 
 @router.delete("/{battery_id}/delete", summary="deletes a battery")
 def battery_delete(

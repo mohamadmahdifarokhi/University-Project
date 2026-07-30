@@ -95,16 +95,15 @@ user
             "_id": ObjectId(user['_id']),
         },
         {
-            "$push": {
+            "$addToSet": {
                 "devices": device_id
             },
         },
         upsert=False,
     )
-    if update_result.modified_count == 0:
+    if update_result.matched_count == 0:
         raise HTTPException(status_code=404, detail="user not found")
     return {"detail": "device added."}
-
 
 
 

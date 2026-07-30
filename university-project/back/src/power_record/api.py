@@ -56,10 +56,24 @@ async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(g
         return JSONResponse(status_code=400, content={"message": "Excel file does not have the required columns."})
 
     records = df.to_dict('records')
-    for record in records:
+    if not records:
+        raise HTTPException(status_code=422, detail="فایل اکسل هیچ سابقه‌ای ندارد.")
+
+    for index, record in enumerate(records, start=2):
+        device_name = record.get("device_name")
+        start_time = pd.to_datetime(record.get("start_time"), errors="coerce")
+        end_time = pd.to_datetime(record.get("end_time"), errors="coerce")
+        if not isinstance(device_name, str) or not device_name.strip():
+            raise HTTPException(status_code=422, detail=f"نام تجهیز در ردیف {index} معتبر نیست.")
+        if pd.isna(start_time) or pd.isna(end_time):
+            raise HTTPException(status_code=422, detail=f"زمان شروع یا پایان در ردیف {index} معتبر نیست.")
+        if end_time <= start_time:
+            raise HTTPException(status_code=422, detail=f"زمان پایان در ردیف {index} باید بعد از زمان شروع باشد.")
+
         record["user_id"] = user['_id']
-        record["start_time"] = pd.to_datetime(record["start_time"])
-        record["end_time"] = pd.to_datetime(record["end_time"])
+        record["device_name"] = device_name.strip()
+        record["start_time"] = start_time
+        record["end_time"] = end_time
         # Calculate consumption
         device = db["device"].find_one({"name": record["device_name"]})
         if device and 'DC_power_consumption' in device:
@@ -68,7 +82,7 @@ async def upload_excel_file(file: UploadFile = File(...), user: User = Depends(g
             raise HTTPException(404,"Device not found")
         time_difference = (record["end_time"] - record["start_time"]).total_seconds() / 3600
         consumption = dc_power * time_difference
-        if device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
+        if device.get('kind') == 'lamp' or 'لامپ' in device['name'] or device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
             consumption = consumption * 6
         record["consumption"] = consumption
 

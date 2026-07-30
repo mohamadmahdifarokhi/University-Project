@@ -58,21 +58,6 @@ useHead({
 
 <template>
   <div>
-    <!--
-      Global app search modal
-      @see .demo/components/DemoAppSearch.vue
-    -->
-    <!--
-      Global app layout switcher
-      @see .demo/components/DemoAppLayoutSwitcher.vue
-    -->
-
-    <!--
-      Vue Axe Popup
-      @see .demo/plugins/vue-axe.client.ts
-    -->
-    <VueAxePopup />
-
     <NuxtLayout>
       <NuxtLoadingIndicator color="rgb(var(--color-primary-500))" />
       <NuxtPage />

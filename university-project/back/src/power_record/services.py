@@ -368,6 +368,8 @@ def service_add_power_records(
         power_record: PowerRecordAddSchema,
         user_id
 ):
+    if power_record.end_time <= power_record.start_time:
+        raise HTTPException(status_code=422, detail="زمان پایان باید بعد از زمان شروع باشد.")
     # calculate consumption due to power of the device
     device = db["device"].find_one({"name": power_record.device_name})
     if not device or 'DC_power_consumption' not in device:
@@ -783,5 +785,4 @@ def service_available_periods(user_id):
         "months": [{"year": y, "month": m} for y, m in months],
         "seasons": [{"year": y, "season": s} for s, y in seasons],
     }
-
 

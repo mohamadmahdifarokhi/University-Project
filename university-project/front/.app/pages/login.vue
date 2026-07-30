@@ -8,8 +8,6 @@ import {useAuthStore} from "@/stores/auth"
 import {useAppStore} from "~/stores/app";
 const {t} = useI18n({useScope: "local"})
 
-const apiUrl = `${import.meta.env.VITE_FRONTEND_SERVER_URL}`;
-
 const app = useAppStore();
 
 
@@ -20,7 +18,7 @@ const loginWithGoogle = async () => {
 }
 
 const initializeData = async () => {
-  await loadTextDirection();
+  await app.loadTextDirection();
 };
 
 initializeData();
@@ -107,10 +105,6 @@ const onSubmit = handleSubmit(async (values) => {
           دانشگاه پردیس
         </BaseHeading>
         </div>
-        <BaseHeading as="h2" size="3xl" weight="medium" class="relative text-white mb-3">
-          {{ t('Dont') }}
-        </BaseHeading>
-        <BaseButton  :to="`${apiUrl}/signup`" shape="curved">{{ t('Signup') }}</BaseButton>
       </div>
     </div>
 
@@ -184,13 +178,6 @@ const onSubmit = handleSubmit(async (values) => {
 <!--          </span>-->
 <!--        </BaseButton>-->
 
-        <p class="text-muted-400 mt-4 flex justify-between font-sans text-sm leading-5">
-          <span>{{ t('Dont') }}</span>
-          <NuxtLink :to="`${apiUrl}/signup`"
-                    class="text-primary-600 hover:text-primary-500 font-medium underline-offset-4 transition duration-150 ease-in-out hover:underline focus:underline focus:outline-none">
-            {{ t('Signup') }}
-          </NuxtLink>
-        </p>
       </form>
 
       <div class="text-center">

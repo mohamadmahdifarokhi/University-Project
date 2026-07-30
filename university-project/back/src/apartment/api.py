@@ -21,9 +21,17 @@ def apartment_get(
 
 @router.get("/all", summary="Get all apartments")
 def battery_list_all(
+    user: User = Depends(get_current_user)
 ):
     return service_list_apartment_all(
+        user["_id"]
     )
+
+@router.get("/available", summary="Get apartments available for block registration")
+def apartment_list_available(
+    user: User = Depends(get_current_user)
+):
+    return service_list_available_apartments()
 
 @router.post("/", summary="adds an apartment")
 def device_add(
@@ -40,4 +48,3 @@ def battery_delete(
     return service_delete_apartment(
         apartment_id
     )
-

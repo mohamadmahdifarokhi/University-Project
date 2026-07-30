@@ -33,6 +33,7 @@ const onSubmit = handleSubmit(async (values) => {
 <template>
   <form
     class="pb-16"
+    data-tour="account-security"
     novalidate
     @submit.prevent="onSubmit"
   >

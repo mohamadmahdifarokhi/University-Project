@@ -45,17 +45,38 @@ def service_apartment_get(
     return apartment
 
 def service_list_apartment_all(
+    user_id: str,
 ):
-    apartments = db["apartments"].find()
-
     results = []
-    for apartment in apartments:
-        apartment["id"] = str(apartment["_id"])
-        del apartment["_id"]
-        results.append(ApartmentSchemaGet(**apartment))
+    for block in db["blocks"].find({"user_id": str(user_id)}):
+        apartment = db["apartments"].find_one(
+            {"_id": ObjectId(block["apartment_id"])}
+        )
+        if not apartment:
+            continue
+        results.append({
+            "id": str(apartment["_id"]),
+            "apartment_no": apartment.get("apartment_no"),
+            "admin_id": apartment.get("admin_id"),
+            "block_no": apartment.get("block_no"),
+            "unit": block.get("unit"),
+            "area": block.get("area"),
+        })
     return results
 
 
+def service_list_available_apartments():
+    return [
+        {
+            "id": str(apartment["_id"]),
+            "apartment_no": apartment.get("apartment_no"),
+            "block_no": apartment.get("block_no"),
+        }
+        for apartment in db["apartments"].find(
+            {},
+            {"apartment_no": 1, "block_no": 1},
+        ).sort("apartment_no", 1)
+    ]
 
 
 

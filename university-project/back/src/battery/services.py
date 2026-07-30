@@ -45,6 +45,20 @@ def service_delete_battery(
     return {"detail": "battery deleted."}
 
 
+def service_update_battery_offer(user_id: str, active: bool):
+    battery = db["battery"].find_one_and_update(
+        {"user_id": str(user_id)},
+        {"$set": {"status": "available" if active else "unavailable"}},
+        return_document=pymongo.ReturnDocument.AFTER,
+    )
+    if battery is None:
+        raise HTTPException(status_code=404, detail="Battery not found.")
+    return {
+        "detail": "offer activated" if active else "offer deactivated",
+        "status": battery["status"],
+    }
+
+
 # def service_update_device(
 #     device_id: str,
 #     device_data: DeviceUpdateSchema,
@@ -58,13 +72,17 @@ def service_battery_get_by_id(
     return battery
 
 def service_list_battery_all(
+    exclude_user_id: str | None = None,
 ):
     get_all_season = db["pricing"].find()
     daylights = {}
     for season in get_all_season:
         daylights[season["season_name"]] = season["day_light"]
 
-    batteries = list(db["battery"].find())
+    query = {"status": "available"}
+    if exclude_user_id:
+        query["user_id"] = {"$ne": str(exclude_user_id)}
+    batteries = list(db["battery"].find(query))
     for battery in batteries:
         # update battery saving
         current_date = datetime.now()
@@ -79,20 +97,25 @@ def service_list_battery_all(
             num_days = (end - start).days + 1
             daylight = daylights.get(season, 0)  # Default to 0 if the season is not found
             total_daylight_saving += (num_days * daylight) * 50
+        available_energy = max(
+            0,
+            total_daylight_saving - int(battery.get("sold_energy", 0)),
+        )
         db["battery"].update_one(
             {
                 "_id": battery["_id"],
             },
             {
                 "$set": {
-                    "saved_energy": total_daylight_saving
+                    "saved_energy": available_energy
                 },
             },
             upsert=False,
         )
 
+    available_query = {**query, "saved_energy": {"$gt": 0}}
     results = []
-    for battery in db["battery"].find():
+    for battery in db["battery"].find(available_query):
         user = db["users"].find_one({"_id": ObjectId(battery['user_id'])})
 
         battery["id"] = str(battery["_id"])
@@ -129,17 +152,22 @@ def service_battery_by_user_id(
             daylight = daylights.get(season, 0)  # Default to 0 if the season is not found
             total_daylight_saving += (num_days * daylight) * 50
 
+        available_energy = max(
+            0,
+            total_daylight_saving - int(battery.get("sold_energy", 0)),
+        )
         update_result = db["battery"].update_one(
             {
                 "user_id": str(user_id),
             },
             {
                 "$set": {
-                    "saved_energy": total_daylight_saving
+                    "saved_energy": available_energy
                 },
             },
             upsert=False,
         )
+        battery["saved_energy"] = available_energy
         # if update_result.modified_count == 0:
             # raise HTTPException(status_code=404, detail="battery not found")
 
@@ -182,10 +210,6 @@ def divide_into_periods(created_at, current_date):
         periods[-1]['end'] = current_date
 
     return periods
-
-
-
-
 
 
 

@@ -23,21 +23,9 @@ const staticPageRule = isProduction
     }
   : {}
 
-export const demoRules = {
+export const landingRules = {
   '/img/**': staticAssetsRule,
   '/api/**': staticAssetsRule,
-  '/dashboards/**': staticPageRule,
-  '/layouts/**': staticPageRule,
-  '/wizard/**': staticPageRule,
-  '/auth/**': staticPageRule,
-}
-
-export const landingRules = {
   '/_ipx/**': staticAssetsRule,
   '/': staticPageRule,
-  '/demos': staticPageRule,
-}
-
-export const documentationRules = {
-  '/documentation/**': staticPageRule,
 }

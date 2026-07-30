@@ -10,7 +10,6 @@
     "pnpm": ">=8"
   },
   "workspaces": [
-    ".demo",
     ".app",
     "layers/*"
   ],
@@ -18,15 +17,11 @@
     "dev": "nuxi dev .app --host 0.0.0.0",
     "build": "nuxi build .app",
     "generate": "nuxi generate .app",
-    "demo:dev": "nuxi dev .demo --open",
-    "demo:build": "nuxi build .demo",
     "clean:all": "pnpm -r clean && rimraf .nuxt .output node_modules",
     "test": "run-p test:*",
-    "test:tsc-demo": "nuxi typecheck .demo",
     "test:lint": "eslint .",
-    "lint": "run-s lint:eslint:fix lint:eslint:fix-demo ",
-    "lint:eslint:fix": "eslint --fix .",
-    "lint:eslint:fix-demo": "eslint -c layers/documentation/examples/.eslintrc.cjs --fix layers/documentation/examples"
+    "lint": "run-s lint:eslint:fix",
+    "lint:eslint:fix": "eslint --fix ."
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^1.5.4",

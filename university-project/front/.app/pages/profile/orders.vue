@@ -8,8 +8,14 @@ const loading = ref(true)
 const errorMessage = ref('')
 const filter = ref('')
 const active = ref<'buy' | 'sell'>('buy')
+const page = ref(1)
+const perPage = 6
 const source = computed(() => active.value === 'buy' ? buyOrders.value : sellOrders.value)
 const rows = computed(() => (source.value || []).filter((x: any) => JSON.stringify(x).toLowerCase().includes(filter.value.toLowerCase())))
+const visibleRows = computed(() => rows.value.slice((page.value - 1) * perPage, page.value * perPage))
+watch([filter, active], () => {
+  page.value = 1
+})
 const money = (n: any) => new Intl.NumberFormat('fa-IR').format(Number(n || 0))
 const date = (v: any) => v ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(v)) : '—'
 async function load() {
@@ -28,7 +34,7 @@ async function load() {
 onMounted(load)
 </script>
 <template>
-  <section>
+  <section data-tour="energy-orders">
     <div class="mb-6">
       <BaseHeading as="h1" size="xl">
         تاریخچه تبادل انرژی
@@ -73,7 +79,7 @@ onMounted(load)
     </BaseCard>
     <div v-else class="space-y-3">
       <BaseCard
-        v-for="item in rows"
+        v-for="item in visibleRows"
         :key="item.id || item._id || item.created_at"
         class="p-4"
       >
@@ -82,5 +88,15 @@ onMounted(load)
         </div>
       </BaseCard>
     </div>
+    <BasePagination
+      previous-icon="lucide:chevron-right"
+      next-icon="lucide:chevron-left"
+      v-if="rows.length > perPage"
+      class="mt-6"
+      :total-items="rows.length"
+      :item-per-page="perPage"
+      :current-page="page"
+      @update:current-page="page = $event"
+    />
   </section>
 </template>

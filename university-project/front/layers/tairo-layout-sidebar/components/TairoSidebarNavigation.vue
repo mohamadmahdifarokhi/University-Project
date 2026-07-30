@@ -56,7 +56,6 @@ const { locale, locales } = useI18n()
           v-for="item in startSidebars"
           :key="item.title"
           :sidebar="item"
-          class="hidden"
         />
       </div>
       <!-- Bottom Menu -->

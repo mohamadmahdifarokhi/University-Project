@@ -88,6 +88,13 @@ class UserCreate(BaseModel):
     permissions: List[Permission] = []
 
 
+class AdminUserCreate(BaseModel):
+    """Account details accepted only from the administrator panel."""
+    email: EmailStr
+    password: str = Field(min_length=6, max_length=128)
+    is_admin: bool = False
+
+
 class UserUpdate(BaseModel):
     email: EmailStr | None = None
     password: str | None = None
