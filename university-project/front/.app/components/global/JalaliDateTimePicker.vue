@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import {
+  gregorianToJalaali,
+  jalaaliToGregorian,
+  jalaliMonthLength,
+  JALALI_MONTHS,
+  toPersianDigits,
+} from '~/utils/jalali'
 
 const props = defineProps<{
   modelValue?: string
@@ -35,6 +42,18 @@ const days = computed(() => {
 const hours = Array.from({ length: 24 }, (_, i) => i)
 const minutes = [0, 15, 30, 45]
 
+function syncFromModelValue(value?: string) {
+  if (!value) return
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return
+  const jalali = gregorianToJalaali(date.getFullYear(), date.getMonth() + 1, date.getDate())
+  jYear.value = jalali.jy
+  jMonth.value = jalali.jm
+  jDay.value = jalali.jd
+  hour.value = date.getHours()
+  minute.value = Math.floor(date.getMinutes() / 15) * 15
+}
+
 // Keep day in range when month/year changes.
 watch([jYear, jMonth], () => {
   const len = jalaliMonthLength(jYear.value, jMonth.value)
@@ -51,6 +70,7 @@ function emitValue() {
 }
 
 watch([jYear, jMonth, jDay, hour, minute], emitValue, { immediate: true })
+watch(() => props.modelValue, syncFromModelValue)
 
 const monthLabels = JALALI_MONTHS
 </script>

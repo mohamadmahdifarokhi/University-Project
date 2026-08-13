@@ -1,5 +1,5 @@
 import smtplib
-import uuid
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
@@ -10,6 +10,13 @@ from redis import Redis
 from ..logger import logger
 
 load_dotenv()
+
+
+def default_user_name(email: str) -> str:
+    """Create a stable display name when an account has no explicit name."""
+    local_part = str(email or "").split("@", 1)[0]
+    display_name = re.sub(r"[._-]+", " ", local_part).strip()
+    return display_name or "کاربر"
 
 
 class EmailSender:
@@ -83,7 +90,7 @@ class EmailSender:
         body = f"Your OTP code is: {otp_code}"
         self.send_email(subject, email, body)
 
-    def send_token_email(self, email: str, token: uuid) -> None:
+    def send_token_email(self, email: str, token: str) -> None:
         """
         Send a password reset token email to the specified email address.
 
@@ -99,5 +106,7 @@ class EmailSender:
         self.send_email(subject, email, body)
 
 
-redis_instance = Redis()
-
+redis_instance = Redis.from_url(
+    os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+    decode_responses=False,
+)

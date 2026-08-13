@@ -17,31 +17,37 @@ from bson.objectid import ObjectId
 def service_list_apartment_blocks(
     apartment_id: str
 ):
-    blocks = db["blocks"].find({"apartment_id": ObjectId(apartment_id)})
+    apartment_id = str(apartment_id)
+    apartment_queries = [apartment_id]
+    if ObjectId.is_valid(apartment_id):
+        apartment_queries.append(ObjectId(apartment_id))
+    blocks = db["blocks"].find({"apartment_id": {"$in": apartment_queries}})
 
-    if blocks is None:
-        raise HTTPException(status_code=404, detail="apartment not found")
     results = []
     for block in blocks:
-        user_name = db["users"].find_one({"_id": ObjectId(block["user_id"])})["email"]
-        if user_name is None:
-            raise HTTPException(status_code=404, detail="user not found")
+        user_id = str(block.get("user_id", ""))
+        user_query = {"_id": ObjectId(user_id)} if ObjectId.is_valid(user_id) else {"_id": user_id}
+        user = db["users"].find_one(user_query)
         base_blocks = BlockSchemaGet(
-        blocks_id=str(block["_id"]),
-        user_id=user_name,
-        apartment_id=block["apartment_id"],
-        unit=block["unit"],
-        area=block["area"]
-    ).model_dump()
+            id=str(block["_id"]),
+            user_id=user.get("email", "") if user else "",
+            apartment_id=str(block["apartment_id"]),
+            unit=block["unit"],
+            area=block["area"]
+        ).model_dump()
         results.append(base_blocks)
     return results
 
 def service_delete_block(
         block_id
 ):
+    if not ObjectId.is_valid(str(block_id)):
+        raise HTTPException(status_code=404, detail="block not found")
     update_result = db["blocks"].delete_one(
         {"_id": ObjectId(block_id)},
     )
+    if update_result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="block not found")
     return {"detail": "block_id deleted."}
 
 def service_add_block(

@@ -23,13 +23,15 @@ def power_record_24_super_admin(
 
 @router.get("/month-chart", summary="shows all consumptions of devices in requested month for super admin")
 def power_record_monthly_super_admin(
-        year,
-        month,
+        year: int,
+        month: int,
+        calendar: str = "gregorian",
         user: User = Depends(get_admin_user),
 ):
     return service_show_records_on_chart_monthly_super_admin(
         year=year,
         month=month,
+        calendar=calendar,
         user_id=user["_id"]
     )
 
@@ -38,11 +40,13 @@ def power_record_monthly_super_admin(
 def power_record_seasonal_super_admin(
         year: int,
         season,
+        calendar: str = "gregorian",
         user: User = Depends(get_admin_user),
 ):
     return service_show_seasonal_records_on_chart_super_admin(
         year=year,
         season=season,
+        calendar=calendar,
         user_id=user["_id"]
     )
 
@@ -74,13 +78,15 @@ def power_record_24_block_admin(
 
 @router.get("/month-chart-block", summary="shows all consumptions of devices in requested month for super admin")
 def power_record_monthly_block_admin(
-        year,
-        month,
+        year: int,
+        month: int,
+        calendar: str = "gregorian",
         user: User = Depends(get_manager_user),
 ):
     return service_show_records_on_chart_monthly_block_admin(
         year=year,
         month=month,
+        calendar=calendar,
         admin_user_id=user["_id"]
     )
 
@@ -89,11 +95,13 @@ def power_record_monthly_block_admin(
 def power_record_seasonal_block_admin(
         year: int,
         season,
+        calendar: str = "gregorian",
         user: User = Depends(get_manager_user),
 ):
     return service_show_seasonal_records_on_chart_block_admin(
         year=year,
         season=season,
+        calendar=calendar,
         admin_user_id=user["_id"]
     )
 

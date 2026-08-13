@@ -122,12 +122,34 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Secrets and local credentials
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+secrets/
+
+# Local database backups and generated debug output
+backups/*.archive.gz
+backups/*.dump
+backups/*.bson
+backups/*.metadata.json
+backups/*.sha256
+*.out
 
 # Spyder project settings
 .spyderproject

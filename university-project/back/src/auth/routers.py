@@ -6,13 +6,14 @@ from typing import List
 
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Security, Form, Request
+from redis.exceptions import RedisError
 from sqlalchemy.orm import Session
 
 from .schemas import (OtpReq, OtpRes, TokenRes, VerifyOtpReq, UserRes, TokenReq, VerifyTokenReq, TokenPasswordReq,
                       UserUp, PasswordReq, VerifyCodeReq, SendEmailReq, UserReq, UserUpdate, UserOut, UserCreate, AdminUserCreate,
                       OTPUpdate, OTPOut, OTPCreate, TokenUpdate, TokenCreate, TokenOut, PermissionUpdate,
                       PermissionCreate, PermissionOut)
-from ..core.utils import redis_instance, EmailSender
+from ..core.utils import redis_instance, EmailSender, default_user_name
 from ..db.db import db
 from .models import User
 from .services import UserService, TokenService, OTPService, PermissionService
@@ -102,7 +103,10 @@ def code_verify(req: VerifyCodeReq):
     Returns:
         dict: Access token information.
     """
-    token_data_json = redis_instance.get(req.code)
+    try:
+        token_data_json = redis_instance.get(req.code)
+    except RedisError:
+        raise HTTPException(status_code=503, detail="Authentication service is temporarily unavailable")
     if token_data_json:
         token_data = json.loads(token_data_json)
         a_token = token_data[0]
@@ -218,14 +222,16 @@ def recover_password(req: TokenPasswordReq):
     Returns:
         user (UserRes): return user.
     """
-    token = TokenService().get_by_token(req['token'])
+    token = TokenService().verify_token(req['token'])
 
     user = UserService().get_by_email(token['email'])
 
-    if not authenticate(req['password'], user):
-        return UserService().update(user['_id'], UserUp(password=req['password']))
-    else:
+    if authenticate(req['password'], user):
         raise HTTPException(status_code=400, detail="Current password and new password must be different")
+
+    updated_user = UserService().update(user['_id'], UserUp(password=req['password']))
+    TokenService().db.tokens.delete_one({"_id": token["_id"]})
+    return updated_user
 
 
 @router.post("/users/password", response_model=UserRes)
@@ -253,8 +259,10 @@ def user_password(req: PasswordReq, user: User = Depends(get_current_user)):
 
 
 @router.get("/auth/login")
-async def auth_init(redirect_uri):
+async def auth_init(redirect_uri: str):
     """Initialize auth and redirect"""
+    if sso is None:
+        raise HTTPException(status_code=503, detail="Google login is not configured")
     with sso:
         redirect_response = await sso.get_login_redirect(params={"prompt": "consent", "access_type": "offline"},
                                                          state=redirect_uri)
@@ -265,6 +273,8 @@ async def auth_init(redirect_uri):
 async def auth_callback(request: Request):
     """Verify login"""
     try:
+        if sso is None:
+            raise HTTPException(status_code=503, detail="Google login is not configured")
         # Assuming you have a function to get the MongoDB client
         with sso:
             user = await sso.verify_and_process(request)
@@ -272,17 +282,20 @@ async def auth_callback(request: Request):
 
         user = db.users.find_one({"email": email})
         if not user:
-            user = {"email": email}
+            user_permission = PermissionService().get_by_name("user")
+            if user_permission is None:
+                raise HTTPException(status_code=500, detail="Default user permission is missing")
+
+            user = {
+                "email": email,
+                "name": default_user_name(email),
+                "provider": "google",
+                "permissions": [user_permission],
+            }
             user_id = db.users.insert_one(user).inserted_id
-            permission_service = PermissionService()
-            user_permission = permission_service.get_by_name("user")
-            permission_set = {"user_id": user_id, "permission_id": user_permission.id}
-            db.permission_set.insert_one(permission_set)
             random_numbers = random.randint(1, 26)
-            profile = {"user_id": user_id, "photo": random_numbers}
-            db.profile.insert_one(profile)
-            cart = {"user_id": user_id}
-            db.cart.insert_one(cart)
+            db.profiles.insert_one({"user_id": str(user_id), "photo": random_numbers})
+            db.carts.insert_one({"user_id": str(user_id), "cart_items": []})
 
             a_token = create_token(
                 data={"sub": str(user_id), "scopes": ["user"]},
@@ -303,12 +316,19 @@ async def auth_callback(request: Request):
                 "refresh_token": r_token
             }
         else:
+            scopes = [
+                permission.get("name")
+                for permission in user.get("permissions", [])
+                if isinstance(permission, dict) and permission.get("name")
+            ]
+            if "user" not in scopes:
+                scopes.insert(0, "user")
             a_token = create_token(
-                data={"sub": str(user["_id"]), "scopes": [scope.permission.name for scope in scopes]},
+                data={"sub": str(user["_id"]), "scopes": scopes},
                 expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
             )
             r_token = create_token(
-                data={"sub": str(user["_id"]), "scopes": [scope.permission.name for scope in scopes]},
+                data={"sub": str(user["_id"]), "scopes": scopes},
                 expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
             )
             logger.info(f"Token created for User with ID: {user['_id']}, Email: {email}")
@@ -320,6 +340,8 @@ async def auth_callback(request: Request):
                 "email": email,
                 "refresh_token": r_token
             }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating token: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -350,6 +372,7 @@ async def create_user_from_admin_panel(
 
     result = db.users.insert_one({
         "email": email,
+        "name": str(user.name or "").strip() or default_user_name(email),
         "password": get_password_hash(user.password),
         "provider": "local",
         "permissions": permissions,

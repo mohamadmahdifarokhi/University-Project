@@ -216,9 +216,9 @@ onMounted(loadResources)
                   <BaseHeading size="sm">
                     {{ device.name }}
                   </BaseHeading><BaseParagraph class="text-muted-500 mt-2">
-                    مصرف AC: {{ device.AC_power_consumption || 0 }} وات
+                    مصرف جریان متناوب: {{ device.AC_power_consumption || 0 }} وات
                   </BaseParagraph><BaseParagraph class="text-muted-500">
-                    مصرف DC: {{ device.DC_power_consumption || 0 }} وات
+                    مصرف جریان مستقیم: {{ device.DC_power_consumption || 0 }} وات
                   </BaseParagraph>
                 </div>
                 <BaseButtonIcon

@@ -4,6 +4,7 @@ import { useAppStore } from "~/stores/app";
 import { storeToRefs } from "pinia";
 import { useI18n } from 'vue-i18n';
 import {useAuthStore} from "~/stores/auth";
+import { gregorianToJalaali, toPersianDigits } from '~/utils/jalali'
 const { t } = useI18n({ useScope: "local" });
 
 
@@ -13,15 +14,20 @@ const { seasonDatas, seasonLabels  } = storeToRefs(app);
 const authStore = useAuthStore();
 
 const now = new Date();
+const currentJalali = gregorianToJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate())
 function currentSeason(d = now) {
-  const m = d.getMonth() + 1, day = d.getDate();
-  if ((m === 3 && day >= 21) || m === 4 || m === 5 || (m === 6 && day <= 20)) return 'Spring';
-  if ((m === 6 && day >= 21) || m === 7 || m === 8 || (m === 9 && day <= 22)) return 'Summer';
-  if ((m === 9 && day >= 23) || m === 10 || m === 11 || (m === 12 && day <= 20)) return 'Fall';
+  const { jm: month } = gregorianToJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  if (month <= 3) return 'Spring';
+  if (month <= 6) return 'Summer';
+  if (month <= 9) return 'Fall';
   return 'Winter';
 }
-const selectedYear = ref<number>(now.getFullYear());
+const selectedYear = ref<number>(currentJalali.jy);
 const selectedSeason = ref<string>(currentSeason());
+
+let loadedSeasonKey = '';
+let seasonalRequestKey = '';
+let seasonalRequest = null;
 
 const SEASON_LABELS = {
   Spring: 'بهار',
@@ -31,9 +37,9 @@ const SEASON_LABELS = {
 };
 
 const yearOptions = computed(() =>
-  Array.from({ length: 7 }, (_, index) => now.getFullYear() - 5 + index).map(year => ({
+  Array.from({ length: 7 }, (_, index) => currentJalali.jy - 5 + index).map(year => ({
     value: year,
-    label: gregorianYearToJalaliLabel(year),
+    label: toPersianDigits(year),
   })),
 );
 
@@ -42,12 +48,33 @@ const seasonOptions = computed(() =>
 );
 
 async function loadSeasonal() {
-  if (authStore.isAdmin) {
-    await app.fetchSeasonChartAdmin(selectedYear.value, selectedSeason.value);
-  } else if (authStore.isMng) {
-    await app.fetchSeasonChartMng(selectedYear.value, selectedSeason.value);
-  } else {
-    await app.fetchSeasonChart(selectedYear.value, selectedSeason.value);
+  const role = authStore.isAdmin ? 'admin' : authStore.isMng ? 'manager' : 'user';
+  const sessionKey = useCookie('email').value || useCookie('access_token').value || 'session';
+  const key = `${sessionKey}:${role}:${selectedYear.value}:${selectedSeason.value}`;
+
+  // onMounted and the select watcher can run during the same navigation.
+  // Share the request and keep the loaded range for a short component lifetime
+  // so the seasonal endpoint is not called twice for the same selection.
+  if (loadedSeasonKey === key) return;
+  if (seasonalRequestKey === key && seasonalRequest) return seasonalRequest;
+
+  seasonalRequestKey = key;
+  seasonalRequest = (async () => {
+    let result;
+    if (authStore.isAdmin) {
+      result = await app.fetchSeasonChartAdmin(selectedYear.value, selectedSeason.value);
+    } else if (authStore.isMng) {
+      result = await app.fetchSeasonChartMng(selectedYear.value, selectedSeason.value);
+    } else {
+      result = await app.fetchSeasonChart(selectedYear.value, selectedSeason.value);
+    }
+    if (result) loadedSeasonKey = key;
+  })();
+
+  try {
+    await seasonalRequest;
+  } finally {
+    if (seasonalRequestKey === key) seasonalRequest = null;
   }
 }
 

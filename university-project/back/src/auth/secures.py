@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from bson import ObjectId
+from bson.errors import InvalidId
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status, Security
 from passlib.context import CryptContext
@@ -28,13 +29,19 @@ REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users")
 
-sso = GoogleSSO(
-    client_id="981508218676-acrnka0o2adpilvqeteg7vhg1hc3mopl.apps.googleusercontent.com",
-    client_secret="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",
-    redirect_uri="http://localhost:3002/api/auth/callback/google",
-    allow_insecure_http=True,
-    scope=["profile", "email"]
-)
+google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+google_redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8002/auth/callback")
+
+sso = None
+if google_client_id and google_client_secret:
+    sso = GoogleSSO(
+        client_id=google_client_id,
+        client_secret=google_client_secret,
+        redirect_uri=google_redirect_uri,
+        allow_insecure_http=google_redirect_uri.startswith("http://"),
+        scope=["profile", "email"],
+    )
 
 client = MongoClient(os.environ.get("DATABASE_URL"))
 # Access your database
@@ -131,7 +138,10 @@ def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth
         token_scopes = payload.get("scopes", [])
     except JWTError:
         raise credentials_exception
-    user = db.users.find_one({"_id": ObjectId(user_id)})
+    try:
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+    except (InvalidId, TypeError):
+        raise credentials_exception
     if user is None:
         raise credentials_exception
 

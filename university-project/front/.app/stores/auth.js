@@ -3,11 +3,14 @@ import axios from 'axios';
 
 const apiUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL}`;
 const uiText = (fa, en) => import.meta.client && document.documentElement.lang.startsWith('en') ? en : fa;
+let refreshPromise = null;
+const SESSION_CHECK_TTL = 30_000;
 
 export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = ref(false);
   const isAdmin = ref(false);
   const isMng = ref(false);
+  const lastSessionCheckAt = ref(0);
 
   function setAuthenticated(auth) {
     isAuthenticated.value = auth;
@@ -31,6 +34,17 @@ export const useAuthStore = defineStore('auth', () => {
       return;
     }
 
+    // Middleware, the default layout, and protected pages can all reach this
+    // action during one navigation. Avoid refreshing the same session several
+    // times while the access token is still known to be valid.
+    if (
+      accessToken
+      && isAuthenticated.value
+      && Date.now() - lastSessionCheckAt.value < SESSION_CHECK_TTL
+    ) {
+      return;
+    }
+
     // If we have an access token, consider the user authenticated up front so
     // a transient refresh failure does not flip the navbar back to logged-out.
     if (accessToken) {
@@ -38,46 +52,61 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     if (!refreshToken) {
+      lastSessionCheckAt.value = Date.now();
       return;
     }
 
-    try {
-      const response = await axios.post(`${apiUrl}/users/refresh`, {}, {
+    // Layout, middleware, and pages can all check the session during navigation.
+    // Share one refresh request so API calls never race with token replacement.
+    if (!refreshPromise) {
+      refreshPromise = axios.post(`${apiUrl}/users/refresh`, {}, {
         headers: {
           'Authorization': `Bearer ${refreshToken}`,
         },
-      });
-      if (response.status === 200) {
-        setCookie('access_token', response.data.access_token);
-        this.setAuthenticated(true);
+      }).then((response) => {
+        if (response.status === 200 && response.data?.access_token) {
+          setCookie('access_token', response.data.access_token);
+          this.setAuthenticated(true);
 
-        if (response.data.scopes.includes('admin')) {
-          this.setIsAdmin(true)
+          if (response.data.scopes?.includes('admin')) this.setIsAdmin(true)
+          if (response.data.scopes?.includes('manager')) this.setIsMng(true)
         }
-        if (response.data.scopes.includes('manager')) {
-          this.setIsMng(true)
+        lastSessionCheckAt.value = Date.now();
+        return response;
+      }).catch((error) => {
+        // A rejected refresh token means the old access token cannot be trusted.
+        if (error.response?.status === 401) {
+          deleteCookie('refresh_token');
+          deleteCookie('access_token');
+          this.$reset();
         }
-      }
+        lastSessionCheckAt.value = Date.now();
+        throw error;
+      }).finally(() => {
+        refreshPromise = null;
+      });
+    }
+
+    try {
+      await refreshPromise;
     } catch (error) {
-      // Only force logout when the refresh token itself is rejected AND we have
-      // no usable access token. Otherwise keep the current session.
-      if (error.response && error.response.status === 401 && !accessToken) {
-        this.$reset();
-      }
+      // The middleware decides whether to redirect; keep this check non-throwing.
+      console.warn('Session refresh failed:', error);
     }
   }
 
-  async function login({email, password, callBackUrl}) {
+  async function login({email, password, callBackUrl = '/'}) {
     const toaster = useToaster();
     const router = useRouter();
     try {
 
+      const formData = new URLSearchParams({
+        username: email,
+        password,
+      });
       const response = await axios.post(
         `${apiUrl}/users`,
-        {
-          username: email,
-          password: password,
-        },
+        formData,
         {
           headers: {
             'accept': 'application/json',
@@ -183,22 +212,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function loginWithGoogle(redirect_uri) {
     try {
-      let redirect_urii; // Define redirect_urii outside the if-else blocks
-
-      if (!redirect_uri.startsWith('http')) {
-        redirect_urii = 'http://localhost:3002' + redirect_uri; // Use let to define the variable
-      } else {
-        redirect_urii = redirect_uri; // Use let to define the variable
-      }
-
-      const response = await axios.get(
-        `${apiUrl}/auth/login?redirect_uri=${redirect_urii}`, // Use the defined variable
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const redirectUrl = redirect_uri.startsWith('http')
+        ? redirect_uri
+        : new URL(redirect_uri, window.location.origin).toString();
+      const response = await axios.get(`${apiUrl}/auth/login`, {
+        params: {redirect_uri: redirectUrl},
+        headers: {'Content-Type': 'application/json'},
+      });
 
       // Redirect to Google OAuth endpoint
       window.location.href = response.data;
@@ -290,7 +310,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function initiatePasswordRecovery(success, email) {
     try {
 
-      const response = await axios.post(`${apiUrl}/users/recover/`, {email: email}, {
+      const response = await axios.post(`${apiUrl}/users/recover`, {email}, {
         headers: {
           'Content-Type': 'application/json',
           accept: 'application/json',
@@ -306,8 +326,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function verifyToken(isTokenValid, token) {
     try {
       const response = await axios.post(
-        `${apiUrl}/users/recover/verify?token=${token}`,
-        {},
+        `${apiUrl}/users/recover/verify`,
+        {token},
         {
           headers: {
             'Content-Type': 'application/json',
@@ -328,7 +348,7 @@ export const useAuthStore = defineStore('auth', () => {
     const toaster = useToaster();
 
     try {
-      const response = await axios.post(`${apiUrl}/users/recover/password?token=${token}&password=${newPassword}`, {}, {
+      const response = await axios.post(`${apiUrl}/users/recover/password`, {token, password: newPassword}, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -356,7 +376,7 @@ export const useAuthStore = defineStore('auth', () => {
     const accessToken = useCookie('access_token').value;
 
     try {
-      const response = await axios.post(`${apiUrl}/users/password?password=${currentPassword}&new_password=${newPassword}`, {}, {
+      const response = await axios.post(`${apiUrl}/users/password`, {password: currentPassword, new_password: newPassword}, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',

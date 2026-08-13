@@ -29,7 +29,7 @@ class Order(BaseModel):
     user: "User"
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # class Order(Base, BaseModel):

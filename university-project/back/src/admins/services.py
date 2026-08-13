@@ -8,6 +8,8 @@ from .schemas import *
 from fastapi.responses import JSONResponse
 from src.auth.models import User
 from src.auth.secures import get_current_user
+from ..power_record.services import _daily_consumption_series, tiered_cost_toman
+from ..core.persian_calendar import jalali_month_range, jalali_season_range
 
 
 def service_show_records_on_chart_super_admin(user_id, date=None):
@@ -52,67 +54,28 @@ def service_show_records_on_chart_super_admin(user_id, date=None):
     return res
 
 
-def service_show_records_on_chart_monthly_super_admin(user_id, year, month):
+def service_show_records_on_chart_monthly_super_admin(user_id, year, month, calendar="gregorian"):
     year = int(year)
     month = int(month)
-    start_date = datetime(year, month, 1)
-    end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+    if str(calendar).lower() in {"persian", "jalali", "shamsi"}:
+        try:
+            start_date, end_date = jalali_month_range(year, month)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+    else:
+        start_date = datetime(year, month, 1)
+        end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
 
-    pipeline = [
-        {
-            '$match': {
-                # 'user_id': ObjectId(str(user_id)),
-                'start_time': {'$gte': start_date},
-                'end_time': {'$lt': end_date}
-            }
-        },
-        {
-            '$group': {
-                '_id': {
-                    'device_name': '$device_name',
-                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$start_time'}}
-                },
-                'total_consumption': {'$sum': '$consumption'}
-            }
-        },
-        {
-            '$project': {
-                '_id': 0,
-                'device_name': '$_id.device_name',
-                'date': '$_id.day',
-                'total_consumption': 1
-            }
-        },
-        {
-            '$sort': {
-                'device_name': 1,
-                'date': 1
-            }
-        }
-    ]
-
-    results = list(db["power_records"].aggregate(pipeline))
-    categories = sorted({record['date'] for record in results})
-    device_data = {}
-
-    for record in results:
-        device_name = record['device_name']
-        if device_name not in device_data:
-            device_data[device_name] = {date: 0 for date in categories}
-        device_data[device_name][record['date']] = record['total_consumption']
-
-    formatted_output = [
-        {
-            'name': device_name,
-            'data': [device_data[device_name][date] for date in categories]
-        }
-        for device_name in sorted(device_data)
-    ]
-
-    return formatted_output, categories
+    return _daily_consumption_series({}, start_date, end_date)
 
 
-def get_season_dates(season, year):
+def get_season_dates(season, year, calendar="gregorian"):
+    if str(calendar).lower() in {"persian", "jalali", "shamsi"}:
+        try:
+            return jalali_season_range(int(year), season)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
     if season == "Winter":
         start_date = datetime(year, 12, 21)
         end_date = datetime(year + 1, 3, 20)
@@ -130,8 +93,8 @@ def get_season_dates(season, year):
     return start_date, end_date
 
 
-def service_show_seasonal_records_on_chart_super_admin(user_id, season, year):
-    start_date, end_date = get_season_dates(season, year)
+def service_show_seasonal_records_on_chart_super_admin(user_id, season, year, calendar="gregorian"):
+    start_date, end_date = get_season_dates(season, year, calendar)
 
     pipeline = [
         {
@@ -303,7 +266,10 @@ def service_cal_graph4_super_admin(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            unoptimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.95 / 1000)
+            unoptimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
+            monthly_kwh = unoptimized_grid_kwh / 3
+            # هزینه خروجی به‌صورت تومان کامل است تا نمودار مدیر با داشبورد یکسان باشد.
+            unoptimized = round(tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3)
             unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
 
         pipeline = [
@@ -416,7 +382,9 @@ def service_cal_graph4_super_admin(
             pv_gen = (((int(block['area']) * 0.75) / 1.65) * dc_coefficient[optimized_season["season"]][
                 int(block['area'])]) * 90
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
-            optimized = (abs(pv_gen - optimized_season['totalConsumption']) * 0.55 / 1000)
+            optimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
+            monthly_kwh = optimized_grid_kwh / 3
+            optimized = round(tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3)
             optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
         seasons_order = ["spring", "summer", "fall", "winter"]
         unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
@@ -520,82 +488,43 @@ def service_show_records_on_chart_block_admin(admin_user_id, date=None):
     return res
 
 
-def service_show_records_on_chart_monthly_block_admin(admin_user_id, year, month):
+def service_show_records_on_chart_monthly_block_admin(admin_user_id, year, month, calendar="gregorian"):
     year = int(year)
     month = int(month)
-    start_date = datetime(year, month, 1)
-    end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+    if str(calendar).lower() in {"persian", "jalali", "shamsi"}:
+        try:
+            start_date, end_date = jalali_month_range(year, month)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+    else:
+        start_date = datetime(year, month, 1)
+        end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
     
     # Fetch the apartment associated with the admin
     apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})
+    if not apartment:
+        raise HTTPException(status_code=404, detail="Apartment not found")
     
     # Fetch all blocks associated with the apartment
     all_blocks = db["blocks"].find({"apartment_id": str(apartment["_id"])})
     
     # Extract user ids from the blocks
-    user_ids = [ObjectId(str(block["user_id"])) for block in all_blocks]
+    user_ids = []
+    for block in all_blocks:
+        block_user_id = str(block.get("user_id"))
+        user_ids.append(block_user_id)
+        if ObjectId.is_valid(block_user_id):
+            user_ids.append(ObjectId(block_user_id))
 
-    # MongoDB aggregation pipeline
-    pipeline = [
-        {
-            '$match': {
-                'user_id': {'$in': user_ids},
-                'start_time': {'$gte': start_date},
-                'end_time': {'$lt': end_date}
-            }
-        },
-        {
-            '$group': {
-                '_id': {
-                    'device_name': '$device_name',
-                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$start_time'}}
-                },
-                'total_consumption': {'$sum': '$consumption'}
-            }
-        },
-        {
-            '$project': {
-                '_id': 0,
-                'device_name': '$_id.device_name',
-                'date': '$_id.day',
-                'total_consumption': 1
-            }
-        },
-        {
-            '$sort': {
-                'device_name': 1,
-                'date': 1
-            }
-        }
-    ]
+    return _daily_consumption_series(
+        {"user_id": {"$in": user_ids}},
+        start_date,
+        end_date,
+    )
 
-    results = list(db["power_records"].aggregate(pipeline))
-    
-    # Generate all dates for the specified month
-    categories = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range((end_date - start_date).days)]
-    
-    # Initialize device data dictionary
-    device_data = {}
-    for record in results:
-        device_name = record['device_name']
-        if device_name not in device_data:
-            device_data[device_name] = {date: 0 for date in categories}
-        device_data[device_name][record['date']] = record['total_consumption']
-    
-    # Format the output
-    formatted_output = [
-        {
-            'name': device_name,
-            'data': [device_data[device_name][date] for date in categories]
-        }
-        for device_name in sorted(device_data)
-    ]
-
-    return formatted_output, categories
-
-def service_show_seasonal_records_on_chart_block_admin(admin_user_id, season, year):
+def service_show_seasonal_records_on_chart_block_admin(admin_user_id, season, year, calendar="gregorian"):
     # Get the start and end dates for the specified season and year
-    start_date, end_date = get_season_dates(season, year)
+    start_date, end_date = get_season_dates(season, year, calendar)
 
     # Find the apartment by admin_user_id
     apartment = db["apartments"].find_one({"admin_id": str(admin_user_id)})

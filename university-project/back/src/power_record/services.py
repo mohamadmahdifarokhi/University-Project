@@ -16,12 +16,17 @@ from src.auth.secures import get_current_user
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 import math
+from ..core.persian_calendar import jalali_month_range, jalali_season_range
 
 
 def service_list_power_records(
         user_id: str
 ):
-    power_records = db["power_records"].find({"user_id": user_id})
+    user_id = str(user_id)
+    user_ids = [user_id]
+    if ObjectId.is_valid(user_id):
+        user_ids.append(ObjectId(user_id))
+    power_records = db["power_records"].find({"user_id": {"$in": user_ids}})
 
     if power_records is None:
         raise HTTPException(status_code=404, detail="Records not found")
@@ -39,11 +44,20 @@ def service_list_power_records(
 
 
 def service_delete_power_records(
-        power_record_id
+        power_record_id,
+        user_id,
 ):
+    if not ObjectId.is_valid(str(power_record_id)):
+        raise HTTPException(status_code=404, detail="Power record not found")
+    user_id = str(user_id)
+    user_ids = [user_id]
+    if ObjectId.is_valid(user_id):
+        user_ids.append(ObjectId(user_id))
     update_result = db["power_records"].delete_one(
-        {"_id": ObjectId(power_record_id)},
+        {"_id": ObjectId(power_record_id), "user_id": {"$in": user_ids}},
     )
+    if update_result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Power record not found")
     return {"detail": "power record deleted."}
 
 
@@ -237,7 +251,8 @@ def service_cal_graph4(
             unoptimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
             # Bill the grid energy with the tiered tariff (monthly basis x3 months).
             monthly_kwh = unoptimized_grid_kwh / 3
-            unoptimized = tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3 / 1000
+            # خروجی هزینه‌ها به‌صورت تومان کامل است؛ مقدار را به هزار تومان تبدیل نکن.
+            unoptimized = round(tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3)
             unoptimized_seasonss.append({'season': optimized_season["season"], 'unoptimized': unoptimized})
 
         pipeline = [
@@ -352,7 +367,7 @@ def service_cal_graph4(
             seasons_pv_gen.append({'season': optimized_season["season"], 'pv_gen': pv_gen})
             optimized_grid_kwh = abs(pv_gen - optimized_season['totalConsumption']) / 1000
             monthly_kwh = optimized_grid_kwh / 3
-            optimized = tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3 / 1000
+            optimized = round(tiered_cost_toman(monthly_kwh, optimized_season["season"]) * 3)
             optimized_seasonss.append({'season': optimized_season["season"], 'optimized': optimized})
         seasons_order = ["spring", "summer", "fall", "winter"]
         unoptimized_seasonss = sorted(unoptimized_seasonss, key=lambda x: seasons_order.index(x['season']))
@@ -380,7 +395,7 @@ def service_add_power_records(
     if device.get('kind') == 'lamp' or 'لامپ' in device['name'] or device['name'] in ["lamp(small)", "lamp(medium)", "lamp(large)"]:
         consumption = consumption * 6
     base_power_record = PowerRecordSchema(
-        user_id=str(user_id),
+        user_id=ObjectId(str(user_id)),
         device_name=power_record.device_name,
         start_time=power_record.start_time,
         end_time=power_record.end_time,
@@ -393,27 +408,80 @@ def service_add_power_records(
 
 
 def get_max_power(user_id):
-    season = get_current_season()
-    block = db["blocks"].find_one({"user_id": str(user_id)})
-    peak_hour = 0
-    peak_power = 0
-    size_by_area = {80: "small", 100: "medium", 120: "large"}
-    if block:
-        size = size_by_area.get(int(block['area']), "medium")
-        devices = db["device"].find({"size": size})
-        cooling_heating_off_peak = season in ['spring', 'fall']
-        for device in devices:
-            name = device['name']
-            if 'لامپ' in name or 'lamp' in name:
-                peak_hour = (peak_hour + device['DC_power_consumption']) * 6
-            elif 'کولر' in name or 'بخاری' in name or 'air conditioner' in name or 'heater' in name:
-                if not cooling_heating_off_peak:
-                    peak_hour = (peak_hour + device['DC_power_consumption'])
-            else:
-                peak_power += device['DC_power_consumption']
+    user_id = str(user_id)
+    user_ids = [user_id]
+    if ObjectId.is_valid(user_id):
+        user_ids.append(ObjectId(user_id))
 
-        return peak_hour, peak_power + 810
-    return 0, 0
+    # Find the hour with the highest average daily consumption. The previous
+    # implementation returned a watt value in the `peak_hour` slot (for
+    # example 2204), which made the UI look like it was showing a time.
+    pipeline = [
+        {
+            "$match": {
+                "user_id": {"$in": user_ids},
+                "start_time": {"$exists": True},
+                "end_time": {"$exists": True},
+                "consumption": {"$exists": True},
+            }
+        },
+        {
+            "$project": {
+                "date": {
+                    "$dateToString": {
+                        "format": "%Y-%m-%d",
+                        "date": "$start_time",
+                    }
+                },
+                "hour": {"$hour": "$start_time"},
+                "consumption": 1,
+                "duration_hours": {
+                    "$divide": [
+                        {"$subtract": ["$end_time", "$start_time"]},
+                        3600000,
+                    ]
+                },
+            }
+        },
+        {
+            "$project": {
+                "date": 1,
+                "hour": 1,
+                "consumption": 1,
+                "estimated_power": {
+                    "$cond": [
+                        {"$gt": ["$duration_hours", 0]},
+                        {"$divide": ["$consumption", "$duration_hours"]},
+                        "$consumption",
+                    ]
+                },
+            }
+        },
+        {
+            "$group": {
+                "_id": {"date": "$date", "hour": "$hour"},
+                "daily_energy": {"$sum": "$consumption"},
+                "daily_power": {"$sum": "$estimated_power"},
+            }
+        },
+        {
+            "$group": {
+                "_id": "$_id.hour",
+                "average_energy": {"$avg": "$daily_energy"},
+                "average_power": {"$avg": "$daily_power"},
+            }
+        },
+        {"$sort": {"average_energy": -1, "_id": 1}},
+        {"$limit": 1},
+    ]
+
+    peak = next(iter(db["power_records"].aggregate(pipeline)), None)
+    if not peak:
+        return "—", 0
+
+    peak_hour = f"{int(peak['_id']):02d}:00"
+    peak_power = round(float(peak.get("average_power", 0)), 2)
+    return peak_hour, peak_power
 
 
 def get_current_season():
@@ -543,8 +611,9 @@ def get_8_cal(
         un_op, op = service_cal_graph4(user_id)
         investment = (sum(un_op) - sum(op))
         season_dict = {'spring': 0, 'summer': 1, "fall": 2, "winter": 3}
-        power_divided_by_ac_dc = round((int((op[season_dict[season]] * 1000) / 63) / pv_gen), 2)
-        efficiency = round(pv_gen / (pv_gen + ((op[season_dict[season]] * 100) / 63)), 2) * 100
+        # op اکنون به تومان کامل است. این ضرایب همان مقیاس قبلی شاخص‌ها را حفظ می‌کنند.
+        power_divided_by_ac_dc = round((int(op[season_dict[season]] / 63) / pv_gen), 2)
+        efficiency = round(pv_gen / (pv_gen + ((op[season_dict[season]] / 10) / 63)), 2) * 100
 
         # Fetch the records
         return {'pv_gen': pv_gen,
@@ -627,71 +696,108 @@ def service_show_records_on_chart(user_id, date=None):
     return res
 
 
-from datetime import datetime
-from bson import ObjectId
+def _daily_consumption_series(query, start_date, end_date):
+    """Split each record's total consumption across the days it intersects.
 
+    Power records store one total for the whole interval.  Grouping by
+    ``start_time`` therefore puts a multi-day record on a single chart day.
+    This helper allocates the total proportionally by elapsed time and clips
+    records to the requested date range, including records crossing a month
+    boundary.
+    """
+    records_query = {
+        **query,
+        "start_time": {"$lt": end_date},
+        "end_time": {"$gt": start_date},
+    }
+    records = db["power_records"].find(
+        records_query,
+        {"_id": 0, "device_name": 1, "start_time": 1, "end_time": 1, "consumption": 1},
+    )
 
-def service_show_records_on_chart_monthly(user_id, year, month):
-    year = int(year)
-    month = int(month)
-    start_date = datetime(year, month, 1)
-    end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
-
-    pipeline = [
-        {
-            '$match': {
-                'user_id': ObjectId(str(user_id)),
-                'start_time': {'$gte': start_date},
-                'end_time': {'$lt': end_date}
-            }
-        },
-        {
-            '$group': {
-                '_id': {
-                    'device_name': '$device_name',
-                    'day': {'$dateToString': {'format': '%Y-%m-%d', 'date': '$start_time'}}
-                },
-                'total_consumption': {'$sum': '$consumption'}
-            }
-        },
-        {
-            '$project': {
-                '_id': 0,
-                'device_name': '$_id.device_name',
-                'date': '$_id.day',
-                'total_consumption': 1
-            }
-        },
-        {
-            '$sort': {
-                'device_name': 1,
-                'date': 1
-            }
-        }
-    ]
-
-    results = list(db["power_records"].aggregate(pipeline))
-    categories = sorted({record['date'] for record in results})
     device_data = {}
+    categories = set()
+    for record in records:
+        record_start = record.get("start_time")
+        record_end = record.get("end_time")
+        consumption = record.get("consumption")
+        device_name = record.get("device_name")
 
-    for record in results:
-        device_name = record['device_name']
-        if device_name not in device_data:
-            device_data[device_name] = {date: 0 for date in categories}
-        device_data[device_name][record['date']] = record['total_consumption']
+        if (
+            not device_name
+            or not isinstance(record_start, datetime)
+            or not isinstance(record_end, datetime)
+            or record_end <= record_start
+            or consumption is None
+        ):
+            continue
 
+        overlap_start = max(record_start, start_date)
+        overlap_end = min(record_end, end_date)
+        if overlap_end <= overlap_start:
+            continue
+
+        total_seconds = (record_end - record_start).total_seconds()
+        energy_per_second = float(consumption) / total_seconds
+        cursor = overlap_start
+        device_data.setdefault(device_name, {})
+
+        while cursor < overlap_end:
+            next_midnight = cursor.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            ) + timedelta(days=1)
+            segment_end = min(overlap_end, next_midnight)
+            category = cursor.strftime("%Y-%m-%d")
+            segment_seconds = (segment_end - cursor).total_seconds()
+            device_data[device_name][category] = (
+                device_data[device_name].get(category, 0.0)
+                + energy_per_second * segment_seconds
+            )
+            categories.add(category)
+            cursor = segment_end
+
+    sorted_categories = sorted(categories)
     formatted_output = [
         {
-            'name': device_name,
-            'data': [device_data[device_name][date] for date in categories]
+            "name": device_name,
+            "data": [round(device_data[device_name].get(date, 0.0), 2) for date in sorted_categories],
         }
         for device_name in sorted(device_data)
     ]
+    return formatted_output, sorted_categories
 
-    return formatted_output, categories
+
+def service_show_records_on_chart_monthly(user_id, year, month, calendar="gregorian"):
+    year = int(year)
+    month = int(month)
+    if str(calendar).lower() in {"persian", "jalali", "shamsi"}:
+        try:
+            start_date, end_date = jalali_month_range(year, month)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+    else:
+        start_date = datetime(year, month, 1)
+        end_date = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+
+    user_id = str(user_id)
+    user_ids = [user_id]
+    if ObjectId.is_valid(user_id):
+        user_ids.append(ObjectId(user_id))
+
+    return _daily_consumption_series(
+        {"user_id": {"$in": user_ids}},
+        start_date,
+        end_date,
+    )
 
 
-def get_season_dates(season, year):
+def get_season_dates(season, year, calendar="gregorian"):
+    if str(calendar).lower() in {"persian", "jalali", "shamsi"}:
+        try:
+            return jalali_season_range(int(year), season)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+
     if season == "Winter":
         start_date = datetime(year, 12, 21)
         end_date = datetime(year + 1, 3, 20)
@@ -709,8 +815,8 @@ def get_season_dates(season, year):
     return start_date, end_date
 
 
-def service_show_seasonal_records_on_chart(user_id, season, year):
-    start_date, end_date = get_season_dates(season, year)
+def service_show_seasonal_records_on_chart(user_id, season, year, calendar="gregorian"):
+    start_date, end_date = get_season_dates(season, year, calendar)
 
     pipeline = [
         {
@@ -785,4 +891,3 @@ def service_available_periods(user_id):
         "months": [{"year": y, "month": m} for y, m in months],
         "seasons": [{"year": y, "season": s} for s, y in seasons],
     }
-

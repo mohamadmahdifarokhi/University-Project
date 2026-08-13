@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic_mongo import ObjectIdField
 
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 from fastapi import HTTPException, status
 import random
 from .models import Profile
@@ -11,6 +11,7 @@ from ..auth.schemas import ProfileCreate, ProfileOut, ProfileUpdate
 
 from ..db.db import client, db
 from bson import ObjectId
+from ..core.utils import default_user_name
 
 
 class ProfileService:
@@ -41,14 +42,21 @@ class ProfileService:
                 {"user_id": str(user["_id"])},
                 # {"user_id": user.id, "is_active": True},
                 {"$set": {"photo": random_number}},
-                return_document=True
+                return_document=ReturnDocument.AFTER
             )
             if not profile:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Profile not found with user ID: {user.id}"
+                    detail=f"Profile not found with user ID: {user['_id']}"
                 )
-            return ProfileRes(photo=profile['photo'], user={"_id": str(user["_id"]), "email": user['email']})
+            return ProfileRes(
+                photo=profile['photo'],
+                user={
+                    "_id": str(user["_id"]),
+                    "email": user['email'],
+                    "name": user.get('name') or default_user_name(user['email']),
+                },
+            )
         except HTTPException:
             raise
         except Exception as e:
@@ -79,13 +87,26 @@ class ProfileService:
 
         block_details = self.db.blocks.find_one({"user_id": str(user["_id"])})
         if block_details:
-            apartments = self.db.apartments.find_one({"_id": ObjectId(block_details['apartment_id'])})
-            return {'photo': profile['photo'], 'user': {"_id": str(user["_id"]), "email": user['email']},
+            apartment_id = str(block_details.get("apartment_id", ""))
+            apartments = (
+                self.db.apartments.find_one({"_id": ObjectId(apartment_id)})
+                if ObjectId.is_valid(apartment_id)
+                else None
+            )
+            return {'photo': profile['photo'], 'user': {
+                        "_id": str(user["_id"]),
+                        "email": user['email'],
+                        "name": user.get('name') or default_user_name(user['email']),
+                    },
                     "area": block_details['area'],
-                    "apartment_no": apartments['apartment_no'],
+                    "apartment_no": apartments['apartment_no'] if apartments else None,
                     }
         else:
-            return {'photo': profile['photo'], 'user': {"_id": str(user["_id"]), "email": user['email']},
+            return {'photo': profile['photo'], 'user': {
+                        "_id": str(user["_id"]),
+                        "email": user['email'],
+                        "name": user.get('name') or default_user_name(user['email']),
+                    },
                     }
 
     def create_profile(self, profile_data: ProfileCreate) -> ProfileOut:

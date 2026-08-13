@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAppStore } from '~/stores/app'
 import { storeToRefs } from 'pinia'
+import { toJalaliDateTime } from '~/utils/jalali'
 
 definePageMeta({ title: 'سوابق مصرف', middleware: 'authenticated' })
 
@@ -13,9 +14,7 @@ const uploading = ref(false)
 const page = ref(1)
 const perPage = 20
 const visibleRecords = computed(() => records.value.slice((page.value - 1) * perPage, page.value * perPage))
-const date = (value: any) => value
-  ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
-  : '—'
+const date = (value: any) => toJalaliDateTime(value) || '—'
 
 async function load() {
   loading.value = true

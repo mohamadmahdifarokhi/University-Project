@@ -104,7 +104,8 @@ def power_record_delete(
 
 ):
     return service_delete_power_records(
-        power_record_id
+        power_record_id,
+        user_id=user["_id"],
     )
 
 
@@ -119,13 +120,15 @@ def power_record_24(
 
 @router.get("/month-chart", summary="shows all consumptions of devices in requested month")
 def power_record_monthly(
-    year,
-    month,
+    year: int,
+    month: int,
+    calendar: str = "gregorian",
     user: User = Depends(get_current_user),
 ):
     return service_show_records_on_chart_monthly(
         year=year,
         month=month,
+        calendar=calendar,
         user_id=user["_id"]
     )
 
@@ -151,11 +154,13 @@ def cal_unoptimized(
 def power_record_seasonal(
     year:int,
     season,
+    calendar: str = "gregorian",
     user: User = Depends(get_current_user),
 ):
     return service_show_seasonal_records_on_chart(
         year=year,
         season=season,
+        calendar=calendar,
         user_id=user["_id"]
     )
 

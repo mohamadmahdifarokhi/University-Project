@@ -56,12 +56,13 @@ class Permission(BaseModel):
     description: str | None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class User(BaseModel):
     id: UUID
     email: EmailStr
+    name: str | None = None
     password: str
     provider: str
     profile: Optional["Profile"] = None
@@ -70,12 +71,13 @@ class User(BaseModel):
     # devices: List["Device"] = []
     # block: Optional["Block"] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserBase(BaseModel):
     id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     email: EmailStr
+    name: str | None = None
     password: str
     provider: str
     # permissions: List[Permission] = []
@@ -83,6 +85,7 @@ class UserBase(BaseModel):
 
 class UserCreate(BaseModel):
     email: EmailStr
+    name: str | None = None
     password: str
     provider: str
     permissions: List[Permission] = []
@@ -91,12 +94,14 @@ class UserCreate(BaseModel):
 class AdminUserCreate(BaseModel):
     """Account details accepted only from the administrator panel."""
     email: EmailStr
+    name: str | None = None
     password: str = Field(min_length=6, max_length=128)
     is_admin: bool = False
 
 
 class UserUpdate(BaseModel):
     email: EmailStr | None = None
+    name: str | None = None
     password: str | None = None
     provider: str | None = None
 
@@ -105,6 +110,7 @@ class UserUpdate(BaseModel):
 class UserOut(BaseModel):
     id: Annotated[ObjectId, ObjectIdPydanticAnnotation]
     email: EmailStr
+    name: str | None = None
     password: str | None
     permissions: List["Permission"] = []
 
@@ -121,7 +127,7 @@ class OTP(BaseModel):
     expired_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OTPCreate(BaseModel):
@@ -153,7 +159,7 @@ class Token(BaseModel):
     expired_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TokenCreate(BaseModel):
@@ -198,6 +204,7 @@ class UserRes(BaseModel):
         email (EmailStr): User's email address.
     """
     email: EmailStr
+    name: str | None = None
 
 
 class UserUp(BaseModel):
@@ -222,7 +229,7 @@ class OtpReq(BaseModel):
     email: EmailStr
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OtpRes(BaseModel):
@@ -254,7 +261,7 @@ class VerifyOtpReq(BaseModel):
     otp_code: conint(ge=100000, le=999999)
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class VerifyCodeReq(BaseModel):
@@ -333,7 +340,7 @@ class PasswordReq(BaseModel):
             password (constr): User's password.
             new_password (constr): User's new password.
         """
-    password: constr(min_length=8)
+    password: str
     new_password: constr(min_length=8)
 
 

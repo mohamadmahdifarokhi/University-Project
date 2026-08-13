@@ -1,3 +1,22 @@
+<script lang="ts">
+type DashboardLoadState = {
+  key: string
+  promise: Promise<void> | null
+  completedAt: number
+}
+
+// Nuxt can briefly create the page twice while completing the login redirect.
+// Keep the initial dashboard load shared at module scope so both instances do
+// not issue the same set of expensive chart requests.
+const dashboardLoadState: DashboardLoadState = {
+  key: '',
+  promise: null,
+  completedAt: 0,
+}
+
+const DASHBOARD_LOAD_TTL = 3_000
+</script>
+
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '~/stores/app'
@@ -7,16 +26,31 @@ import { Field, useForm } from 'vee-validate'
 import { z } from 'zod'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { gregorianToJalaali, toJalaliDateTime } from '~/utils/jalali'
 
 const { t } = useI18n({ useScope: 'local' })
 const router = useRouter()
 
 const app = useAppStore()
-const { orders, categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop, peakHour, peakPower } = storeToRefs(app)
+const { orders, categories24, values24, categoriesMonth, valuesMonth, cal8, graph4op, graph4Unop, peakHour, peakPower, battery } = storeToRefs(app)
 const cate = ref(categories24.value)
 const authStore = useAuthStore()
 const dashboardLoading = ref(true)
 const dashboardError = ref('')
+const recordError = ref('')
+const formatNumber = (value: any) => new Intl.NumberFormat('fa-IR').format(Number(value ?? 0))
+const formatIranianDate = (value: any) => toJalaliDateTime(value) || '—'
+const toPersianDigits = (value: unknown) => String(value ?? '').replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)])
+const formatPeakHour = (value: any) => {
+  const match = String(value ?? '').match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return '—'
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (hour > 23 || minute > 59) return '—'
+  const period = hour < 12 ? 'صبح' : hour < 18 ? 'بعدازظهر' : 'شب'
+  return `${toPersianDigits(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`)} ${period}`
+}
+const batteryStoredEnergy = computed(() => Number(battery.value?.saved_energy ?? 0))
 const dashboardEmpty = computed(() => !categories24.value?.length && !categoriesMonth.value?.length && !orders.value?.length && !Object.keys(cal8.value || {}).length)
 
 const areaCustomers = reactive(useAreaCustomers())
@@ -25,6 +59,7 @@ const barProfit = reactive(useBarProfit())
 const dailyConsumptionChart = reactive(useDailyConsumptionChart())
 const monthlyConsumptionChart = reactive(useMonthlyConsumptionChart())
 const optimizationChart = reactive(useOptimizationChart())
+const monthlyChartVersion = ref(0)
 
 const fetchselectedDevice = app.fetchselectedDevice
 const fetchOrders = app.fetchOrders
@@ -33,6 +68,7 @@ const fetchMonthRecords = app.fetchMonthRecords
 const fetch8 = app.fetch8
 const fetchGraph4 = app.fetchGraph4
 const powerConsumption = app.powerConsumption
+const fetchBattery = app.fetchBattery
 
 const fetch24RecordsAdmin = app.fetch24RecordsAdmin
 const fetchMonthRecordsAdmin = app.fetchMonthRecordsAdmin
@@ -44,25 +80,60 @@ const fetchMonthRecordsMng = app.fetchMonthRecordsMng
 // const fetchSeasonChartMng = app.fetchSeasonChartMng;
 const fetchGraph4Mng = app.fetchGraph4Mng
 
-async function initializeData() {
+async function initializeData(force = false) {
   dashboardLoading.value = true
   dashboardError.value = ''
-  try {
-    if (authStore.isAdmin) {
-      await Promise.all([fetch24RecordsAdmin(), fetchMonthRecordsAdmin(), fetchGraph4Admin(), powerConsumption()])
+
+  await authStore.checkAccessToken()
+
+  const sessionKey = useCookie('email').value || useCookie('access_token').value || 'session'
+  const loadKey = `${sessionKey}:${authStore.isAdmin ? 'admin' : authStore.isMng ? 'manager' : 'user'}:${selectedYear.value}:${selectedMonth.value}`
+  const cacheIsFresh = dashboardLoadState.key === loadKey
+    && Date.now() - dashboardLoadState.completedAt < DASHBOARD_LOAD_TTL
+
+  if (!force && dashboardLoadState.key === loadKey) {
+    if (dashboardLoadState.promise) {
+      await dashboardLoadState.promise
+      dashboardLoading.value = false
+      return
     }
-    else if (authStore.isMng) {
-      await Promise.all([fetch24RecordsMng(), fetchMonthRecordsMng(), fetchGraph4Mng(), powerConsumption()])
-    }
-    else {
-      await Promise.all([fetch24Records(), fetchMonthRecords(), fetchselectedDevice(), fetchOrders(1, 5), fetch8(), fetchGraph4(), powerConsumption()])
+
+    if (cacheIsFresh) {
+      dashboardLoading.value = false
+      return
     }
   }
-  catch {
-    dashboardError.value = 'اطلاعات داشبورد دریافت نشد. اتصال سرویس انرژی را بررسی کنید.'
+
+  const loadPromise = (async () => {
+    try {
+      if (authStore.isAdmin) {
+        await Promise.all([fetch24RecordsAdmin(), fetchMonthRecordsAdmin(selectedYear.value, selectedMonth.value), fetchGraph4Admin(), powerConsumption()])
+      }
+      else if (authStore.isMng) {
+        await Promise.all([fetch24RecordsMng(), fetchMonthRecordsMng(selectedYear.value, selectedMonth.value), fetchGraph4Mng(), powerConsumption()])
+      }
+      else {
+        await Promise.all([fetch24Records(), fetchMonthRecords(selectedYear.value, selectedMonth.value), fetchselectedDevice(), fetchOrders(1, 5), fetch8(), fetchGraph4(), fetchBattery(), powerConsumption()])
+      }
+    }
+    catch {
+      dashboardError.value = 'اطلاعات داشبورد دریافت نشد. اتصال سرویس انرژی را بررسی کنید.'
+    }
+    finally {
+      dashboardLoading.value = false
+    }
+  })()
+
+  dashboardLoadState.key = loadKey
+  dashboardLoadState.promise = loadPromise
+  try {
+    await loadPromise
+    dashboardLoadState.completedAt = Date.now()
   }
   finally {
-    dashboardLoading.value = false
+    if (dashboardLoadState.promise === loadPromise) {
+      dashboardLoadState.promise = null
+    }
   }
 }
 
@@ -72,23 +143,28 @@ onMounted(async () => {
 })
 
 // Watchers for reactive updates
-watch([categories24, values24, categoriesMonth, valuesMonth, graph4op, graph4Unop], () => {
-  // Update your charts here
+watch([categories24, values24, graph4op, graph4Unop], () => {
   dailyConsumptionChart.options.xaxis.categories = categories24.value
   dailyConsumptionChart.series[0].data = values24.value
-  monthlyConsumptionChart.options.xaxis.categories = categoriesMonth.value
-  monthlyConsumptionChart.series = valuesMonth.value
-
   optimizationChart.series[0].data = graph4Unop.value
   optimizationChart.series[1].data = graph4op.value
 }, {
   deep: true,
 })
+
+watch([categoriesMonth, valuesMonth], () => {
+  monthlyConsumptionChart.options.xaxis.categories = categoriesMonth.value
+  monthlyConsumptionChart.series = valuesMonth.value
+  monthlyChartVersion.value += 1
+}, {
+  deep: true,
+})
 const now = new Date()
-const selectedYear = ref<number>(now.getFullYear())
-const selectedMonth = ref<number>(now.getMonth() + 1)
+const currentJalali = gregorianToJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate())
+const selectedYear = ref<number>(currentJalali.jy)
+const selectedMonth = ref<number>(currentJalali.jm)
 const isMonthlyLoading = ref(false)
-const yearOptions = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027]
+const yearOptions = Array.from({ length: 7 }, (_, index) => currentJalali.jy - 5 + index)
 const monthOptions = [
   { value: 1, label: 'فروردین' }, { value: 2, label: 'اردیبهشت' }, { value: 3, label: 'خرداد' },
   { value: 4, label: 'تیر' }, { value: 5, label: 'مرداد' }, { value: 6, label: 'شهریور' },
@@ -106,9 +182,21 @@ const VALIDATION_TEXT = {
 }
 
 const zodSchema = z.object({
-  start: z.string(),
-  end: z.string(),
-  deviceId: z.string(),
+  start: z.string().min(1, 'تاریخ شروع را انتخاب کنید'),
+  end: z.string().min(1, 'تاریخ پایان را انتخاب کنید'),
+  deviceId: z.string().min(1, 'دستگاه را انتخاب کنید'),
+}).superRefine((values, context) => {
+  if (!values.start || !values.end) return
+  const start = new Date(values.start).getTime()
+  const end = new Date(values.end).getTime()
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return
+  if (end <= start) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['end'],
+      message: 'زمان پایان باید بعد از زمان شروع باشد',
+    })
+  }
 })
 
 type FormInput = z.infer<typeof zodSchema>
@@ -135,8 +223,22 @@ const {
   initialValues,
 })
 
-const addPowerRecord = handleSubmit(async (values) => {
-  await app.addRecord(values.deviceId, values.start, values.end)
+const addPowerRecord = handleSubmit(async (formValues) => {
+  recordError.value = ''
+  try {
+    await app.addRecord(formValues.deviceId, formValues.start, formValues.end)
+    resetForm()
+    await Promise.all([
+      fetch24Records(),
+      fetchMonthly(),
+      fetch8(),
+      fetchGraph4(),
+      powerConsumption(),
+    ])
+  }
+  catch (error: any) {
+    recordError.value = error?.response?.data?.detail || 'ثبت سابقه مصرف انجام نشد.'
+  }
 })
 const fetchMonthly = async () => {
   isMonthlyLoading.value = true
@@ -581,7 +683,7 @@ function useDailyConsumptionChart() {
 
   const series = shallowRef([
     {
-      name: 'DC',
+      name: 'جریان مستقیم',
       data: values24.value.map(value => parseFloat(value.toFixed(2))),
     },
   ])
@@ -621,13 +723,14 @@ function useMonthlyConsumptionChart() {
       curve: 'smooth',
     },
     xaxis: {
-      type: 'datetime',
+      // Categories are already formatted as Persian dates in the store.
+      // They must stay categorical; ApexCharts cannot parse Jalali text as a
+      // native JavaScript datetime.
+      type: 'category',
       categories: categoriesMonth.value,
     },
     tooltip: {
-      x: {
-        format: 'dd/MM/yy HH:mm',
-      },
+      x: { formatter: value => value },
     },
   }
 
@@ -692,7 +795,10 @@ function useOptimizationChart() {
     },
     yaxis: {
       title: {
-        text: 'هزینه (یورو)',
+        text: 'هزینه (تومان)',
+      },
+      labels: {
+        formatter: (value: any) => new Intl.NumberFormat('fa-IR').format(Number(value ?? 0)),
       },
     },
     fill: {
@@ -758,7 +864,7 @@ function useOptimizationChart() {
     </BaseCard>
     <BaseMessage v-else-if="dashboardError" type="danger">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <span>{{ dashboardError }}</span><BaseButton size="sm" @click="initializeData">
+        <span>{{ dashboardError }}</span><BaseButton size="sm" @click="initializeData(true)">
           تلاش دوباره
         </BaseButton>
       </div>
@@ -780,7 +886,7 @@ function useOptimizationChart() {
     <template v-else>
       <div class="grid grid-cols-12 gap-6">
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-conversion">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -793,16 +899,15 @@ function useOptimizationChart() {
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/exchange-line.png"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/conversion.png"
                   alt=""
                 >
-              <!--              <Icon name="ri:battery-saver-fill" class="size-6"/>-->
               </BaseIconBox>
             </div>
             <div class="mb-2">
@@ -813,7 +918,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>{{ cal8['conversion_per'] }}</span>
+                <span>{{ formatNumber(cal8['conversion_per']) }}</span>
               </BaseHeading>
             </div>
             <div
@@ -827,7 +932,7 @@ function useOptimizationChart() {
         </div>
         <!-- Stat tile -->
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-battery">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -840,13 +945,13 @@ function useOptimizationChart() {
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/battery-saver-line.png"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/battery-storage.png"
                   alt=""
                 >
               </BaseIconBox>
@@ -859,7 +964,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>0</span>
+                <span>{{ formatNumber(batteryStoredEnergy) }}</span>
               </BaseHeading>
             </div>
             <div
@@ -873,7 +978,7 @@ function useOptimizationChart() {
         </div>
         <!-- Stat tile -->
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-investment">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -882,22 +987,19 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-500 dark:text-muted-400"
               >
-                <span>میانگین سالانه سرمایه‌گذاری و صرفه‌جویی (یورو)</span>
+                <span>میانگین سالانه سرمایه‌گذاری و صرفه‌جویی (تومان)</span>
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/wallet-3-line.png"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/investment.png"
                   alt=""
                 >
-              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
-
-              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
               </BaseIconBox>
             </div>
             <div class="mb-2">
@@ -908,7 +1010,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>{{ cal8['investment'] }}</span>
+                <span>{{ formatNumber(cal8['investment']) }}</span>
               </BaseHeading>
             </div>
             <div
@@ -922,7 +1024,7 @@ function useOptimizationChart() {
         </div>
         <!-- Stat tile -->
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-emissions">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -931,22 +1033,19 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-500 dark:text-muted-400"
               >
-                <span>کاهش انتشار گازهای گلخانه‌ای (گرم CO2/کیلووات‌ساعت در روز)</span>
+                <span>کاهش انتشار گازهای گلخانه‌ای (گرم دی‌اکسیدکربن/کیلووات‌ساعت در روز)</span>
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/battery-saver-line.png"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/emissions.png"
                   alt=""
                 >
-              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
-
-              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
               </BaseIconBox>
             </div>
             <div class="mb-2">
@@ -957,7 +1056,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>{{ cal8['gr_em_sa'] }}</span>
+                <span>{{ formatNumber(cal8['gr_em_sa']) }}</span>
               </BaseHeading>
             </div>
             <div
@@ -971,7 +1070,7 @@ function useOptimizationChart() {
         </div>
         <!-- Stat tile -->
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-ac-dc">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -980,22 +1079,19 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-500 dark:text-muted-400"
               >
-                <span>توان تقسیم‌شده بر AC-DC</span>
+                <span>نسبت توان متناوب و مستقیم</span>
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/supabase-fill.png"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/ac-dc.png"
                   alt=""
                 >
-              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
-
-              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
               </BaseIconBox>
             </div>
             <div class="mb-2">
@@ -1006,7 +1102,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>{{ cal8['power_divided_by_ac_dc'] }}</span>
+                <span>{{ formatNumber(cal8['power_divided_by_ac_dc']) }}</span>
               </BaseHeading>
             </div>
             <div
@@ -1020,7 +1116,7 @@ function useOptimizationChart() {
         </div>
         <!-- Stat tile -->
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-4">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-efficiency">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -1033,18 +1129,16 @@ function useOptimizationChart() {
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/speed-up-line.svg"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/efficiency.png"
                   alt=""
                 >
-                <Icon name="ri:leaf-fill" class="size-6" />
 
-              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
               </BaseIconBox>
             </div>
             <div class="mb-2">
@@ -1055,7 +1149,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>{{ cal8['efficiency'] }}%</span>
+                <span>{{ formatNumber(cal8['efficiency']) }}٪</span>
               </BaseHeading>
             </div>
             <div
@@ -1069,7 +1163,7 @@ function useOptimizationChart() {
         </div>
 
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-solar">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -1082,18 +1176,15 @@ function useOptimizationChart() {
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/flashlight-line.png"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/solar-generation.png"
                   alt=""
                 >
-              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
-
-              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
               </BaseIconBox>
             </div>
             <div class="mb-2">
@@ -1104,7 +1195,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>{{ cal8['pv_gen'] }}</span>
+                <span>{{ formatNumber(cal8['pv_gen']) }}</span>
               </BaseHeading>
             </div>
             <div
@@ -1117,7 +1208,7 @@ function useOptimizationChart() {
           </BaseCard>
         </div>
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="col-span-12 md:col-span-6">
-          <BaseCard class="p-4">
+          <BaseCard class="p-4" data-tour="metric-charge">
             <div class="mb-1 flex items-center justify-between">
               <BaseHeading
                 as="h5"
@@ -1130,18 +1221,15 @@ function useOptimizationChart() {
               </BaseHeading>
               <BaseIconBox
                 size="xs"
-                class="text-primary-500 dark:text-primary-400 dark:border-success-500 bg-yellow-100 dark:border-2 dark:bg-yellow-100"
+                class="text-primary-500 dark:text-primary-400 bg-transparent"
                 rounded="full"
                 color="none"
               >
                 <img
-                  class="size-10 h-7 w-8"
-                  src="/img/database-line.png"
+                  class="size-9 object-contain"
+                  src="/img/dashboard-icons/charge-status.png"
                   alt=""
                 >
-              <!--              <Icon name="ri:leaf-fill" class="size-6"/>-->
-
-              <!--              <Icon name="ph:megaphone-simple-duotone" class="size-5"/>-->
               </BaseIconBox>
             </div>
             <div class="mb-2">
@@ -1152,7 +1240,7 @@ function useOptimizationChart() {
                 lead="tight"
                 class="text-muted-800 dark:text-white"
               >
-                <span>{{ cal8['st_ca'] }}%</span>
+                <span>{{ formatNumber(cal8['st_ca']) }}٪</span>
               </BaseHeading>
             </div>
             <div
@@ -1199,7 +1287,10 @@ function useOptimizationChart() {
                 </BaseHeading>
               </div>
 
-              <AddonApexcharts v-bind="monthlyConsumptionChart" />
+              <AddonApexcharts
+                v-bind="monthlyConsumptionChart"
+                :refresh-key="monthlyChartVersion"
+              />
 
               <div class="border-muted-200 dark:border-muted-700 mt-6 flex justify-center border-t pt-6">
                 <div class="w-full max-w-md">
@@ -1217,7 +1308,7 @@ function useOptimizationChart() {
                         :key="year"
                         :value="year"
                       >
-                        {{ year }}
+                        {{ toPersianDigits(year) }}
                       </option>
                     </BaseSelect>
 
@@ -1251,7 +1342,9 @@ function useOptimizationChart() {
         </div>
 
         <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
-          <EnergySeasonSummary />
+          <div data-tour="season-summary">
+            <EnergySeasonSummary />
+          </div>
         </div>
         <div class="ltablet:col-span-12 col-span-12 lg:col-span-6">
           <BaseCard class="py-30 p-14" rounded="lg" data-tour="peak-power">
@@ -1279,7 +1372,7 @@ function useOptimizationChart() {
                   <BaseHeading size="sm">
                     ساعت اوج مصرف
                   </BaseHeading><BaseParagraph class="text-muted-500">
-                    {{ peakHour || '—' }}
+                    {{ formatPeakHour(peakHour) }}
                   </BaseParagraph>
                 </div>
               </div><div class="flex items-center gap-3">
@@ -1287,7 +1380,7 @@ function useOptimizationChart() {
                   <BaseHeading size="sm">
                     بیشینه توان مصرفی
                   </BaseHeading><BaseParagraph class="text-muted-500">
-                    {{ peakPower || '—' }} وات
+                    {{ peakPower ? formatNumber(peakPower) : '—' }} وات
                   </BaseParagraph>
                 </div>
               </div>
@@ -1320,7 +1413,10 @@ function useOptimizationChart() {
             novalidate
             @submit.prevent="addPowerRecord"
           >
-            <BaseCard rounded="lg" class="p-6">
+            <BaseCard rounded="lg" class="p-6" data-tour="add-record">
+              <BaseMessage v-if="recordError" type="danger" class="mb-4">
+                {{ recordError }}
+              </BaseMessage>
               <div class="mb-6 flex items-center justify-between">
                 <BaseHeading
                   as="h3"
@@ -1417,7 +1513,7 @@ function useOptimizationChart() {
 
         <!-- Create a section to loop through devices -->
         <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12">
-          <div class="mb-6 flex items-center justify-between">
+          <div class="mb-6 flex items-center justify-between" data-tour="selected-devices">
             <BaseHeading
               as="h3"
               size="md"
@@ -1449,82 +1545,78 @@ function useOptimizationChart() {
         </div>
       </div>
 
-      <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-6 col-span-6 md:col-span-6 lg:col-span-6">
-        <BaseHeading
-          as="h3"
-          size="md"
-          weight="semibold"
-          lead="tight"
-          class="text-muted-800 my-5 mt-10 dark:text-white"
-        >
-          <span>آخرین سفارش</span>
-        </BaseHeading>
-        <div class="space-y-2 pt-6">
-          <TransitionGroup
-            enter-active-class="transform-gpu"
-            enter-from-class="opacity-0 -translate-x-full"
-            enter-to-class="opacity-100 translate-x-0"
-            leave-active-class="absolute transform-gpu"
-            leave-from-class="opacity-100 translate-x-0"
-            leave-to-class="opacity-0 -translate-x-full"
+      <div v-if="!authStore.isAdmin && !authStore.isMng" class="ltablet:col-span-12 col-span-12 md:col-span-12 lg:col-span-12" data-tour="latest-orders">
+        <div class="my-5 mt-10 flex items-center justify-between gap-3">
+          <BaseHeading
+            as="h3"
+            size="md"
+            weight="semibold"
+            lead="tight"
+            class="text-muted-800 dark:text-white"
           >
-            <DemoFlexTableRow
-              v-for="(item, index) in orders"
-              :key="index"
-              rounded="sm"
-            >
-              <template #start>
-                <DemoFlexTableStart
-                  label="خریدار"
-                  :hide-label="index > 0"
-                  :title="item.user_id"
-                />
-                <DemoFlexTableStart
-                  label="مقدار"
-                  :hide-label="index > 0"
-                  :title="item.amount"
-                  class="ms-20"
-                />
-                <DemoFlexTableStart
-                  label="کارمزد"
-                  :hide-label="index > 0"
-                  :title="item.fee"
-                  class="ms-20"
-                />
-              </template>
-
-              <template #end>
-                <DemoFlexTableCell
-                  label="تاریخ"
-                  :hide-label="index > 0"
-                  tablet-hidden
-                  class="w-full sm:w-36"
-                >
-                  <span
-                    class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                  >
-                    {{ item.created_at }}
-                  </span>
-                </DemoFlexTableCell>
-                <DemoFlexTableCell
-                  label="قیمت"
-                  :hide-label="index > 0"
-                  class="w-full sm:w-32"
-                >
-                  <div
-                    class="flex w-full items-center justify-end gap-1 sm:justify-center"
-                  >
-                    <span
-                      class="text-muted-500 dark:text-muted-400 font-sans text-sm"
-                    >
-                      20
-                    </span>
-                  </div>
-                </DemoFlexTableCell>
-              </template>
-            </DemoFlexTableRow>
-          </TransitionGroup>
+            <span>آخرین سفارش‌ها</span>
+          </BaseHeading>
+          <BaseTag v-if="orders.length" color="primary" variant="pastel">
+            {{ formatNumber(orders.length) }} مورد
+          </BaseTag>
         </div>
+        <TransitionGroup
+          tag="div"
+          class="space-y-3"
+          enter-active-class="transform-gpu transition-all duration-300"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="absolute transform-gpu transition-all duration-300"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <BaseCard
+            v-for="(item, index) in orders"
+            :key="item.id || item._id || `${item.created_at}-${index}`"
+            rounded="sm"
+            class="p-4 sm:p-5"
+          >
+            <div class="mb-4 flex items-center justify-between gap-3 border-b border-muted-200 pb-3 dark:border-muted-700">
+              <span class="text-muted-500 dark:text-muted-400 text-xs font-medium">
+                سفارش {{ formatNumber(index + 1) }}
+              </span>
+              <span class="text-muted-400 dark:text-muted-500 text-xs">
+                {{ formatIranianDate(item.created_at) }}
+              </span>
+            </div>
+            <div class="flex flex-col divide-y divide-muted-200 dark:divide-muted-700">
+              <div class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                <span class="text-muted-500 dark:text-muted-400 text-sm">خریدار</span>
+                <span class="text-muted-800 dark:text-white text-end text-sm font-semibold">
+                  {{ item.buyer_name || 'کاربر ناشناس' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                <span class="text-muted-500 dark:text-muted-400 text-sm">مقدار انرژی</span>
+                <span class="text-muted-800 dark:text-white text-end text-sm font-semibold">
+                  {{ formatNumber(item.amount) }} کیلووات‌ساعت
+                </span>
+              </div>
+              <div class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                <span class="text-muted-500 dark:text-muted-400 text-sm">کارمزد</span>
+                <span class="text-muted-800 dark:text-white text-end text-sm font-semibold">
+                  {{ formatNumber(item.fee) }} تومان
+                </span>
+              </div>
+              <div class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                <span class="text-muted-500 dark:text-muted-400 text-sm">قیمت نهایی</span>
+                <span class="text-primary-600 dark:text-primary-400 text-end text-sm font-bold">
+                  {{ formatNumber(item.fee) }} تومان
+                </span>
+              </div>
+            </div>
+          </BaseCard>
+        </TransitionGroup>
+        <BaseCard v-if="!orders.length" class="p-6 text-center">
+          <BaseParagraph class="text-muted-500">
+            هنوز سفارشی برای نمایش وجود ندارد.
+          </BaseParagraph>
+        </BaseCard>
       </div>
     </template>
   </div>

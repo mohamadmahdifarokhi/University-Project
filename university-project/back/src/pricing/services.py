@@ -43,8 +43,11 @@ def service_get_pricing(
 def service_delete_pricing(
     pricing_id: str,
 ):
+    if not ObjectId.is_valid(str(pricing_id)):
+        raise HTTPException(status_code=404, detail="pricing not found")
     update_result = db["pricing"].delete_one(
         {"_id": ObjectId(pricing_id)},
     )
+    if update_result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="pricing not found")
     return {"detail": "pricing deleted."}
-

@@ -26,9 +26,13 @@ def service_add_apartment(
 def service_delete_apartment(
     apartment_id: str,
 ):
+    if not ObjectId.is_valid(str(apartment_id)):
+        raise HTTPException(status_code=404, detail="apartment not found")
     update_result = db["apartments"].delete_one(
         {"_id": ObjectId(apartment_id)},
     )
+    if update_result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="apartment not found")
     return {"detail": "apartment deleted."}
 
 
@@ -41,7 +45,12 @@ def service_delete_apartment(
 def service_apartment_get(
     apartment_id:str,    
 ):
+    if not ObjectId.is_valid(str(apartment_id)):
+        raise HTTPException(status_code=404, detail="apartment not found")
     apartment = db["apartments"].find_one({"_id": ObjectId(apartment_id)})
+    if apartment is None:
+        raise HTTPException(status_code=404, detail="apartment not found")
+    apartment["id"] = str(apartment.pop("_id"))
     return apartment
 
 def service_list_apartment_all(
@@ -49,9 +58,10 @@ def service_list_apartment_all(
 ):
     results = []
     for block in db["blocks"].find({"user_id": str(user_id)}):
-        apartment = db["apartments"].find_one(
-            {"_id": ObjectId(block["apartment_id"])}
-        )
+        apartment_id = str(block.get("apartment_id", ""))
+        if not ObjectId.is_valid(apartment_id):
+            continue
+        apartment = db["apartments"].find_one({"_id": ObjectId(apartment_id)})
         if not apartment:
             continue
         results.append({
@@ -77,7 +87,6 @@ def service_list_available_apartments():
             {"apartment_no": 1, "block_no": 1},
         ).sort("apartment_no", 1)
     ]
-
 
 
 

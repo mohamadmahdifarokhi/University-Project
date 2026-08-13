@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, Response, status
 
 from src.auth.models import User
 from src.auth.secures import get_current_user
@@ -8,6 +8,7 @@ from .services import (
     service_get_product_by_slug,
     service_get_cart,
     service_add_cart_item,
+    service_remove_cart_item,
 )
 
 # Products & categories (public)
@@ -55,5 +56,14 @@ def add_cart_item(
     product_id = payload.get("product_id")
     count = payload.get("count", 1)
     if not product_id:
-        return {"detail": "product_id is required"}
+        return Response(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
     return service_add_cart_item(user["_id"], product_id, count)
+
+
+@cart_router.delete("/items/{product_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove an item from the cart")
+def remove_cart_item(
+    product_id: str,
+    user: User = Depends(get_current_user),
+):
+    service_remove_cart_item(user["_id"], product_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

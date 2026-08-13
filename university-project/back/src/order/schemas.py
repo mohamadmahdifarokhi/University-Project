@@ -79,6 +79,8 @@ class OrderCreateSchema(BaseModel):
     amount: int
     fee: Optional[int] = None
     created_at: datetime | None  = None
+    buyer_name: Optional[str] = None
+    seller_name: Optional[str] = None
 
 
 class OrderOutputSchema(BaseModel):
@@ -88,6 +90,8 @@ class OrderOutputSchema(BaseModel):
     amount: int
     fee: Optional[int] = None
     created_at: str | None  = None
+    buyer_name: Optional[str] = None
+    seller_name: Optional[str] = None
 
 class OrderCreate(BaseModel):
     price: float = 0.0

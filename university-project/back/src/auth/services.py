@@ -15,7 +15,7 @@ from .schemas import TokenReq, OtpReq, OtpRes, UserOut, UserUpdate, UserCreate, 
     OTPOut, TokenCreate, TokenUpdate, TokenOut, PermissionCreate, PermissionOut, PermissionUpdate
 from .secures import authenticate, create_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, \
     REFRESH_TOKEN_EXPIRE_DAYS
-from ..core.utils import EmailSender
+from ..core.utils import EmailSender, default_user_name
 from ..logger import logger
 
 
@@ -26,6 +26,7 @@ class UserService:
 
     def create_user(self, user: UserCreate) -> UserOut:
         user_data = user.dict()
+        user_data["name"] = str(user_data.get("name") or "").strip() or default_user_name(user_data["email"])
         user_id = str(ObjectId())
         user_data["_id"] = user_id
         user_data["permissions"] = [Permission(id=str(permission["_id"]), **permission) for permission in
@@ -82,7 +83,12 @@ class UserService:
             if admin:
                 admin_permission = permission_service.get_by_name("admin")
                 user_permissions.append(admin_permission)
-            user_data = {"email": req['email'], "password": password, "permissions": user_permissions}
+            user_data = {
+                "email": req['email'],
+                "name": default_user_name(req['email']),
+                "password": password,
+                "permissions": user_permissions,
+            }
             user = self.db.users.insert_one(user_data)
             user_id = user.inserted_id
 
@@ -288,10 +294,12 @@ class TokenService:
             existing_token = self.db.tokens.find_one({"email": req['email']})
 
             if existing_token:
-                raise HTTPException(
-                    status_code=409,
-                    detail='A token for this email already exists'
-                )
+                if existing_token.get("expired_at", datetime.min) >= datetime.utcnow():
+                    raise HTTPException(
+                        status_code=409,
+                        detail='A token for this email already exists'
+                    )
+                self.db.tokens.delete_one({"_id": existing_token["_id"]})
 
             while True:
                 token_value = str(uuid4())
@@ -306,7 +314,7 @@ class TokenService:
                             "expired_at": expired_at
                         }
                         self.db.tokens.insert_one(token_data)
-                        EmailSender().send_token_email(req['email'], token_data)
+                        EmailSender().send_token_email(req['email'], token_value)
                         logger.info(f"Generated and stored token for email: {req['email']}")
                         return token_data
                     except Exception as e:

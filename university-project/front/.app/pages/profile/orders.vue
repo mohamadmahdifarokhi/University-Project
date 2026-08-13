@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAppStore } from '~/stores/app'
 import { storeToRefs } from 'pinia'
+import { toJalaliDateTime } from '~/utils/jalali'
 definePageMeta({ title: 'سفارش‌های انرژی', middleware: 'authenticated' })
 const app = useAppStore()
 const { sellOrders, buyOrders } = storeToRefs(app)
@@ -17,7 +18,11 @@ watch([filter, active], () => {
   page.value = 1
 })
 const money = (n: any) => new Intl.NumberFormat('fa-IR').format(Number(n || 0))
-const date = (v: any) => v ? new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(v)) : '—'
+const date = (v: any) => toJalaliDateTime(v) || '—'
+const counterpartyName = (item: any) => {
+  const name = active.value === 'buy' ? item.seller_name : item.buyer_name
+  return name || 'کاربر ناشناس'
+}
 async function load() {
   loading.value = true
   errorMessage.value = ''
@@ -84,7 +89,7 @@ onMounted(load)
         class="p-4"
       >
         <div class="grid gap-4 sm:grid-cols-4">
-          <div><small class="text-muted-500">طرف معامله</small><p>{{ item.seller_id || item.user_id || 'سامانه' }}</p></div><div><small class="text-muted-500">مقدار انرژی</small><p>{{ money(item.amount) }} کیلووات‌ساعت</p></div><div><small class="text-muted-500">مبلغ</small><p>{{ money(item.fee) }} ریال</p></div><div><small class="text-muted-500">زمان ثبت</small><p>{{ date(item.created_at) }}</p></div>
+          <div><small class="text-muted-500">طرف معامله</small><p>{{ counterpartyName(item) }}</p></div><div><small class="text-muted-500">مقدار انرژی</small><p>{{ money(item.amount) }} کیلووات‌ساعت</p></div><div><small class="text-muted-500">مبلغ</small><p>{{ money(item.fee) }} تومان</p></div><div><small class="text-muted-500">زمان ثبت</small><p>{{ date(item.created_at) }}</p></div>
         </div>
       </BaseCard>
     </div>

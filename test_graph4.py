@@ -1,8 +1,16 @@
+import os
+
 import requests
 
+backend_url = os.getenv('BACKEND_URL', 'http://localhost:8002').rstrip('/')
+email = os.getenv('TEST_EMAIL')
+password = os.getenv('TEST_PASSWORD')
+if not email or not password:
+    raise SystemExit('Set TEST_EMAIL and TEST_PASSWORD before running this smoke test.')
+
 r = requests.post(
-    'http://localhost:8002/users',
-    data={'username': 'user@pardis.ac.ir', 'password': 'Demo@12345'},
+    f'{backend_url}/users',
+    data={'username': email, 'password': password},
     headers={'Content-Type': 'application/x-www-form-urlencoded'},
 )
 tok = r.json()['access_token']

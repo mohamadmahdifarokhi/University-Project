@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from pymongo.errors import CollectionInvalid
 from starlette.middleware.cors import CORSMiddleware
+import random
+import os
 
 from src.auth.secures import get_password_hash
+from src.core.utils import default_user_name
 from src.logger import logger
 from src.order.api import router as order_router
 from src.battery.api import router as battery_router
@@ -101,25 +104,69 @@ def create_admin_permission():
 
 def create_admin():
     """
-    Create an admin user in the database.
+    Create the configured bootstrap admin user in the database.
     """
     try:
-        if db.users.find_one({"email": "admin@gmail.com"}):
+        admin_email = os.getenv("ADMIN_EMAIL")
+        admin_password = os.getenv("ADMIN_PASSWORD")
+        if not admin_email or not admin_password:
+            logger.warning("Admin bootstrap skipped: ADMIN_EMAIL and ADMIN_PASSWORD are not configured")
+            return
+
+        admin = db.users.find_one({"email": admin_email})
+        if admin:
+            user_id = str(admin["_id"])
+            db.profiles.update_one(
+                {"user_id": user_id},
+                {"$setOnInsert": {"photo": random.randint(1, 26)}},
+                upsert=True,
+            )
+            db.carts.update_one(
+                {"user_id": user_id},
+                {"$setOnInsert": {"cart_items": []}},
+                upsert=True,
+            )
             return
         permissions = [p for p in db.permissions.find({"name": {"$in": ["user", "admin"]}})]
-        db.users.insert_one({
-            "email": "admin@gmail.com",
-            "password": get_password_hash("admin"),
+        admin_id = db.users.insert_one({
+            "email": admin_email,
+            "name": default_user_name(admin_email),
+            "password": get_password_hash(admin_password),
             "provider": "local",
             "permissions": permissions,
-        })
+        }).inserted_id
+        db.profiles.insert_one({"user_id": str(admin_id), "photo": random.randint(1, 26)})
+        db.carts.insert_one({"user_id": str(admin_id), "cart_items": []})
     except Exception as e:
         logger.error(f"Error creating admin user: {e}")
+
+
+def ensure_user_names():
+    """Backfill display names for legacy accounts created before the name field."""
+    try:
+        for user in db.users.find(
+            {
+                "$or": [
+                    {"name": {"$exists": False}},
+                    {"name": None},
+                    {"name": ""},
+                ],
+                "email": {"$type": "string"},
+            },
+            {"email": 1},
+        ):
+            db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"name": default_user_name(user["email"])}},
+            )
+    except Exception as e:
+        logger.error(f"Error backfilling user names: {e}")
 
 
 # Execute database setup functions
 create_user_permission()
 create_admin_permission()
+ensure_user_names()
 create_admin()
 
 # Run the application using Uvicorn

@@ -16,6 +16,7 @@ from pydantic import EmailStr, UUID4
 class User(BaseModel):
     id: ObjectIdField = None
     email: EmailStr
+    name: str | None = None
     password: str
     provider: str
     permissions: List["Permission"] = []
@@ -24,7 +25,7 @@ class User(BaseModel):
     # block: Optional["Block"] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OTP(BaseModel):
@@ -34,7 +35,7 @@ class OTP(BaseModel):
     expired_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Token(BaseModel):
@@ -44,7 +45,7 @@ class Token(BaseModel):
     expired_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Permission(BaseModel):
     id: ObjectIdField = None
@@ -52,5 +53,4 @@ class Permission(BaseModel):
     description: str
 
     class Config:
-        orm_mode = True
-
+        from_attributes = True

@@ -26,13 +26,14 @@ def service_delete_device(
     device_id: str,
     user_id
 ):
-    update_result = db["users"].find_one_and_update(
-        {"_id": user_id},
-        {"$pull": {"devices": device_id}})
-    if update_result:
-        return {"detail": "Device deleted successfully."}
-    else:
-        return {"detail": "User not found or device could not be deleted."}
+    user = db["users"].find_one({"_id": user_id})
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+    devices = [str(device) for device in user.get("devices", [])]
+    if str(device_id) not in devices:
+        raise HTTPException(status_code=404, detail="device not found for user")
+    db["users"].update_one({"_id": user_id}, {"$pull": {"devices": device_id}})
+    return {"detail": "Device deleted successfully."}
 
 
 
@@ -55,7 +56,12 @@ def service_update_device(
 def service_device_get(
     device_id:str,    
 ):
+    if not ObjectId.is_valid(str(device_id)):
+        raise HTTPException(status_code=404, detail="device not found")
     device = db["device"].find_one({"_id": ObjectId(device_id)})
+    if device is None:
+        raise HTTPException(status_code=404, detail="device not found")
+    device["id"] = str(device.pop("_id"))
     return device
 
 def service_list_device_all(
@@ -90,6 +96,10 @@ def service_select_device(
     device_id: str,
 user
 ):
+    if not ObjectId.is_valid(str(device_id)):
+        raise HTTPException(status_code=404, detail="device not found")
+    if db["device"].find_one({"_id": ObjectId(device_id)}) is None:
+        raise HTTPException(status_code=404, detail="device not found")
     update_result = db["users"].update_one(
         {
             "_id": ObjectId(user['_id']),
@@ -104,8 +114,6 @@ user
     if update_result.matched_count == 0:
         raise HTTPException(status_code=404, detail="user not found")
     return {"detail": "device added."}
-
-
 
 
 

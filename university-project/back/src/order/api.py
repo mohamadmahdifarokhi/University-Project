@@ -57,5 +57,6 @@ def devices_list_all_by_user(
     user: User = Depends(get_current_user)
 ):
     return service_delete_order(
-        order_id
+        order_id,
+        user_id=user["_id"],
     )

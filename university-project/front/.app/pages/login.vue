@@ -6,6 +6,7 @@ import {useAuthStore} from "@/stores/auth"
 
 
 import {useAppStore} from "~/stores/app";
+import { toJalaliDate } from '~/utils/jalali'
 const {t} = useI18n({useScope: "local"})
 
 const app = useAppStore();
@@ -181,7 +182,7 @@ const onSubmit = handleSubmit(async (values) => {
       </form>
 
       <div class="text-center">
-        <BaseText size="sm" class="text-muted-400">© {{ new Date().getFullYear() }} دانشگاه آزاد اسلامی واحد پردیس</BaseText>
+        <BaseText size="sm" class="text-muted-400">© {{ toJalaliDate(new Date()).split('/')[0] || '—' }} دانشگاه آزاد اسلامی واحد پردیس</BaseText>
       </div>
     </div>
   </div>

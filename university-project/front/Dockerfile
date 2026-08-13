@@ -1,6 +1,6 @@
 FROM node:20
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@8.14.0 --activate
 
 # Set the working directory in the container
 WORKDIR /usr/src/app

@@ -1,17 +1,22 @@
 import {defineStore} from 'pinia';
 import axios from 'axios';
+import { gregorianToJalaali, toJalaliDate } from '~/utils/jalali';
 
 
 const apiUrl = `${import.meta.env.VITE_BACKEND_SERVER_URL}`;
 const uiText = (fa, en) => import.meta.client && document.documentElement.lang.startsWith('en') ? en : fa;
 
-// Maps the current date to the season names the backend expects.
+function getCurrentPersianPeriod(date = new Date()) {
+  const jalali = gregorianToJalaali(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  return { year: jalali.jy, month: jalali.jm };
+}
+
+// Maps the current Persian date to the season names the backend expects.
 function getCurrentSeason(date = new Date()) {
-  const m = date.getMonth() + 1; // 1-12
-  const d = date.getDate();
-  if ((m === 3 && d >= 21) || m === 4 || m === 5 || (m === 6 && d <= 20)) return 'Spring';
-  if ((m === 6 && d >= 21) || m === 7 || m === 8 || (m === 9 && d <= 22)) return 'Summer';
-  if ((m === 9 && d >= 23) || m === 10 || m === 11 || (m === 12 && d <= 20)) return 'Fall';
+  const { jm: month } = gregorianToJalaali(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  if (month <= 3) return 'Spring';
+  if (month <= 6) return 'Summer';
+  if (month <= 9) return 'Fall';
   return 'Winter';
 }
 
@@ -37,7 +42,7 @@ export const useAppStore = defineStore('app', {
     valuesMonth: ref([]),
     battery: ref(''),
     batteries: [],
-    cart: [],
+    cart: {cart_items: []},
     seasonDatas: [],
     seasonLabels: [],
     orders: [],
@@ -104,14 +109,14 @@ export const useAppStore = defineStore('app', {
       if (state.activeGenre === 1) {
         return state.products;
       } else {
-        return state.products.filter((product) => product.category.id === state.activeGenre);
+        return state.products.filter((product) => product.category?.id === state.activeGenre);
       }
     },
     filteredNotActiveProducts: (state) => {
       if (state.activeGenre === 1) {
         return state.not_active_products;
       } else {
-        return state.not_active_products.filter((product) => product.category.id === state.activeGenre);
+        return state.not_active_products.filter((product) => product.category?.id === state.activeGenre);
       }
     },
     textDirection: (state) => {
@@ -341,11 +346,11 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecords(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
+    async fetchMonthRecords(year = getCurrentPersianPeriod().year, month = getCurrentPersianPeriod().month) {
       const accessToken = useCookie('access_token').value;
 
       try {
-        const response = await axios.get(`${apiUrl}/power-records/month-chart?year=${year}&month=${month}`,
+        const response = await axios.get(`${apiUrl}/power-records/month-chart?year=${year}&month=${month}&calendar=persian`,
 
 
           {
@@ -357,7 +362,7 @@ export const useAppStore = defineStore('app', {
         );
         if (response.data) {
           this.valuesMonth = response.data[0];
-          this.categoriesMonth = response.data[1];
+          this.categoriesMonth = response.data[1].map(date => toJalaliDate(date));
         }
 
       } catch (error) {
@@ -367,11 +372,11 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecordsAdmin(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
+    async fetchMonthRecordsAdmin(year = getCurrentPersianPeriod().year, month = getCurrentPersianPeriod().month) {
       const accessToken = useCookie('access_token').value;
 
       try {
-        const response = await axios.get(`${apiUrl}/super-admin/month-chart?year=${year}&month=${month}`,
+        const response = await axios.get(`${apiUrl}/super-admin/month-chart?year=${year}&month=${month}&calendar=persian`,
 
 
           {
@@ -383,7 +388,7 @@ export const useAppStore = defineStore('app', {
         );
         if (response.data) {
           this.valuesMonth = response.data[0];
-          this.categoriesMonth = response.data[1];
+          this.categoriesMonth = response.data[1].map(date => toJalaliDate(date));
         }
 
       } catch (error) {
@@ -393,11 +398,11 @@ export const useAppStore = defineStore('app', {
         this.showErrorToast(t('fetchProducts.errors.fetchFailed'));
       }
     },
-    async fetchMonthRecordsMng(year = new Date().getFullYear(), month = new Date().getMonth() + 1) {
+    async fetchMonthRecordsMng(year = getCurrentPersianPeriod().year, month = getCurrentPersianPeriod().month) {
       const accessToken = useCookie('access_token').value;
 
       try {
-        const response = await axios.get(`${apiUrl}/super-admin/month-chart-block?year=${year}&month=${month}`,
+        const response = await axios.get(`${apiUrl}/super-admin/month-chart-block?year=${year}&month=${month}&calendar=persian`,
 
 
           {
@@ -409,7 +414,7 @@ export const useAppStore = defineStore('app', {
         );
         if (response.data) {
           this.valuesMonth = response.data[0];
-          this.categoriesMonth = response.data[1];
+          this.categoriesMonth = response.data[1].map(date => toJalaliDate(date));
         }
 
       } catch (error) {
@@ -710,6 +715,7 @@ export const useAppStore = defineStore('app', {
             ...user,
             id: user.id || item.id,
             email: user.email || item.email,
+            name: user.name || item.name || user.email || item.email,
             role: (user.permissions || []).some(permission => permission.name === 'admin')
               ? 'مدیر'
               : 'کاربر',
@@ -723,9 +729,10 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching orders:', error);
       }
     },
-    async createManagedUser({ email, password, is_admin = false }) {
+    async createManagedUser({ name, email, password, is_admin = false }) {
       const accessToken = useCookie('access_token').value;
       const response = await axios.post(`${apiUrl}/admins/users`, {
+        name,
         email,
         password,
         is_admin,
@@ -907,10 +914,11 @@ export const useAppStore = defineStore('app', {
         });
         if (response.status === 200) {
           this.showSuccessToast(uiText('سابقه مصرف ثبت شد.', 'Consumption record added.'));
-
+          return response.data;
         }
       } catch (error) {
-        console.error('Error fetching orders:', error);
+        console.error('Error adding power record:', error);
+        throw error;
       }
     },
     async addOrder(user_id, solar_panel_id, amount, fee) {
@@ -979,10 +987,10 @@ export const useAppStore = defineStore('app', {
       }
     },
 
-    async fetchSeasonChart(year = new Date().getFullYear(), season = getCurrentSeason()) {
+    async fetchSeasonChart(year = getCurrentPersianPeriod().year, season = getCurrentSeason()) {
       try {
         const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/power-records/season-chart?year=${year}&season=${season}`, {
+        const response = await axios.get(`${apiUrl}/power-records/season-chart?year=${year}&season=${season}&calendar=persian`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -1002,10 +1010,10 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching season chart data:', error);
       }
     },
-    async fetchSeasonChartAdmin(year = 2024, season = 'Spring') {
+    async fetchSeasonChartAdmin(year = getCurrentPersianPeriod().year, season = getCurrentSeason()) {
       try {
         const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/super-admin/season-chart?year=${year}&season=${season}`, {
+        const response = await axios.get(`${apiUrl}/super-admin/season-chart?year=${year}&season=${season}&calendar=persian`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -1025,10 +1033,10 @@ export const useAppStore = defineStore('app', {
         console.error('Error fetching season chart data:', error);
       }
     },
-    async fetchSeasonChartMng(year = 2024, season = 'Spring') {
+    async fetchSeasonChartMng(year = getCurrentPersianPeriod().year, season = getCurrentSeason()) {
       try {
         const accessToken = useCookie('access_token').value;
-        const response = await axios.get(`${apiUrl}/super-admin/season-chart-block?year=${year}&season=${season}`, {
+        const response = await axios.get(`${apiUrl}/super-admin/season-chart-block?year=${year}&season=${season}&calendar=persian`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',

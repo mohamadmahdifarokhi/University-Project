@@ -17,13 +17,13 @@ const isModalOpen = ref(false)
 const isCreateModalOpen = ref(false)
 const creating = ref(false)
 const createError = ref('')
-const createForm = reactive({ email: '', password: '', isAdmin: false })
+const createForm = reactive({ name: '', email: '', password: '', isAdmin: false })
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return allUsers.value || []
   return (allUsers.value || []).filter((user: any) =>
-    [user.email, user.role, user.status].some(value => String(value || '').toLowerCase().includes(q)),
+    [user.name, user.email, user.role, user.status].some(value => String(value || '').toLowerCase().includes(q)),
   )
 })
 const visible = computed(() => filtered.value.slice((page.value - 1) * perPage, page.value * perPage))
@@ -50,6 +50,7 @@ function showDevices(devices: any[] = []) {
 }
 function openCreateModal() {
   createError.value = ''
+  createForm.name = ''
   createForm.email = ''
   createForm.password = ''
   createForm.isAdmin = false
@@ -57,8 +58,8 @@ function openCreateModal() {
 }
 async function createUser() {
   createError.value = ''
-  if (!createForm.email || !createForm.password) {
-    createError.value = 'ایمیل و رمز عبور را وارد کنید.'
+  if (!createForm.name.trim() || !createForm.email.trim() || !createForm.password) {
+    createError.value = 'نام، ایمیل و رمز عبور را وارد کنید.'
     return
   }
   if (createForm.password.length < 6) {
@@ -68,6 +69,7 @@ async function createUser() {
   creating.value = true
   try {
     await app.createManagedUser({
+      name: createForm.name,
       email: createForm.email,
       password: createForm.password,
       is_admin: createForm.isAdmin,
@@ -91,7 +93,7 @@ onMounted(loadUsers)
       <BaseInput
         v-model="search"
         icon="lucide:search"
-        placeholder="جست‌وجوی ایمیل، نقش یا وضعیت…"
+        placeholder="جست‌وجوی نام، ایمیل، نقش یا وضعیت…"
       />
     </template>
     <div class="mb-6 flex flex-wrap items-end justify-between gap-4" data-tour="admin-panel">
@@ -143,8 +145,10 @@ onMounted(loadUsers)
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="min-w-0">
             <BaseHeading size="sm" class="truncate">
+              {{ user.name || user.email }}
+            </BaseHeading><BaseParagraph class="text-muted-500 mt-1 truncate text-xs">
               {{ user.email }}
-            </BaseHeading><div class="mt-2 flex flex-wrap gap-2">
+            </BaseParagraph><div class="mt-2 flex flex-wrap gap-2">
               <BaseTag
                 size="sm"
                 color="primary"
@@ -213,6 +217,13 @@ onMounted(loadUsers)
         <BaseMessage v-if="createError" type="danger">
           {{ createError }}
         </BaseMessage>
+        <BaseInput
+          v-model="createForm.name"
+          label="نام کاربر"
+          placeholder="نام و نام خانوادگی"
+          autocomplete="name"
+          :disabled="creating"
+        />
         <BaseInput
           v-model="createForm.email"
           type="email"

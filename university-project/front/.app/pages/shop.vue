@@ -170,7 +170,7 @@ onMounted(load)
               <dt class="text-muted-500 text-xs">
                 نرخ واحد
               </dt><dd class="font-semibold">
-                {{ number(item.fee) }} ریال
+                {{ number(item.fee) }} تومان
               </dd>
             </div>
           </dl><div class="mt-5 flex flex-col gap-2 sm:flex-row">

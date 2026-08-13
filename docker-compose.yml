@@ -9,9 +9,19 @@ services:
     ports:
       - "8002:8002"
     env_file: .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8002"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     depends_on:
-      - university-project-db
+      university-project-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - university-project-network
 
@@ -25,6 +35,11 @@ services:
     restart: always
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   # MongoDB for university-project
   university-project-db:
@@ -41,6 +56,11 @@ services:
     volumes:
       - university-project-db-data:/data/db
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   # Mongo Compass for database management
   mongo-compass:
@@ -53,7 +73,8 @@ services:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
       - ME_CONFIG_MONGODB_ADMINPASSWORD=admin
     depends_on:
-      - university-project-db
+      university-project-db:
+        condition: service_healthy
     networks:
       - university-project-network
     restart: always
@@ -62,7 +83,9 @@ services:
   university-project-front:
     build: ./university-project/front
     container_name: university-project-front
-    command: pnpm exec nuxi dev .app --host 0.0.0.0 --port 3000
+    # Serve the verified Nuxt output so the dashboard does not depend on the
+    # development HMR server or its transient build metadata files.
+    command: node .app/.output/server/index.mjs
     working_dir: /usr/src/app
     volumes:
       - ./university-project/front:/usr/src/app
@@ -78,10 +101,17 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
     depends_on:
-      - university-project
-      - university-project-db
+      university-project:
+        condition: service_healthy
+      university-project-db:
+        condition: service_healthy
     networks:
       - university-project-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     restart: always
 
 networks:

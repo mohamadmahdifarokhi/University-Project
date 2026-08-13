@@ -15,13 +15,16 @@ def service_add_battery(
     battery: BatterySchema,
     user_id: str
 ):  
-    email = db["users"].find_one({"_id": ObjectId(user_id)})["email"]
     user_battery = db["battery"].find_one({"user_id": user_id})
-    sp = SolarPanelCreate(user_id= str(user_id), fee=0).model_dump()
-    solar_panel = db["solar_panels"].insert_one(sp).inserted_id
-
     if user_battery is not None:
         raise HTTPException(status_code=403, detail="This user has a battery")
+
+    user = db["users"].find_one({"_id": ObjectId(user_id)})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    email = user["email"]
+    sp = SolarPanelCreate(user_id= str(user_id), fee=0).model_dump()
+    solar_panel = db["solar_panels"].insert_one(sp).inserted_id
 
     battery = BatterySchema(
         user_id=str(user_id),
@@ -39,9 +42,13 @@ def service_add_battery(
 def service_delete_battery(
     battery_id: str,
 ):
+    if not ObjectId.is_valid(str(battery_id)):
+        raise HTTPException(status_code=404, detail="battery not found")
     update_result = db["battery"].delete_one(
         {"_id": ObjectId(battery_id)},
     )
+    if update_result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="battery not found")
     return {"detail": "battery deleted."}
 
 
@@ -68,7 +75,12 @@ def service_update_battery_offer(user_id: str, active: bool):
 def service_battery_get_by_id(
     battery_id:str,    
 ):
+    if not ObjectId.is_valid(str(battery_id)):
+        raise HTTPException(status_code=404, detail="battery not found")
     battery = db["battery"].find_one({"_id": ObjectId(battery_id)})
+    if battery is None:
+        raise HTTPException(status_code=404, detail="battery not found")
+    battery["id"] = str(battery.pop("_id"))
     return battery
 
 def service_list_battery_all(
@@ -210,9 +222,6 @@ def divide_into_periods(created_at, current_date):
         periods[-1]['end'] = current_date
 
     return periods
-
-
-
 
 
 

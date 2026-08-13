@@ -132,13 +132,13 @@ docker compose exec university-project python -m src.seed_data
 
 </div>
 
-حساب نمایشی ساخته‌شده توسط seed:
+حساب نمایشی توسط متغیرهای `DEMO_USER_EMAIL` و `DEMO_USER_PASSWORD` در فایل `.env` محلی تعیین می‌شود. این مقادیر عمداً در مخزن ثبت نمی‌شوند.
 
 <div dir="ltr">
 
 ```text
-Email: user@pardis.ac.ir
-Password: Demo@12345
+Email: مقدار `DEMO_USER_EMAIL`
+Password: مقدار `DEMO_USER_PASSWORD`
 ```
 
 </div>
@@ -147,17 +147,34 @@ Password: Demo@12345
 
 ## پشتیبان‌گیری و بازیابی دیتابیس
 
-یک نسخه‌ی پشتیبان از دیتابیس MongoDB پروژه در مسیر زیر قرار داده شده است:
+بکاپ‌های MongoDB فقط به‌صورت محلی در پوشه‌ی `backups/` نگهداری می‌شوند و با `.gitignore` از گیت خارج هستند؛ چون شامل داده‌ی واقعی کاربران و سوابق سامانه‌اند.
 
 <div dir="ltr">
 
 ```
-backups/university-mongodb-2026-06-12.archive.gz
+backups/university-mongodb-YYYY-MM-DD.archive.gz
 ```
 
 </div>
 
-برای بازیابی این بکاپ، ابتدا سرویس دیتابیس را اجرا کنید:
+برای گرفتن بکاپ جدید:
+
+<div dir="ltr">
+
+```bash
+umask 077
+docker compose exec -T university-project-db mongodump \
+  --username admin \
+  --password admin \
+  --authenticationDatabase admin \
+  --db university \
+  --archive \
+  --gzip > backups/university-mongodb-$(date +%F).archive.gz
+```
+
+</div>
+
+برای بازیابی بکاپ، ابتدا سرویس دیتابیس را اجرا کنید:
 
 <div dir="ltr">
 
@@ -179,12 +196,12 @@ docker exec -i university-project-mongo mongorestore \
   --db university \
   --drop \
   --archive \
-  --gzip < backups/university-mongodb-2026-06-12.archive.gz
+  --gzip < backups/university-mongodb-YYYY-MM-DD.archive.gz
 ```
 
 </div>
 
-گزینه‌ی `--drop` قبل از بازیابی، کالکشن‌های فعلی دیتابیس `university` را پاک می‌کند تا داده‌ها دقیقاً مطابق بکاپ شوند.
+گزینه‌ی `--drop` قبل از بازیابی، کالکشن‌های فعلی دیتابیس `university` را پاک می‌کند؛ قبل از اجرای آن از دیتای فعلی بکاپ بگیرید.
 
 ## دسترسی به سرویس‌ها
 
@@ -201,6 +218,7 @@ docker exec -i university-project-mongo mongorestore \
 
 - `DATABASE_URL`: آدرس اتصال به پایگاه داده‌ی MongoDB
 - `SECRET_KEY` و `ALGORITHM`: تنظیمات توکن و احراز هویت
+- `ADMIN_EMAIL` و `ADMIN_PASSWORD`: ساخت حساب مدیر اولیه در اجرای نخست (اجباری برای دیتابیس خالی)
 - `SMTP_*`: تنظیمات ارسال ایمیل
 - `MERCHANT` و `ZP_API_*`: تنظیمات درگاه پرداخت زرین‌پال
 - `AWS_*`: تنظیمات فضای ذخیره‌سازی فایل (سازگار با S3)
@@ -210,7 +228,7 @@ docker exec -i university-project-mongo mongorestore \
 
 > ⚠️ فایل `.env.example` صرفاً نمونه است. **هرگز** کلیدها و رمزهای واقعی را در مخزن گیت قرار ندهید. پیش از استقرار در محیط واقعی، تمام مقادیر حساس (مانند `SECRET_KEY`، رمز SMTP، کلیدهای پرداخت و کلیدهای S3) را با مقادیر جدید و امن جایگزین کنید.
 
-رمزهای پیش‌فرض MongoDB در `docker-compose.yml` فقط برای محیط توسعه و دموی دانشگاهی نگه داشته شده‌اند.
+رمزهای MongoDB باید فقط در `.env` محلی تنظیم شوند و برای محیط واقعی حتماً با مقادیر قوی و جداگانه جایگزین شوند. فایل‌های `.env` و بکاپ‌های دیتابیس در این مخزن commit نمی‌شوند.
 
 ---
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import '~/assets/css/apexcharts.css'
-import { watch, ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 // Props definition
 const props = defineProps<{
@@ -9,31 +9,12 @@ const props = defineProps<{
   width?: number
   series: any[]
   options?: Record<string, any>
+  refreshKey?: string | number
 }>()
 
 const { LazyApexCharts, isLoaded } = useLazyApexCharts()
 const target = ref(null)
 const targetIsVisible = ref(false)
-const chartKey = ref(0) // Key to force re-render
-
-// Watch for changes in series and options props
-watch(
-  () => props.series,
-  () => {
-    // Increment the key to force re-render
-    chartKey.value += 1
-  },
-  { deep: true }
-)
-
-watch(
-  () => props.options,
-  () => {
-    // Increment the key to force re-render
-    chartKey.value += 1
-  },
-  { deep: true }
-)
 
 // When the target is visible on viewport, load the chart
 const { stop } = useIntersectionObserver(target, ([{ isIntersecting }]) => {
@@ -41,12 +22,6 @@ const { stop } = useIntersectionObserver(target, ([{ isIntersecting }]) => {
     targetIsVisible.value = isIntersecting
     stop()
   }
-})
-
-// Log the data for debugging purposes
-onMounted(() => {
-  console.log('Series:', props.series)
-  console.log('Options:', props.options)
 })
 
 </script>
@@ -62,8 +37,12 @@ onMounted(() => {
       <LazyApexCharts
         v-if="targetIsVisible"
         v-show="isLoaded"
-        v-bind="props"
-        :key="chartKey" <!-- Force re-render on key change -->
+        :key="props.refreshKey"
+        :type="props.type"
+        :height="props.height"
+        :width="props.width"
+        :series="props.series"
+        :options="props.options"
       />
       <BasePlaceload
         v-else
@@ -73,4 +52,3 @@ onMounted(() => {
     </ClientOnly>
   </div>
 </template>
-
